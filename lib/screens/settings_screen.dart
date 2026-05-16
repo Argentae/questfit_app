@@ -1,61 +1,113 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../app/theme.dart';
+import '../providers/health_provider.dart';
+import '../providers/user_provider.dart';
+import '../providers/database_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playerAsync = ref.watch(playerStreamProvider);
+    final healthAvailable = ref.watch(healthAvailableProvider);
+    final healthAuthorized = ref.watch(healthAuthorizedProvider);
+    final syncState = ref.watch(healthSyncNotifierProvider);
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
-          Text('Settings', style: GoogleFonts.cinzel(fontWeight: FontWeight.w700, fontSize: 16)),
+          Text('Settings',
+              style: GoogleFonts.cinzel(
+                  fontWeight: FontWeight.w700, fontSize: 16)),
           const SizedBox(height: 24),
+
+          // ── Profile ──
           _SectionTitle('Profile'),
-          _SettingsRow(label: 'Display Name', value: 'IronLift_Agus'),
-          _SettingsRow(label: 'Class', value: 'Berserker'),
-          const SizedBox(height: 24),
-          _SectionTitle('Health Connect'),
-          _SettingsRow(label: 'Status', value: 'Not Connected', valueColor: QuestFitColors.textMuted),
-          _SettingsRow(label: 'Last Sync', value: 'Never'),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: QuestFitColors.emerald.withValues(alpha: 0.3)),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-              child: const Text('Connect Samsung Watch', style: TextStyle(color: QuestFitColors.emerald, fontWeight: FontWeight.w600)),
+          playerAsync.when(
+            data: (player) => Column(
+              children: [
+                _SettingsRow(label: 'Display Name', value: player.name),
+                _SettingsRow(
+                    label: 'Class',
+                    value: _capitalize(player.classType)),
+              ],
             ),
+            loading: () =>
+                const _SettingsRow(label: 'Loading...', value: ''),
+            error: (e, _) =>
+                _SettingsRow(label: 'Error', value: '$e'),
           ),
           const SizedBox(height: 24),
+
+          // ── Health Connect ──
+          _SectionTitle('Health Connect'),
+          _buildHealthStatus(healthAvailable, healthAuthorized),
+          _buildLastSync(syncState),
+          _buildHealthButton(context, ref, healthAvailable,
+              healthAuthorized, syncState),
+          const SizedBox(height: 24),
+
+          // ── Preferences ──
           _SectionTitle('Preferences'),
           _SettingsRow(label: 'Units', value: 'Metric (kg)'),
           _ToggleRow(label: 'Daily Reminder', initialValue: true),
           _ToggleRow(label: 'Haptic Feedback', initialValue: true),
           _ToggleRow(label: 'Sound Effects', initialValue: false),
           const SizedBox(height: 24),
+
+          // ── Data ──
           _SectionTitle('Data'),
-          _SettingsRow(label: 'Export Data', trailing: TextButton(onPressed: () {}, child: const Text('Export JSON', style: TextStyle(color: QuestFitColors.emerald, fontSize: 12)))),
+          _SettingsRow(
+              label: 'Export Data',
+              trailing: TextButton(
+                  onPressed: () {},
+                  child: const Text('Export JSON',
+                      style: TextStyle(
+                          color: QuestFitColors.emerald,
+                          fontSize: 12)))),
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () {},
+              onPressed: () async {
+                final db = ref.read(databaseProvider);
+                await db.resetAllProgress();
+                ref.invalidate(playerStreamProvider);
+                ref.invalidate(statsStreamProvider);
+                // Also reset health sync state
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.remove('health_connect_last_sync');
+                
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('All progress has been reset.')),
+                  );
+                }
+              },
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: QuestFitColors.redAccent.withValues(alpha: 0.3)),
-                backgroundColor: QuestFitColors.redAccent.withValues(alpha: 0.08),
+                side: BorderSide(
+                    color:
+                        QuestFitColors.redAccent.withValues(alpha: 0.3)),
+                backgroundColor:
+                    QuestFitColors.redAccent.withValues(alpha: 0.08),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
-              child: const Text('Reset All Progress', style: TextStyle(color: QuestFitColors.redAccent, fontWeight: FontWeight.w600)),
+              child: const Text('Reset All Progress',
+                  style: TextStyle(
+                      color: QuestFitColors.redAccent,
+                      fontWeight: FontWeight.w600)),
             ),
           ),
           const SizedBox(height: 24),
+
+          // ── About ──
           _SectionTitle('About'),
           _SettingsRow(label: 'Version', value: '1.0.0'),
           _SettingsRow(label: 'Made with', value: '⚔️ & 💪'),
@@ -63,6 +115,145 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildHealthStatus(
+      AsyncValue<bool> available, AsyncValue<bool> authorized) {
+    final isAvailable = available.valueOrNull ?? false;
+    final isAuthorized = authorized.valueOrNull ?? false;
+
+    String status;
+    Color color;
+    if (!isAvailable) {
+      status = 'Not Available';
+      color = QuestFitColors.textMuted;
+    } else if (isAuthorized) {
+      status = 'Connected ✓';
+      color = QuestFitColors.emerald;
+    } else {
+      status = 'Not Connected';
+      color = QuestFitColors.orangeAccent;
+    }
+
+    return _SettingsRow(label: 'Status', value: status, valueColor: color);
+  }
+
+  Widget _buildLastSync(HealthSyncState syncState) {
+    String text;
+    if (syncState.isSyncing) {
+      text = 'Syncing...';
+    } else if (syncState.lastResult != null) {
+      final r = syncState.lastResult!;
+      text = '${r.importedCount} workouts · +${r.totalXp} XP';
+    } else if (syncState.error != null) {
+      text = 'Error';
+    } else {
+      text = 'Never';
+    }
+    return _SettingsRow(label: 'Last Sync', value: text);
+  }
+
+  Widget _buildHealthButton(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<bool> available,
+    AsyncValue<bool> authorized,
+    HealthSyncState syncState,
+  ) {
+    final isAvailable = available.valueOrNull ?? false;
+    final isAuthorized = authorized.valueOrNull ?? false;
+
+    if (!isAvailable) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: OutlinedButton(
+          onPressed: null,
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(
+                color: QuestFitColors.textMuted.withValues(alpha: 0.3)),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14)),
+          ),
+          child: const Text('Health Connect Not Available',
+              style: TextStyle(
+                  color: QuestFitColors.textMuted,
+                  fontWeight: FontWeight.w600)),
+        ),
+      );
+    }
+
+    if (!isAuthorized) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: OutlinedButton(
+          onPressed: () async {
+            final granted = await ref
+                .read(healthSyncNotifierProvider.notifier)
+                .requestPermissions();
+            if (context.mounted && !granted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Health Connect permissions denied')),
+              );
+            }
+          },
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(
+                color: QuestFitColors.emerald.withValues(alpha: 0.3)),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14)),
+          ),
+          child: const Text('Connect Health Connect',
+              style: TextStyle(
+                  color: QuestFitColors.emerald,
+                  fontWeight: FontWeight.w600)),
+        ),
+      );
+    }
+
+    // Authorized — show sync button
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: OutlinedButton(
+        onPressed: syncState.isSyncing
+            ? null
+            : () async {
+                final result = await ref
+                    .read(healthSyncNotifierProvider.notifier)
+                    .sync();
+                if (context.mounted && result.importedCount > 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'Imported ${result.importedCount} workouts · +${result.totalXp} XP')),
+                  );
+                }
+              },
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(
+              color: QuestFitColors.emerald.withValues(alpha: 0.3)),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14)),
+        ),
+        child: syncState.isSyncing
+            ? const SizedBox(
+                height: 18,
+                width: 18,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: QuestFitColors.emerald),
+              )
+            : const Text('Sync Now',
+                style: TextStyle(
+                    color: QuestFitColors.emerald,
+                    fontWeight: FontWeight.w600)),
+      ),
+    );
+  }
+
+  static String _capitalize(String s) =>
+      s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -83,18 +274,28 @@ class _SettingsRow extends StatelessWidget {
   final String? value;
   final Color? valueColor;
   final Widget? trailing;
-  const _SettingsRow({required this.label, this.value, this.valueColor, this.trailing});
+  const _SettingsRow(
+      {required this.label, this.value, this.valueColor, this.trailing});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: QuestFitColors.glassBorder))),
+      decoration: BoxDecoration(
+          border:
+              Border(bottom: BorderSide(color: QuestFitColors.glassBorder))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-          trailing ?? Text(value ?? '', style: TextStyle(fontSize: 13, color: valueColor ?? QuestFitColors.textSecondary)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w500)),
+          trailing ??
+              Text(value ?? '',
+                  style: TextStyle(
+                      fontSize: 13,
+                      color:
+                          valueColor ?? QuestFitColors.textSecondary)),
         ],
       ),
     );
@@ -123,15 +324,20 @@ class _ToggleRowState extends State<_ToggleRow> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: QuestFitColors.glassBorder))),
+      decoration: BoxDecoration(
+          border:
+              Border(bottom: BorderSide(color: QuestFitColors.glassBorder))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(widget.label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          Text(widget.label,
+              style: const TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w500)),
           Switch(
             value: _value,
             onChanged: (v) => setState(() => _value = v),
-            activeColor: QuestFitColors.emerald,
+            activeTrackColor: QuestFitColors.emerald,
+            thumbColor: WidgetStateProperty.all(Colors.white),
           ),
         ],
       ),

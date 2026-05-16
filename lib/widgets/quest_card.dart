@@ -1,40 +1,73 @@
 import 'package:flutter/material.dart';
 import '../app/theme.dart';
+import '../db/database.dart';
 
-/// Quest card widget showing exercise, XP reward, and completion state.
+/// Emoji lookup based on quest category.
+String questEmoji(String category) {
+  switch (category) {
+    case 'strength':
+      return '🏋️';
+    case 'cardio':
+      return '🏃';
+    case 'flexibility':
+      return '🧘';
+    case 'core':
+      return '💪';
+    case 'boss':
+      return '⚔️';
+    default:
+      return '🏋️';
+  }
+}
+
+/// Quest card with completion animation, haptic-ready callback.
 class QuestCard extends StatefulWidget {
-  final String emoji;
-  final String title;
-  final String description;
-  final int xpReward;
-  final String category; // strength, cardio, flexibility, core
-  final bool initialCompleted;
+  final Quest quest;
+  final VoidCallback? onComplete;
 
   const QuestCard({
     super.key,
-    required this.emoji,
-    required this.title,
-    required this.description,
-    required this.xpReward,
-    required this.category,
-    this.initialCompleted = false,
+    required this.quest,
+    this.onComplete,
   });
 
   @override
   State<QuestCard> createState() => _QuestCardState();
 }
 
-class _QuestCardState extends State<QuestCard> {
-  late bool _completed;
+class _QuestCardState extends State<QuestCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _bounceCtrl;
+  late Animation<double> _scaleAnim;
 
   @override
   void initState() {
     super.initState();
-    _completed = widget.initialCompleted;
+    _bounceCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.95), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 0.95, end: 1.04), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 1.04, end: 1.0), weight: 30),
+    ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _bounceCtrl.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    if (widget.quest.isCompleted) return;
+    _bounceCtrl.forward(from: 0);
+    widget.onComplete?.call();
   }
 
   Color get _iconBg {
-    switch (widget.category) {
+    switch (widget.quest.category) {
       case 'strength':
         return QuestFitColors.redAccent;
       case 'cardio':
@@ -50,108 +83,125 @@ class _QuestCardState extends State<QuestCard> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => setState(() => _completed = !_completed),
-      child: AnimatedOpacity(
-        opacity: _completed ? 0.5 : 1.0,
-        duration: const Duration(milliseconds: 200),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: QuestFitColors.bgCard,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: _completed
-                  ? QuestFitColors.emerald.withValues(alpha: 0.15)
-                  : QuestFitColors.glassBorder,
+    final completed = widget.quest.isCompleted;
+    final emoji = questEmoji(widget.quest.category);
+
+    return ScaleTransition(
+      scale: _scaleAnim,
+      child: GestureDetector(
+        onTap: _handleTap,
+        child: AnimatedOpacity(
+          opacity: completed ? 0.5 : 1.0,
+          duration: const Duration(milliseconds: 250),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: completed
+                  ? QuestFitColors.emerald.withValues(alpha: 0.04)
+                  : QuestFitColors.bgCard,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: completed
+                    ? QuestFitColors.emerald.withValues(alpha: 0.2)
+                    : QuestFitColors.glassBorder,
+              ),
             ),
-          ),
-          child: Row(
-            children: [
-              // Icon
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      _iconBg.withValues(alpha: 0.15),
-                      _iconBg.withValues(alpha: 0.05),
+            child: Row(
+              children: [
+                // Icon
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        _iconBg.withValues(alpha: 0.15),
+                        _iconBg.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    border:
+                        Border.all(color: _iconBg.withValues(alpha: 0.2)),
+                  ),
+                  alignment: Alignment.center,
+                  child:
+                      Text(emoji, style: const TextStyle(fontSize: 20)),
+                ),
+                const SizedBox(width: 14),
+                // Body
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.quest.title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          decoration: completed
+                              ? TextDecoration.lineThrough
+                              : null,
+                          decorationColor: QuestFitColors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        widget.quest.description,
+                        style: Theme.of(context).textTheme.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: _iconBg.withValues(alpha: 0.2)),
                 ),
-                alignment: Alignment.center,
-                child: Text(widget.emoji, style: const TextStyle(fontSize: 20)),
-              ),
-              const SizedBox(width: 14),
-              // Body
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(width: 8),
+                // Reward + checkbox
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      widget.title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        decoration:
-                            _completed ? TextDecoration.lineThrough : null,
-                        decorationColor: QuestFitColors.textMuted,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color:
+                            QuestFitColors.emerald.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '+${widget.quest.xpReward} XP',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: QuestFitColors.emerald,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      widget.description,
-                      style: Theme.of(context).textTheme.bodySmall,
-                      overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 4),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: completed
+                            ? QuestFitColors.emerald
+                            : Colors.transparent,
+                        border: Border.all(
+                          color: completed
+                              ? QuestFitColors.emerald
+                              : QuestFitColors.glassBorder,
+                          width: 2,
+                        ),
+                      ),
+                      child: completed
+                          ? const Icon(Icons.check,
+                              size: 14, color: QuestFitColors.bgDark)
+                          : null,
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              // Reward + checkbox
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: QuestFitColors.emerald.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '+${widget.xpReward} XP',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: QuestFitColors.emerald,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _completed ? QuestFitColors.emerald : Colors.transparent,
-                      border: Border.all(
-                        color: _completed
-                            ? QuestFitColors.emerald
-                            : QuestFitColors.glassBorder,
-                        width: 2,
-                      ),
-                    ),
-                    child: _completed
-                        ? const Icon(Icons.check, size: 14, color: QuestFitColors.bgDark)
-                        : null,
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

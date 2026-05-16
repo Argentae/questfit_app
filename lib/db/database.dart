@@ -111,6 +111,17 @@ class QuestFitDatabase extends _$QuestFitDatabase {
       await into(quests).insert(q);
     }
   }
+
+  /// Resets the database to its initial state.
+  Future<void> resetAllProgress() async {
+    await delete(quests).go();
+    await delete(workoutLogs).go();
+    await delete(rankHistory).go();
+    await delete(stats).go();
+    await delete(streaks).go();
+    await delete(players).go();
+    await _seedInitialData();
+  }
 }
 
 LazyDatabase _openConnection() {

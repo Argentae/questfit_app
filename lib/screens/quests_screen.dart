@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../app/theme.dart';
+import '../db/database.dart';
+import '../providers/quest_provider.dart';
+import '../services/haptic_service.dart';
 import '../widgets/quest_card.dart';
+import '../widgets/xp_toast.dart';
 
-class QuestsScreen extends StatefulWidget {
+class QuestsScreen extends ConsumerStatefulWidget {
   const QuestsScreen({super.key});
 
   @override
-  State<QuestsScreen> createState() => _QuestsScreenState();
+  ConsumerState<QuestsScreen> createState() => _QuestsScreenState();
 }
 
-class _QuestsScreenState extends State<QuestsScreen> {
+class _QuestsScreenState extends ConsumerState<QuestsScreen> {
   String _filter = 'all';
 
   static const _filters = ['all', 'strength', 'cardio', 'flexibility', 'core'];
@@ -24,6 +29,8 @@ class _QuestsScreenState extends State<QuestsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final questsAsync = ref.watch(dailyQuestsStreamProvider);
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -36,8 +43,10 @@ class _QuestsScreenState extends State<QuestsScreen> {
                   style: GoogleFonts.cinzel(
                       fontWeight: FontWeight.w700, fontSize: 16)),
               TextButton(
-                onPressed: () {},
-                child: const Text('+ New Quest',
+                onPressed: () {
+                  ref.read(questNotifierProvider.notifier).regenerateDaily();
+                },
+                child: const Text('🔄 Refresh',
                     style: TextStyle(
                         color: QuestFitColors.emerald,
                         fontWeight: FontWeight.w600)),
@@ -55,7 +64,10 @@ class _QuestsScreenState extends State<QuestsScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
-                    onTap: () => setState(() => _filter = f),
+                    onTap: () {
+                      HapticService.onUiTap();
+                      setState(() => _filter = f);
+                    },
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
@@ -86,34 +98,62 @@ class _QuestsScreenState extends State<QuestsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          // Quest list
-          ..._buildQuestList(),
+          // Quest list — live from DB
+          questsAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: CircularProgressIndicator(
+                    color: QuestFitColors.emerald, strokeWidth: 2),
+              ),
+            ),
+            error: (e, _) => Center(child: Text('Error: $e')),
+            data: (quests) {
+              final filtered = _filter == 'all'
+                  ? quests
+                  : quests.where((q) => q.category == _filter).toList();
+
+              if (filtered.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Text('No quests in this category',
+                        style: Theme.of(context).textTheme.bodySmall),
+                  ),
+                );
+              }
+
+              return Column(
+                children: filtered
+                    .map((quest) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: QuestCard(
+                            quest: quest,
+                            onComplete: () =>
+                                _onQuestComplete(context, quest),
+                          ),
+                        ))
+                    .toList(),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 
-  List<Widget> _buildQuestList() {
-    const quests = [
-      {'emoji': '🏋️', 'title': 'Bench Press', 'desc': '4 sets × 8 reps · 70 kg', 'xp': 130, 'cat': 'strength'},
-      {'emoji': '🏋️', 'title': 'Deadlift', 'desc': '3 sets × 5 reps · 120 kg', 'xp': 150, 'cat': 'strength'},
-      {'emoji': '🚣', 'title': 'Rowing Machine', 'desc': '20 min · steady state', 'xp': 100, 'cat': 'cardio'},
-      {'emoji': '🧘', 'title': 'Yoga Sun Salutation', 'desc': '15 min flow routine', 'xp': 65, 'cat': 'flexibility'},
-      {'emoji': '💪', 'title': 'Ab Wheel Rollout', 'desc': '3 sets × 12 reps', 'xp': 85, 'cat': 'core'},
-    ];
-
-    return quests
-        .where((q) => _filter == 'all' || q['cat'] == _filter)
-        .map((q) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: QuestCard(
-                emoji: q['emoji'] as String,
-                title: q['title'] as String,
-                description: q['desc'] as String,
-                xpReward: q['xp'] as int,
-                category: q['cat'] as String,
-              ),
-            ))
-        .toList();
+  Future<void> _onQuestComplete(BuildContext context, Quest quest) async {
+    if (quest.isCompleted) return;
+    HapticService.onQuestComplete();
+    final result = await ref
+        .read(questNotifierProvider.notifier)
+        .completeQuest(quest);
+    if (!context.mounted) return;
+    if (result.didLevelUp) {
+      HapticService.onLevelUp();
+      XpToast.show(context, result.xpAwarded, levelUp: true);
+    } else {
+      XpToast.show(context, result.xpAwarded);
+    }
   }
 }

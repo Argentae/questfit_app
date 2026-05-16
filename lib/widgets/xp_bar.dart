@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../app/theme.dart';
 
-/// XP progress bar with animated fill and glow shimmer.
+/// XP progress bar with smooth animated fill and glow shimmer.
+/// Uses implicit animation so the bar smoothly transitions when XP changes.
 class XpBar extends StatelessWidget {
   final int current;
   final int max;
@@ -21,12 +22,16 @@ class XpBar extends StatelessWidget {
               'EXPERIENCE',
               style: Theme.of(context).textTheme.labelSmall,
             ),
-            Text(
-              '${_formatNumber(current)} / ${_formatNumber(max)} XP',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: QuestFitColors.emerald,
-                    fontWeight: FontWeight.w600,
-                  ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Text(
+                '${_formatNumber(current)} / ${_formatNumber(max)} XP',
+                key: ValueKey('$current/$max'),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: QuestFitColors.emerald,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
             ),
           ],
         ),
@@ -44,8 +49,10 @@ class XpBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                // Fill
-                FractionallySizedBox(
+                // Animated fill
+                AnimatedFractionallySizedBox(
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutCubic,
                   widthFactor: _percentage,
                   child: Container(
                     decoration: BoxDecoration(
@@ -75,7 +82,49 @@ class XpBar extends StatelessWidget {
   }
 
   String _formatNumber(int n) {
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
+    if (n >= 1000) {
+      return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
+    }
     return n.toString();
+  }
+}
+
+/// Animated version of FractionallySizedBox that smoothly interpolates widthFactor.
+class AnimatedFractionallySizedBox extends ImplicitlyAnimatedWidget {
+  final double widthFactor;
+  final Widget child;
+
+  const AnimatedFractionallySizedBox({
+    super.key,
+    required this.widthFactor,
+    required this.child,
+    required super.duration,
+    super.curve,
+  });
+
+  @override
+  AnimatedWidgetBaseState<AnimatedFractionallySizedBox> createState() =>
+      _AnimatedFractionallySizedBoxState();
+}
+
+class _AnimatedFractionallySizedBoxState
+    extends AnimatedWidgetBaseState<AnimatedFractionallySizedBox> {
+  Tween<double>? _widthFactor;
+
+  @override
+  void forEachTween(TweenVisitor<dynamic> visitor) {
+    _widthFactor = visitor(
+      _widthFactor,
+      widget.widthFactor,
+      (dynamic value) => Tween<double>(begin: value as double),
+    ) as Tween<double>?;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      widthFactor: _widthFactor?.evaluate(animation) ?? widget.widthFactor,
+      child: widget.child,
+    );
   }
 }
