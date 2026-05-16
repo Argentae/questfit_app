@@ -52,10 +52,3 @@ flutter:
   assets:
     - assets/images/
 
-  fonts:
-    - family: Cinzel
-      fonts:
-        - asset: assets/fonts/Cinzel-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/Cinzel-Black.ttf
-          weight: 900
