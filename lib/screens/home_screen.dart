@@ -64,6 +64,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // v2.0: Gold display
             goldAsync.when(
@@ -80,6 +81,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text('🪙', style: TextStyle(fontSize: 12)),
                       const SizedBox(width: 4),

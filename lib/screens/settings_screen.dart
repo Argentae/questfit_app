@@ -115,7 +115,7 @@ class SettingsScreen extends ConsumerWidget {
 
           // ── About ──
           _SectionTitle('About'),
-          _SettingsRow(label: 'Version', value: '1.0.0'),
+          _SettingsRow(label: 'Version', value: '2.0.0'),
           _SettingsRow(label: 'Made with', value: '⚔️ & 💪'),
         ],
       ),

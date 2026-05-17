@@ -43,6 +43,18 @@ class AppInitNotifier extends AsyncNotifier<AppInitState> {
 
       // v2.0: Check if Awakening is complete
       if (!player.awakeningComplete && player.level < 5) {
+        // Auto-repair: if player level was bumped by a buggy health sync
+        // during Awakening, reset back to level 1
+        if (player.level > 1) {
+          await (db.update(db.players)
+                ..where((t) => t.id.equals(player.id)))
+              .write(const PlayersCompanion(
+            level: Value(1),
+            xp: Value(0),
+            totalXp: Value(0),
+          ));
+          debugPrint('Awakening: auto-repaired player level from ${player.level} to 1');
+        }
         return AppInitState.awakening;
       }
 

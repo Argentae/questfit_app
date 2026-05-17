@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../app/theme.dart';
 import '../providers/app_init_provider.dart';
 import '../providers/health_provider.dart';
 import '../providers/user_provider.dart';
+import '../services/health_sync_service.dart';
 
 /// v2.0: The Awakening — Proving Grounds (Levels 1-5).
 /// A dark, minimalist screen that locks the player out of the main UI
 /// until they reach Level 5 by hitting step and calorie goals via Health Connect.
+///
+/// This screen uses a READ-ONLY health sync (no XP awarded, no workouts imported).
+/// Progress is persisted in SharedPreferences so it survives app restarts.
 class AwakeningScreen extends ConsumerStatefulWidget {
   const AwakeningScreen({super.key});
 
@@ -22,11 +27,18 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   late AnimationController _breatheController;
 
   static const int _stepGoal = 5000;
-  static const int _calorieGoal = 500;
+  static const int _calorieGoal = 300;
+
+  // Persisted keys
+  static const _prefsStepsKey = 'awakening_steps';
+  static const _prefsCaloriesKey = 'awakening_calories';
+  static const _prefsSyncTimeKey = 'awakening_last_sync';
 
   int _currentSteps = 0;
   int _currentCalories = 0;
+  DateTime? _lastSyncTime;
   bool _isSyncing = false;
+  List<String> _debugLines = [];
 
   @override
   void initState() {
@@ -39,6 +51,9 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
+
+    // Restore persisted progress
+    _restoreProgress();
   }
 
   @override
@@ -46,6 +61,32 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     _pulseController.dispose();
     _breatheController.dispose();
     super.dispose();
+  }
+
+  /// Restore saved progress from SharedPreferences.
+  Future<void> _restoreProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _currentSteps = prefs.getInt(_prefsStepsKey) ?? 0;
+        _currentCalories = prefs.getInt(_prefsCaloriesKey) ?? 0;
+        final syncMs = prefs.getInt(_prefsSyncTimeKey);
+        _lastSyncTime = syncMs != null
+            ? DateTime.fromMillisecondsSinceEpoch(syncMs)
+            : null;
+      });
+    }
+  }
+
+  /// Save current progress to SharedPreferences.
+  Future<void> _saveProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_prefsStepsKey, _currentSteps);
+    await prefs.setInt(_prefsCaloriesKey, _currentCalories);
+    if (_lastSyncTime != null) {
+      await prefs.setInt(
+          _prefsSyncTimeKey, _lastSyncTime!.millisecondsSinceEpoch);
+    }
   }
 
   @override
@@ -58,34 +99,48 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              _buildTitle(),
-              const SizedBox(height: 12),
-              _buildSubtitle(),
-              const SizedBox(height: 48),
-              _buildRuneCircle(),
-              const SizedBox(height: 48),
-              _buildProgressCards(),
-              const Spacer(),
-              // Level display
-              playerAsync.when(
-                data: (player) => _buildLevelDisplay(player.level),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom,
               ),
-              const SizedBox(height: 16),
-              // Action button
-              healthAuthorized.when(
-                data: (authorized) => authorized
-                    ? _buildSyncButton()
-                    : _buildPermissionButton(),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => _buildPermissionButton(),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 40),
+                    _buildTitle(),
+                    const SizedBox(height: 12),
+                    _buildSubtitle(),
+                    const SizedBox(height: 48),
+                    _buildRuneCircle(),
+                    const SizedBox(height: 48),
+                    _buildProgressCards(),
+                    const Spacer(),
+                    // Last sync time
+                    if (_lastSyncTime != null) _buildLastSyncLabel(),
+                    const SizedBox(height: 8),
+                    // Level display
+                    playerAsync.when(
+                      data: (player) => _buildLevelDisplay(player.level),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    ),
+                    const SizedBox(height: 16),
+                    // Action button
+                    healthAuthorized.when(
+                      data: (authorized) => authorized
+                          ? _buildSyncButton()
+                          : _buildPermissionButton(),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => _buildPermissionButton(),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
         ),
       ),
@@ -131,8 +186,14 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   }
 
   Widget _buildRuneCircle() {
-    final totalProgress = ((_currentSteps / _stepGoal) + (_currentCalories / _calorieGoal)) / 2;
-    final clampedProgress = totalProgress.clamp(0.0, 1.0);
+    final stepProgress = _stepGoal > 0
+        ? (_currentSteps / _stepGoal).clamp(0.0, 1.0)
+        : 0.0;
+    final calProgress = _calorieGoal > 0
+        ? (_currentCalories / _calorieGoal).clamp(0.0, 1.0)
+        : 0.0;
+    // Average of both — intuitive combined progress
+    final clampedProgress = (stepProgress + calProgress) / 2;
 
     return AnimatedBuilder(
       animation: _pulseController,
@@ -226,12 +287,67 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
         const SizedBox(height: 12),
         _AwakeningProgressCard(
           icon: Icons.local_fire_department_rounded,
-          label: 'ACTIVE CALORIES',
+          label: 'CALORIES',
           current: _currentCalories,
           goal: _calorieGoal,
           color: QuestFitColors.orangeAccent,
         ),
       ],
+    );
+  }
+
+  Widget _buildDebugPanel() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '⚙️ HEALTH CONNECT DEBUG',
+            style: GoogleFonts.inter(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: Colors.amber,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          ..._debugLines.map((line) => Text(
+                line,
+                style: GoogleFonts.inter(
+                  fontSize: 9,
+                  color: Colors.white70,
+                  height: 1.4,
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLastSyncLabel() {
+    final diff = DateTime.now().difference(_lastSyncTime!);
+    String timeAgo;
+    if (diff.inMinutes < 1) {
+      timeAgo = 'just now';
+    } else if (diff.inMinutes < 60) {
+      timeAgo = '${diff.inMinutes}m ago';
+    } else {
+      timeAgo = '${diff.inHours}h ${diff.inMinutes % 60}m ago';
+    }
+
+    return Text(
+      'Last synced: $timeAgo',
+      style: GoogleFonts.inter(
+        fontSize: 11,
+        color: QuestFitColors.textMuted,
+      ),
     );
   }
 
@@ -366,33 +482,34 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
         .read(healthSyncNotifierProvider.notifier)
         .requestPermissions();
     if (mounted && granted) {
-      // Grant Level 1 on permission acceptance
-      // (Player starts at level 1 by default, this is just the acknowledgment)
       _syncHealthData();
     }
   }
 
+  /// READ-ONLY sync: fetches today's steps and calories from Health Connect
+  /// without importing workouts or awarding XP.
   Future<void> _syncHealthData() async {
     setState(() => _isSyncing = true);
 
     try {
-      final result = await ref
-          .read(healthSyncNotifierProvider.notifier)
-          .sync();
+      // Re-request permissions to ensure new types (e.g. ACTIVE_ENERGY_BURNED)
+      // are granted — the user can't access Settings from the Awakening screen.
+      final service = ref.read(healthSyncServiceProvider);
+      await service.requestPermissions();
 
-      // In a real implementation, we'd parse actual step/calorie totals
-      // from the sync results. For now, simulate progress accumulation.
+      final summary = await service.getTodayHealthSummary();
+
       if (mounted) {
         setState(() {
-          // Accumulate from sync results
-          for (final r in result.results) {
-            if (r.category == 'cardio') {
-              _currentCalories += (r.xpAwarded ~/ 2); // Rough approximation
-            }
-          }
-          _currentSteps += 1000; // Placeholder: would come from actual step data
+          _currentSteps = summary.steps;
+          _currentCalories = summary.calories;
+          _lastSyncTime = summary.syncedAt;
+          _debugLines = summary.debugInfo;
           _isSyncing = false;
         });
+
+        // Persist progress
+        await _saveProgress();
       }
     } catch (e) {
       if (mounted) setState(() => _isSyncing = false);
@@ -421,7 +538,7 @@ class _AwakeningProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = (current / goal).clamp(0.0, 1.0);
+    final progress = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
     final met = current >= goal;
 
     return Container(
