@@ -350,15 +350,23 @@ class _SettingsRow extends StatelessWidget {
         child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w500)),
-          trailing ??
-              Text(value ?? '',
-                  style: TextStyle(
-                      fontSize: 13,
-                      color:
-                          valueColor ?? QuestFitColors.textSecondary)),
+          Expanded(
+            child: Text(label,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w500)),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: trailing ??
+                Text(value ?? '',
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                        fontSize: 13,
+                        color:
+                            valueColor ?? QuestFitColors.textSecondary)),
+          ),
         ],
       ),
     ));
@@ -393,9 +401,12 @@ class _ToggleRowState extends State<_ToggleRow> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(widget.label,
-              style: const TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w500)),
+          Expanded(
+            child: Text(widget.label,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w500)),
+          ),
           Switch(
             value: _value,
             onChanged: (v) => setState(() => _value = v),

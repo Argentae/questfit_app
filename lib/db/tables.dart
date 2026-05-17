@@ -1,32 +1,54 @@
 import 'package:drift/drift.dart';
 
 /// Player profile table.
+/// v3.0: LP/Tier system replaces XP/Level system.
 class Players extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withDefault(const Constant('Adventurer'))();
+  // ─── Legacy columns (kept for migration safety) ─────────────────
   IntColumn get level => integer().withDefault(const Constant(1))();
   IntColumn get xp => integer().withDefault(const Constant(0))();
   IntColumn get totalXp => integer().withDefault(const Constant(0))();
+  // ─── v3.0: LP/Tier system ───────────────────────────────────────
+  /// Current tier name (lowercase): 'iron', 'bronze', 'silver', etc.
+  TextColumn get tier => text().withDefault(const Constant('iron'))();
+  /// Current division within tier: 4 (lowest) to 1 (highest).
+  IntColumn get division => integer().withDefault(const Constant(4))();
+  /// Current LP: 0–100.
+  IntColumn get lp => integer().withDefault(const Constant(0))();
+  /// Total quests completed (lifetime vanity stat).
+  IntColumn get totalQuestsCompleted => integer().withDefault(const Constant(0))();
+  /// Last time the player completed a quest (for 48h decay).
+  DateTimeColumn get lastActivityAt => dateTime().nullable()();
+  /// Whether a promotion is pending (LP hit 100, will promote on next launch).
+  BoolColumn get pendingPromotion => boolean().withDefault(const Constant(false))();
+  // ─── Existing columns ───────────────────────────────────────────
   TextColumn get rank => text().withDefault(const Constant('iron_1'))();
   TextColumn get classType => text().withDefault(const Constant('berserker'))();
-  // v2.0: Gold economy
+  /// v2.0: Gold economy
   IntColumn get gold => integer().withDefault(const Constant(0))();
-  // v2.0: Awakening flag — true once the player clears the Proving Grounds
+  /// v2.0: Awakening flag — true once the player clears the Proving Grounds
   BoolColumn get awakeningComplete => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 /// Player stats derived from workout categories.
+/// v3.0: Display names changed to Strength / Cardio / Flexibility
+/// but column names remain str / end / agi for backward compatibility.
 class Stats extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get playerId => integer().references(Players, #id)();
+  /// Strength (STR) — earned from strength quests.
   IntColumn get str => integer().withDefault(const Constant(0))();
+  /// Cardio (CDO) — earned from cardio quests (was "endurance").
   IntColumn get end => integer().withDefault(const Constant(0))();
+  /// Flexibility (FLX) — earned from flexibility quests (was "agility").
   IntColumn get agi => integer().withDefault(const Constant(0))();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 /// Daily and custom quests.
+/// v3.0: Added lpReward column for LP system.
 class Quests extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get title => text()();
@@ -35,8 +57,11 @@ class Quests extends Table {
   IntColumn get sets => integer().nullable()();
   IntColumn get reps => integer().nullable()();
   IntColumn get duration => integer().nullable()();
+  /// Legacy XP reward (kept for migration safety).
   IntColumn get xpReward => integer()();
-  // v2.0: Gold reward for quest completion
+  /// v3.0: LP reward for this quest (base, before bonuses).
+  IntColumn get lpReward => integer().withDefault(const Constant(8))();
+  /// v2.0: Gold reward for quest completion.
   IntColumn get goldReward => integer().withDefault(const Constant(0))();
   BoolColumn get isDaily => boolean().withDefault(const Constant(true))();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
@@ -125,6 +150,7 @@ class Inventory extends Table {
 }
 
 /// Rank promotion trial tracking.
+/// v3.0: Kept for legacy data but no longer used for new promotions.
 class RankTrials extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get playerId => integer().references(Players, #id)();

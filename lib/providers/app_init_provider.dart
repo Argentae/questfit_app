@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../db/database.dart';
 import 'database_provider.dart';
 import 'shop_provider.dart';
+import 'user_provider.dart';
 
 /// App initialization state.
 enum AppInitState {
@@ -11,7 +12,7 @@ enum AppInitState {
   loading,
   /// No profile found — show setup screen.
   needsSetup,
-  /// v2.0: Profile exists but Awakening (Levels 1-5) not completed.
+  /// v2.0: Profile exists but Awakening (first 5 days) not completed.
   awakening,
   /// Profile exists — ready to show home.
   ready,
@@ -20,8 +21,9 @@ enum AppInitState {
 /// Controls the app initialization flow:
 /// 1. Check if a player profile exists in Drift
 /// 2. Run streak verification on launch
-/// 3. v2.0: Check Awakening status (locked until Level 5)
-/// 4. Transition to ready, awakening, or setup state
+/// 3. v3.0: Process pending promotions and LP decay
+/// 4. v2.0: Check Awakening status
+/// 5. Transition to ready, awakening, or setup state
 final appInitProvider =
     AsyncNotifierProvider<AppInitNotifier, AppInitState>(AppInitNotifier.new);
 
@@ -41,20 +43,27 @@ class AppInitNotifier extends AsyncNotifier<AppInitState> {
       // Run streak verification (with streak insurance check)
       await _verifyStreak(db);
 
-      // v2.0: Check if Awakening is complete
-      if (!player.awakeningComplete && player.level < 5) {
-        // Auto-repair: if player level was bumped by a buggy health sync
-        // during Awakening, reset back to level 1
-        if (player.level > 1) {
-          await (db.update(db.players)
-                ..where((t) => t.id.equals(player.id)))
-              .write(const PlayersCompanion(
-            level: Value(1),
-            xp: Value(0),
-            totalXp: Value(0),
-          ));
-          debugPrint('Awakening: auto-repaired player level from ${player.level} to 1');
+      // v3.0: Process pending promotion (LP reached 100 yesterday)
+      if (player.pendingPromotion) {
+        final promoted = await ref
+            .read(userNotifierProvider.notifier)
+            .processPromotion();
+        if (promoted) {
+          debugPrint('LP System: Auto-promoted to next division!');
         }
+      }
+
+      // v3.0: Check for LP decay (48h inactivity)
+      final decayResult = await ref
+          .read(userNotifierProvider.notifier)
+          .applyInactivityDecay();
+      if (decayResult != null) {
+        debugPrint('LP Decay: Lost ${decayResult.lpLost} LP'
+            '${decayResult.shouldDemote ? " (DEMOTED!)" : ""}');
+      }
+
+      // v2.0: Check if Awakening is complete
+      if (!player.awakeningComplete) {
         return AppInitState.awakening;
       }
 
@@ -142,7 +151,7 @@ class AppInitNotifier extends AsyncNotifier<AppInitState> {
     // Run streak verification
     await _verifyStreak(db);
 
-    // v2.0: Transition to awakening (not ready) since Level < 5
+    // v2.0: Transition to awakening (not ready) since awakening not complete
     state = const AsyncData(AppInitState.awakening);
   }
 

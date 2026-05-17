@@ -77,7 +77,7 @@ class HealthSyncService {
     final since = lastSync ?? now.subtract(const Duration(days: 7));
     final todayStart = DateTime(now.year, now.month, now.day);
 
-    final results = <HealthXpResult>[];
+    final results = <HealthLpResult>[];
     var totalSteps = 0;
     var totalCalories = 0;
 
@@ -97,10 +97,10 @@ class HealthSyncService {
         final duration = point.dateTo.difference(point.dateFrom).inMinutes;
         if (duration <= 0) continue;
 
-        final xpResult = HealthXpConverter.convert(
+        final xpResult = HealthLpConverter.convert(
           workoutType: point.typeString,
           durationMinutes: duration,
-          playerLevel: playerLevel,
+          tierIndex: playerLevel, // Uses playerLevel as proxy for tier
         );
 
         results.add(xpResult);
@@ -122,9 +122,9 @@ class HealthSyncService {
       debugPrint('QuestFit SYNC: raw step records=${rawStepData.length}, '
           'deduped=${dedupedSteps.length}, totalSteps=$totalSteps');
 
-      final stepResult = HealthXpConverter.convertSteps(
+      final stepResult = HealthLpConverter.convertSteps(
         totalSteps: totalSteps,
-        playerLevel: playerLevel,
+        tierIndex: playerLevel,
       );
       if (stepResult != null) {
         results.add(stepResult);
@@ -163,7 +163,7 @@ class HealthSyncService {
       debugPrint('HealthConnect sync error: $e');
     }
 
-    final totalXp = results.fold<int>(0, (sum, r) => sum + r.xpAwarded);
+    final totalXp = results.fold<int>(0, (sum, r) => sum + r.lpAwarded);
 
     debugPrint('QuestFit SYNC RESULT: steps=$totalSteps, '
         'calories=$totalCalories, workouts=${results.length}, xp=$totalXp');
@@ -314,7 +314,7 @@ class TodayHealthSummary {
 class SyncResult {
   final int importedCount;
   final int totalXp;
-  final List<HealthXpResult> results;
+  final List<HealthLpResult> results;
   final int totalStepsToday;
   final int totalCaloriesToday;
 

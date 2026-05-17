@@ -6,6 +6,7 @@ import '../db/database.dart';
 import '../providers/quest_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/rank_trial_provider.dart';
+import '../engine/rank_engine.dart';
 import '../services/haptic_service.dart';
 import '../widgets/character_card.dart';
 import '../widgets/streak_bar.dart';
@@ -123,39 +124,61 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  /// v2.0: Shows a promotion banner when XP is capped at a boundary.
+  /// v3.0: Shows a promotion banner when LP reaches 100.
+  /// Tapping navigates to the Rank Trial screen to view tier progress.
+  /// Promotion is processed automatically on next app launch (anti-addiction).
   Widget _buildPromotionBanner(BuildContext context, WidgetRef ref) {
-    final isAtBoundary = ref.watch(isAtPromotionBoundaryProvider);
+    final isPending = ref.watch(isPromotionPendingProvider);
+    final nextRank = ref.watch(nextRankProvider);
 
-    return isAtBoundary.when(
-      data: (atBoundary) {
-        if (!atBoundary) return const SizedBox.shrink();
+    return isPending.when(
+      data: (pending) {
+        if (!pending) return const SizedBox.shrink();
+
+        final next = nextRank.valueOrNull;
+        final nextTierInfo = next != null
+            ? RankEngine.getTierInfo(next.tier, next.division)
+            : null;
+        final nextName = nextTierInfo?.fullName ?? 'Next Division';
 
         return GestureDetector(
-          onTap: () => context.go('/rank-trial'),
+          onTap: () {
+            HapticService.onQuestComplete();
+            context.push('/rank-trial');
+          },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: [
-                QuestFitColors.gold.withValues(alpha: 0.12),
-                QuestFitColors.orangeAccent.withValues(alpha: 0.08),
+                QuestFitColors.gold.withValues(alpha: 0.18),
+                QuestFitColors.orangeAccent.withValues(alpha: 0.12),
               ]),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: QuestFitColors.gold.withValues(alpha: 0.3),
+                color: QuestFitColors.gold.withValues(alpha: 0.4),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: QuestFitColors.gold.withValues(alpha: 0.15),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
             child: Row(
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: QuestFitColors.gold.withValues(alpha: 0.2),
+                    gradient: LinearGradient(colors: [
+                      QuestFitColors.gold.withValues(alpha: 0.3),
+                      QuestFitColors.orangeAccent.withValues(alpha: 0.2),
+                    ]),
                   ),
                   child: const Icon(Icons.military_tech_rounded,
-                      size: 20, color: QuestFitColors.gold),
+                      size: 22, color: QuestFitColors.gold),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -163,17 +186,17 @@ class HomeScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'PROMOTION AVAILABLE',
+                        '⚡ PROMOTION READY',
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.w800,
-                          fontSize: 11,
+                          fontSize: 12,
                           color: QuestFitColors.gold,
                           letterSpacing: 1,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'XP is capped — pass a Rank Trial to advance!',
+                        'You\'ll advance to $nextName on next login!',
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           color: QuestFitColors.textSecondary,
@@ -182,8 +205,8 @@ class HomeScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios_rounded,
-                    size: 14, color: QuestFitColors.gold),
+                const Icon(Icons.chevron_right_rounded,
+                    size: 22, color: QuestFitColors.gold),
               ],
             ),
           ),
@@ -203,34 +226,40 @@ class HomeScreen extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Text('Daily Quests',
-                style: GoogleFonts.cinzel(
-                    fontWeight: FontWeight.w700, fontSize: 16)),
-            const SizedBox(width: 8),
-            completedAsync.when(
-              data: (done) => totalAsync.when(
-                data: (total) => Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: QuestFitColors.emerald.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+        Flexible(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text('Daily Quests',
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.cinzel(
+                        fontWeight: FontWeight.w700, fontSize: 16)),
+              ),
+              const SizedBox(width: 8),
+              completedAsync.when(
+                data: (done) => totalAsync.when(
+                  data: (total) => Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: QuestFitColors.emerald.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text('$done/$total',
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: QuestFitColors.emerald)),
                   ),
-                  child: Text('$done/$total',
-                      style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: QuestFitColors.emerald)),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
                 ),
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
               ),
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
-          ],
+            ],
+          ),
         ),
         TextButton(
           onPressed: () => context.go('/quests'),
@@ -270,7 +299,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  /// Handles quest completion with haptics + XP/Gold toast.
+  /// Handles quest completion with haptics + LP/Gold toast.
   Future<void> _onQuestComplete(
       BuildContext context, WidgetRef ref, Quest quest) async {
     if (quest.isCompleted) return;
@@ -285,20 +314,12 @@ class HomeScreen extends ConsumerWidget {
 
     if (!context.mounted) return;
 
-    // Level-up haptic + toast
-    if (result.didLevelUp) {
+    // Promotion-ready haptic + toast
+    if (result.isPromotionReady) {
       HapticService.onLevelUp();
-      XpToast.show(context, result.xpAwarded, levelUp: true);
-    } else if (result.isXpCapped) {
-      // v2.0: XP capped — show promotion notification
-      XpToast.show(context, result.xpAwarded);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('⚔️ XP CAPPED — Promotion Trial required!'),
-        backgroundColor: QuestFitColors.gold,
-        duration: Duration(seconds: 3),
-      ));
+      LpToast.show(context, result.lpAwarded, promoted: true);
     } else {
-      XpToast.show(context, result.xpAwarded);
+      LpToast.show(context, result.lpAwarded);
     }
   }
 
@@ -328,7 +349,7 @@ class HomeScreen extends ConsumerWidget {
                         fontSize: 13,
                         color: QuestFitColors.purple)),
                 const SizedBox(height: 2),
-                Text('Complete all leg exercises for 3× bonus XP',
+                Text('Complete all leg exercises for 3× bonus LP',
                     style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
@@ -336,7 +357,7 @@ class HomeScreen extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const Text('+500 XP',
+              const Text('+24 LP',
                   style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 11,

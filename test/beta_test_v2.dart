@@ -1,59 +1,59 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:questfit_app/engine/xp_engine.dart';
-import 'package:questfit_app/engine/rank_engine.dart';
+import '../lib/engine/rank_engine.dart';
+import '../lib/engine/lp_engine.dart';
 
 void main() {
-  group('v2.0 Beta Tests', () {
-    test('Promotion Boundary Calculation', () {
-      // Iron starts at 1, Bronze starts at 5.
-      // Iron levels: 1 (I), 2 (II), 3 (III), 4 (IV)
-      expect(RankEngine.isPromotionBoundary(1), isFalse, reason: 'Level 1->2 is free');
-      expect(RankEngine.isPromotionBoundary(2), isTrue, reason: 'Level 2->3 needs trial');
-      expect(RankEngine.isPromotionBoundary(4), isTrue, reason: 'Level 4->5 (Iron->Bronze) needs trial');
-      
-      // Bronze: 5,6 (I), 7,8 (II), 9,10 (III), 11,12 (IV)
-      expect(RankEngine.isPromotionBoundary(5), isFalse);
-      expect(RankEngine.isPromotionBoundary(6), isTrue, reason: 'Bronze I -> II');
-      expect(RankEngine.isPromotionBoundary(12), isTrue, reason: 'Bronze IV -> Silver I');
-    });
+  // ── v3.0 Tier System Tests ──────────────────────────────────────────
 
-    test('XP Engine Capping', () {
-      // Start at Level 2 (which is a boundary)
-      // xpForLevel(2) = floor(100 * 2^1.5) = floor(282.84) = 282
-      final int needed = XpEngine.xpForLevel(2);
-      
-      final result = XpEngine.addXp(
-        currentLevel: 2,
-        currentXp: 0,
-        totalXp: 0,
-        amount: needed + 500, // Try to overshoot
-      );
-      
-      expect(result.newLevel, equals(2)); // Should not level up!
-      expect(result.newXp, equals(needed)); // XP should be capped at needed
-      expect(result.isXpCapped, isTrue);
-      
-      // Now simulate having a passed trial
-      final resultWithTrial = XpEngine.addXp(
-        currentLevel: 2,
-        currentXp: 0,
-        totalXp: 0,
-        amount: needed + 500,
-        hasActiveTrialOrPassed: true,
-      );
-      
-      expect(resultWithTrial.newLevel, greaterThan(2)); // Allowed to level up
-      expect(resultWithTrial.isXpCapped, isFalse);
-    });
-    
-    test('Gatekeeper Requirements', () {
-      // Level 4 is Iron IV -> Bronze I (Major transition)
-      final req = RankEngine.getTrialRequirements(4);
-      expect(req.trialType, equals('gatekeeper'));
-      
-      // Level 2 is Iron II -> Iron III (Tier transition)
-      final req2 = RankEngine.getTrialRequirements(2);
-      expect(req2.trialType, equals('consistency'));
-    });
-  });
+  // Test tier ladder navigation
+  assert(RankEngine.getNextRank('iron', 4)?.tier == 'iron');
+  assert(RankEngine.getNextRank('iron', 4)?.division == 3);
+  assert(RankEngine.getNextRank('iron', 1)?.tier == 'bronze');
+  assert(RankEngine.getNextRank('iron', 1)?.division == 4);
+  assert(RankEngine.getNextRank('challenger', 1) == null); // Max rank
+
+  // Test demotion
+  assert(RankEngine.getPreviousRank('iron', 4) == null); // Min rank
+  assert(RankEngine.getPreviousRank('bronze', 4)?.tier == 'iron');
+  assert(RankEngine.getPreviousRank('bronze', 4)?.division == 1);
+
+  // Test LP engine
+  final result1 = LpEngine.addLp(currentLp: 50, amount: 30);
+  assert(result1.newLp == 80);
+  assert(!result1.isPromotionReady);
+
+  final result2 = LpEngine.addLp(currentLp: 90, amount: 20);
+  assert(result2.newLp == 100);
+  assert(result2.isPromotionReady);
+
+  // Test LP cap
+  final result3 = LpEngine.addLp(currentLp: 95, amount: 20);
+  assert(result3.newLp == 100); // Capped at 100
+
+  // Test LP decay
+  final decay1 = LpEngine.removeLp(currentLp: 30, amount: 10);
+  assert(decay1.newLp == 20);
+  assert(!decay1.shouldDemote);
+
+  final decay2 = LpEngine.removeLp(currentLp: 5, amount: 10);
+  assert(decay2.newLp == 75); // Landing LP after demotion
+  assert(decay2.shouldDemote);
+
+  // Test mastery bonus
+  final lp1 = LpEngine.calculateQuestLp(baseLp: 8, masteryPoints: 50, currentStreak: 0);
+  assert(lp1 == 10); // 8 + 2 mastery bonus
+
+  final lp2 = LpEngine.calculateQuestLp(baseLp: 8, masteryPoints: 0, currentStreak: 7);
+  assert(lp2 == 10); // 8 + 2 streak bonus
+
+  // Test decay amounts by tier
+  assert(RankEngine.getDecayAmount('iron') == 5);
+  assert(RankEngine.getDecayAmount('gold') == 10);
+  assert(RankEngine.getDecayAmount('diamond') == 20);
+
+  // Test tier info
+  final info = RankEngine.getTierInfo('silver', 2);
+  assert(info.fullName == 'Silver III');
+  assert(info.tierIndex == 2);
+
+  print('✅ All v3.0 LP/Tier system tests passed!');
 }

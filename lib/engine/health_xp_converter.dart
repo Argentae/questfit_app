@@ -1,33 +1,37 @@
-/// QuestFit Health Connect → XP Converter.
-/// Converts raw Health Connect workout data into QuestFit XP and quest records.
-class HealthXpConverter {
-  const HealthXpConverter._();
+/// QuestFit Health Connect → LP Converter.
+/// Converts raw Health Connect workout data into QuestFit LP and quest records.
+///
+/// v3.0: Awards LP instead of XP. Health workouts give 3–8 base LP.
+class HealthLpConverter {
+  const HealthLpConverter._();
 
-  /// Convert a Health Connect workout into a QuestFit XP award.
+  /// Convert a Health Connect workout into a QuestFit LP award.
   ///
   /// [workoutType] should be a string like 'WEIGHT_TRAINING', 'RUNNING', etc.
   /// [durationMinutes] is the workout duration in minutes.
   /// [caloriesBurned] is optional active calories from the session.
-  /// [playerLevel] is the current player level for XP scaling.
-  static HealthXpResult convert({
+  /// [tierIndex] is the current tier index for LP scaling.
+  static HealthLpResult convert({
     required String workoutType,
     required int durationMinutes,
-    required int playerLevel,
+    required int tierIndex,
     int? caloriesBurned,
   }) {
-    final levelScale = 1.0 + (playerLevel * 0.02);
     final mapping = _typeMapping(workoutType);
 
-    // Base XP from duration × rate × level scale
-    var xp = (durationMinutes * mapping.xpPerMinute * levelScale).round();
+    // Base LP from duration: longer workouts = more LP, capped
+    var lp = (durationMinutes * mapping.lpPerMinute / 10).round().clamp(3, 12);
 
-    // Calorie bonus: +1 XP per 10 kcal
+    // Calorie bonus: +1 LP per 100 kcal
     if (caloriesBurned != null && caloriesBurned > 0) {
-      xp += (caloriesBurned / 10).floor();
+      lp += (caloriesBurned / 100).floor().clamp(0, 5);
     }
 
-    return HealthXpResult(
-      xpAwarded: xp,
+    // Slight tier bonus
+    lp += (tierIndex ~/ 3);
+
+    return HealthLpResult(
+      lpAwarded: lp.clamp(3, 15),
       category: mapping.category,
       questTitle: '${mapping.label} (Watch)',
       questDescription: '$durationMinutes min · Auto-imported',
@@ -35,18 +39,18 @@ class HealthXpConverter {
     );
   }
 
-  /// Convert daily steps into bonus XP (threshold: ≥ 8,000 steps).
-  static HealthXpResult? convertSteps({
+  /// Convert daily steps into bonus LP (threshold: ≥ 8,000 steps).
+  static HealthLpResult? convertSteps({
     required int totalSteps,
-    required int playerLevel,
+    required int tierIndex,
   }) {
     if (totalSteps < 8000) return null;
 
-    final levelScale = 1.0 + (playerLevel * 0.02);
-    final xp = (50 * levelScale).round();
+    // Steps give a flat 5 LP base
+    final lp = 5 + (tierIndex ~/ 3);
 
-    return HealthXpResult(
-      xpAwarded: xp,
+    return HealthLpResult(
+      lpAwarded: lp.clamp(5, 10),
       category: 'cardio',
       questTitle: 'Daily Walk Quest',
       questDescription: '${_formatSteps(totalSteps)} steps · Auto-imported',
@@ -60,7 +64,7 @@ class HealthXpConverter {
     // Strength types
     if (t.contains('WEIGHT') || t.contains('STRENGTH') ||
         t.contains('CALISTHENICS') || t.contains('FUNCTIONAL')) {
-      return const _WorkoutMapping('strength', 8, 'Weight Training', '🏋️');
+      return const _WorkoutMapping('strength', 3, 'Weight Training', '🏋️');
     }
 
     // Cardio types
@@ -68,17 +72,17 @@ class HealthXpConverter {
         t.contains('SWIMMING') || t.contains('ROWING') ||
         t.contains('ELLIPTICAL') || t.contains('STAIR') ||
         t.contains('HIIT') || t.contains('AEROBIC')) {
-      return const _WorkoutMapping('cardio', 6, 'Cardio Session', '🏃');
+      return const _WorkoutMapping('cardio', 2, 'Cardio Session', '🏃');
     }
 
     // Flexibility types
     if (t.contains('YOGA') || t.contains('STRETCHING') ||
         t.contains('PILATES') || t.contains('FLEXIBILITY')) {
-      return const _WorkoutMapping('flexibility', 5, 'Flexibility Session', '🧘');
+      return const _WorkoutMapping('flexibility', 2, 'Flexibility Session', '🧘');
     }
 
     // Default: general exercise → cardio
-    return const _WorkoutMapping('cardio', 5, 'Exercise Session', '🏃');
+    return const _WorkoutMapping('cardio', 2, 'Exercise Session', '🏃');
   }
 
   static String _formatSteps(int steps) {
@@ -87,15 +91,15 @@ class HealthXpConverter {
   }
 }
 
-class HealthXpResult {
-  final int xpAwarded;
+class HealthLpResult {
+  final int lpAwarded;
   final String category;
   final String questTitle;
   final String questDescription;
   final String emoji;
 
-  const HealthXpResult({
-    required this.xpAwarded,
+  const HealthLpResult({
+    required this.lpAwarded,
     required this.category,
     required this.questTitle,
     required this.questDescription,
@@ -105,9 +109,9 @@ class HealthXpResult {
 
 class _WorkoutMapping {
   final String category;
-  final int xpPerMinute;
+  final int lpPerMinute; // Scaled down from XP: used as lp per 10 min
   final String label;
   final String emoji;
 
-  const _WorkoutMapping(this.category, this.xpPerMinute, this.label, this.emoji);
+  const _WorkoutMapping(this.category, this.lpPerMinute, this.label, this.emoji);
 }

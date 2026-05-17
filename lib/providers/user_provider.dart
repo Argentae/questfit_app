@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../db/database.dart';
+import '../engine/lp_engine.dart';
 import '../engine/rank_engine.dart';
-import '../engine/xp_engine.dart';
 import 'database_provider.dart';
 
 // ─── Reactive Streams ────────────────────────────────────────────────
@@ -30,19 +30,19 @@ final streakStreamProvider = StreamProvider<Streak>((ref) {
 
 // ─── Derived / Computed Providers ────────────────────────────────────
 
-/// Current XP progress (bar data).
-final xpProgressProvider = Provider<AsyncValue<XpProgress>>((ref) {
+/// v3.0: Current LP progress (bar data, 0–100).
+final lpProgressProvider = Provider<AsyncValue<LpProgress>>((ref) {
   final playerAsync = ref.watch(playerStreamProvider);
   return playerAsync.whenData(
-    (player) => XpEngine.getProgress(player.level, player.xp),
+    (player) => LpEngine.getProgress(player.lp),
   );
 });
 
-/// Current rank info derived from player level.
-final rankInfoProvider = Provider<AsyncValue<RankInfo>>((ref) {
+/// v3.0: Current tier info derived from player's tier/division.
+final tierInfoProvider = Provider<AsyncValue<TierInfo>>((ref) {
   final playerAsync = ref.watch(playerStreamProvider);
   return playerAsync.whenData(
-    (player) => RankEngine.getRank(player.level),
+    (player) => RankEngine.getTierInfo(player.tier, player.division),
   );
 });
 
@@ -58,6 +58,30 @@ final awakeningCompleteProvider = Provider<AsyncValue<bool>>((ref) {
   return playerAsync.whenData((player) => player.awakeningComplete);
 });
 
+/// v3.0: Whether a promotion is pending (LP reached 100).
+final pendingPromotionProvider = Provider<AsyncValue<bool>>((ref) {
+  final playerAsync = ref.watch(playerStreamProvider);
+  return playerAsync.whenData((player) => player.pendingPromotion);
+});
+
+/// v3.0: Total quests completed (vanity stat).
+final totalQuestsCompletedProvider = Provider<AsyncValue<int>>((ref) {
+  final playerAsync = ref.watch(playerStreamProvider);
+  return playerAsync.whenData((player) => player.totalQuestsCompleted);
+});
+
+// ─── Legacy Providers (kept for backward compat) ─────────────────────
+
+/// @deprecated Use tierInfoProvider instead.
+final rankInfoProvider = Provider<AsyncValue<TierInfo>>((ref) {
+  return ref.watch(tierInfoProvider);
+});
+
+/// @deprecated Use lpProgressProvider instead.
+final xpProgressProvider = Provider<AsyncValue<LpProgress>>((ref) {
+  return ref.watch(lpProgressProvider);
+});
+
 // ─── Mutations ───────────────────────────────────────────────────────
 
 /// Notifier that handles all player-write operations.
@@ -70,47 +94,138 @@ class UserNotifier extends AsyncNotifier<void> {
 
   QuestFitDatabase get _db => ref.read(databaseProvider);
 
-  /// Award XP to the player, handling level-ups and rank changes.
-  /// v2.0: Supports XP capping at promotion boundaries.
-  /// Returns the [XpResult] so callers can react (animations, haptics).
-  Future<XpResult> awardXp(int amount) async {
+  /// v3.0: Award LP to the player.
+  /// Returns an [LpResult] so callers can react (animations, haptics).
+  Future<LpResult> awardLp(int amount) async {
     final player =
         await ((_db.select(_db.players))..limit(1)).getSingle();
 
-    // Check if there's a passed trial allowing promotion
-    final passedTrial = await (_db.select(_db.rankTrials)
-          ..where((t) =>
-              t.playerId.equals(player.id) & t.status.equals('passed')))
-        .getSingleOrNull();
-
-    final result = XpEngine.addXp(
-      currentLevel: player.level,
-      currentXp: player.xp,
-      totalXp: player.totalXp,
+    final result = LpEngine.addLp(
+      currentLp: player.lp,
       amount: amount,
-      hasActiveTrialOrPassed: passedTrial != null,
     );
 
     // Update player row
+    final companion = PlayersCompanion(
+      lp: Value(result.newLp),
+      lastActivityAt: Value(DateTime.now()),
+    );
+
+    // If LP hit 100, mark pending promotion
+    if (result.isPromotionReady) {
+      await (_db.update(_db.players)
+            ..where((t) => t.id.equals(player.id)))
+          .write(PlayersCompanion(
+        lp: Value(result.newLp),
+        lastActivityAt: Value(DateTime.now()),
+        pendingPromotion: const Value(true),
+      ));
+    } else {
+      await (_db.update(_db.players)
+            ..where((t) => t.id.equals(player.id)))
+          .write(companion);
+    }
+
+    return result;
+  }
+
+  /// v3.0: Process a pending promotion — advance to next division/tier.
+  /// Called on app launch when pendingPromotion is true.
+  Future<bool> processPromotion() async {
+    final player =
+        await ((_db.select(_db.players))..limit(1)).getSingle();
+
+    if (!player.pendingPromotion) return false;
+
+    final next = RankEngine.getNextRank(player.tier, player.division);
+    if (next == null) {
+      // Already at max rank, clear pending flag
+      await (_db.update(_db.players)
+            ..where((t) => t.id.equals(player.id)))
+          .write(const PlayersCompanion(
+        pendingPromotion: Value(false),
+      ));
+      return false;
+    }
+
+    // Promote!
     await (_db.update(_db.players)
           ..where((t) => t.id.equals(player.id)))
         .write(PlayersCompanion(
-      level: Value(result.newLevel),
-      xp: Value(result.newXp),
-      totalXp: Value(result.totalXp),
-      rank: Value(RankEngine.getRankKey(result.newLevel)),
+      tier: Value(next.tier),
+      division: Value(next.division),
+      lp: const Value(0), // Reset LP in new division
+      pendingPromotion: const Value(false),
+      rank: Value('${next.tier}_${next.division}'),
     ));
 
-    // Record rank-up if applicable
-    if (RankEngine.didRankUp(player.level, result.newLevel)) {
-      await _db.into(_db.rankHistory).insert(RankHistoryCompanion(
-        playerId: Value(player.id),
-        rank: Value(RankEngine.getRankKey(result.newLevel)),
-        achievedAt: Value(DateTime.now()),
+    // Record rank history
+    await _db.into(_db.rankHistory).insert(RankHistoryCompanion(
+      playerId: Value(player.id),
+      rank: Value('${next.tier}_${next.division}'),
+      achievedAt: Value(DateTime.now()),
+    ));
+
+    return true;
+  }
+
+  /// v3.0: Apply LP decay for inactivity (48h without training).
+  /// Returns decay result, or null if no decay needed.
+  Future<LpDecayResult?> applyInactivityDecay() async {
+    final player =
+        await ((_db.select(_db.players))..limit(1)).getSingle();
+
+    if (!RankEngine.shouldDecay(player.lastActivityAt)) return null;
+
+    final decayAmount = RankEngine.getDecayAmount(player.tier);
+    final result = LpEngine.removeLp(
+      currentLp: player.lp,
+      amount: decayAmount,
+    );
+
+    if (result.shouldDemote) {
+      // Demotion!
+      final prev = RankEngine.getPreviousRank(player.tier, player.division);
+      if (prev != null) {
+        await (_db.update(_db.players)
+              ..where((t) => t.id.equals(player.id)))
+            .write(PlayersCompanion(
+          tier: Value(prev.tier),
+          division: Value(prev.division),
+          lp: Value(result.newLp), // Landing LP (75)
+          pendingPromotion: const Value(false),
+          rank: Value('${prev.tier}_${prev.division}'),
+        ));
+      } else {
+        // Already at Iron IV, just set LP to 0
+        await (_db.update(_db.players)
+              ..where((t) => t.id.equals(player.id)))
+            .write(const PlayersCompanion(
+          lp: Value(0),
+          pendingPromotion: Value(false),
+        ));
+      }
+    } else {
+      await (_db.update(_db.players)
+            ..where((t) => t.id.equals(player.id)))
+          .write(PlayersCompanion(
+        lp: Value(result.newLp),
+        pendingPromotion: const Value(false),
       ));
     }
 
     return result;
+  }
+
+  /// v3.0: Increment total quests completed counter.
+  Future<void> incrementQuestsCompleted() async {
+    final player =
+        await ((_db.select(_db.players))..limit(1)).getSingle();
+    await (_db.update(_db.players)
+          ..where((t) => t.id.equals(player.id)))
+        .write(PlayersCompanion(
+      totalQuestsCompleted: Value(player.totalQuestsCompleted + 1),
+    ));
   }
 
   /// v2.0: Award gold to the player.
@@ -174,6 +289,22 @@ class UserNotifier extends AsyncNotifier<void> {
     await (_db.update(_db.stats)
           ..where((t) => t.id.equals(stat.id)))
         .write(companion);
+  }
+
+  /// Get the mastery points for a given stat key.
+  Future<int> getMasteryPoints(String statKey) async {
+    final stat =
+        await ((_db.select(_db.stats))..limit(1)).getSingle();
+    switch (statKey) {
+      case 'str':
+        return stat.str;
+      case 'end':
+        return stat.end;
+      case 'agi':
+        return stat.agi;
+      default:
+        return 0;
+    }
   }
 
   /// Update the player's name.

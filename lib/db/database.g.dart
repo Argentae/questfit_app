@@ -63,6 +63,76 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _tierMeta = const VerificationMeta('tier');
+  @override
+  late final GeneratedColumn<String> tier = GeneratedColumn<String>(
+    'tier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('iron'),
+  );
+  static const VerificationMeta _divisionMeta = const VerificationMeta(
+    'division',
+  );
+  @override
+  late final GeneratedColumn<int> division = GeneratedColumn<int>(
+    'division',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(4),
+  );
+  static const VerificationMeta _lpMeta = const VerificationMeta('lp');
+  @override
+  late final GeneratedColumn<int> lp = GeneratedColumn<int>(
+    'lp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _totalQuestsCompletedMeta =
+      const VerificationMeta('totalQuestsCompleted');
+  @override
+  late final GeneratedColumn<int> totalQuestsCompleted = GeneratedColumn<int>(
+    'total_quests_completed',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastActivityAtMeta = const VerificationMeta(
+    'lastActivityAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastActivityAt =
+      GeneratedColumn<DateTime>(
+        'last_activity_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _pendingPromotionMeta = const VerificationMeta(
+    'pendingPromotion',
+  );
+  @override
+  late final GeneratedColumn<bool> pendingPromotion = GeneratedColumn<bool>(
+    'pending_promotion',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("pending_promotion" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _rankMeta = const VerificationMeta('rank');
   @override
   late final GeneratedColumn<String> rank = GeneratedColumn<String>(
@@ -129,6 +199,12 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     level,
     xp,
     totalXp,
+    tier,
+    division,
+    lp,
+    totalQuestsCompleted,
+    lastActivityAt,
+    pendingPromotion,
     rank,
     classType,
     gold,
@@ -169,6 +245,48 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
       context.handle(
         _totalXpMeta,
         totalXp.isAcceptableOrUnknown(data['total_xp']!, _totalXpMeta),
+      );
+    }
+    if (data.containsKey('tier')) {
+      context.handle(
+        _tierMeta,
+        tier.isAcceptableOrUnknown(data['tier']!, _tierMeta),
+      );
+    }
+    if (data.containsKey('division')) {
+      context.handle(
+        _divisionMeta,
+        division.isAcceptableOrUnknown(data['division']!, _divisionMeta),
+      );
+    }
+    if (data.containsKey('lp')) {
+      context.handle(_lpMeta, lp.isAcceptableOrUnknown(data['lp']!, _lpMeta));
+    }
+    if (data.containsKey('total_quests_completed')) {
+      context.handle(
+        _totalQuestsCompletedMeta,
+        totalQuestsCompleted.isAcceptableOrUnknown(
+          data['total_quests_completed']!,
+          _totalQuestsCompletedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_activity_at')) {
+      context.handle(
+        _lastActivityAtMeta,
+        lastActivityAt.isAcceptableOrUnknown(
+          data['last_activity_at']!,
+          _lastActivityAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pending_promotion')) {
+      context.handle(
+        _pendingPromotionMeta,
+        pendingPromotion.isAcceptableOrUnknown(
+          data['pending_promotion']!,
+          _pendingPromotionMeta,
+        ),
       );
     }
     if (data.containsKey('rank')) {
@@ -238,6 +356,35 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
             DriftSqlType.int,
             data['${effectivePrefix}total_xp'],
           )!,
+      tier:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}tier'],
+          )!,
+      division:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}division'],
+          )!,
+      lp:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}lp'],
+          )!,
+      totalQuestsCompleted:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}total_quests_completed'],
+          )!,
+      lastActivityAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_activity_at'],
+      ),
+      pendingPromotion:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}pending_promotion'],
+          )!,
       rank:
           attachedDatabase.typeMapping.read(
             DriftSqlType.string,
@@ -278,9 +425,31 @@ class Player extends DataClass implements Insertable<Player> {
   final int level;
   final int xp;
   final int totalXp;
+
+  /// Current tier name (lowercase): 'iron', 'bronze', 'silver', etc.
+  final String tier;
+
+  /// Current division within tier: 4 (lowest) to 1 (highest).
+  final int division;
+
+  /// Current LP: 0–100.
+  final int lp;
+
+  /// Total quests completed (lifetime vanity stat).
+  final int totalQuestsCompleted;
+
+  /// Last time the player completed a quest (for 48h decay).
+  final DateTime? lastActivityAt;
+
+  /// Whether a promotion is pending (LP hit 100, will promote on next launch).
+  final bool pendingPromotion;
   final String rank;
   final String classType;
+
+  /// v2.0: Gold economy
   final int gold;
+
+  /// v2.0: Awakening flag — true once the player clears the Proving Grounds
   final bool awakeningComplete;
   final DateTime createdAt;
   const Player({
@@ -289,6 +458,12 @@ class Player extends DataClass implements Insertable<Player> {
     required this.level,
     required this.xp,
     required this.totalXp,
+    required this.tier,
+    required this.division,
+    required this.lp,
+    required this.totalQuestsCompleted,
+    this.lastActivityAt,
+    required this.pendingPromotion,
     required this.rank,
     required this.classType,
     required this.gold,
@@ -303,6 +478,14 @@ class Player extends DataClass implements Insertable<Player> {
     map['level'] = Variable<int>(level);
     map['xp'] = Variable<int>(xp);
     map['total_xp'] = Variable<int>(totalXp);
+    map['tier'] = Variable<String>(tier);
+    map['division'] = Variable<int>(division);
+    map['lp'] = Variable<int>(lp);
+    map['total_quests_completed'] = Variable<int>(totalQuestsCompleted);
+    if (!nullToAbsent || lastActivityAt != null) {
+      map['last_activity_at'] = Variable<DateTime>(lastActivityAt);
+    }
+    map['pending_promotion'] = Variable<bool>(pendingPromotion);
     map['rank'] = Variable<String>(rank);
     map['class_type'] = Variable<String>(classType);
     map['gold'] = Variable<int>(gold);
@@ -318,6 +501,15 @@ class Player extends DataClass implements Insertable<Player> {
       level: Value(level),
       xp: Value(xp),
       totalXp: Value(totalXp),
+      tier: Value(tier),
+      division: Value(division),
+      lp: Value(lp),
+      totalQuestsCompleted: Value(totalQuestsCompleted),
+      lastActivityAt:
+          lastActivityAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(lastActivityAt),
+      pendingPromotion: Value(pendingPromotion),
       rank: Value(rank),
       classType: Value(classType),
       gold: Value(gold),
@@ -337,6 +529,14 @@ class Player extends DataClass implements Insertable<Player> {
       level: serializer.fromJson<int>(json['level']),
       xp: serializer.fromJson<int>(json['xp']),
       totalXp: serializer.fromJson<int>(json['totalXp']),
+      tier: serializer.fromJson<String>(json['tier']),
+      division: serializer.fromJson<int>(json['division']),
+      lp: serializer.fromJson<int>(json['lp']),
+      totalQuestsCompleted: serializer.fromJson<int>(
+        json['totalQuestsCompleted'],
+      ),
+      lastActivityAt: serializer.fromJson<DateTime?>(json['lastActivityAt']),
+      pendingPromotion: serializer.fromJson<bool>(json['pendingPromotion']),
       rank: serializer.fromJson<String>(json['rank']),
       classType: serializer.fromJson<String>(json['classType']),
       gold: serializer.fromJson<int>(json['gold']),
@@ -353,6 +553,12 @@ class Player extends DataClass implements Insertable<Player> {
       'level': serializer.toJson<int>(level),
       'xp': serializer.toJson<int>(xp),
       'totalXp': serializer.toJson<int>(totalXp),
+      'tier': serializer.toJson<String>(tier),
+      'division': serializer.toJson<int>(division),
+      'lp': serializer.toJson<int>(lp),
+      'totalQuestsCompleted': serializer.toJson<int>(totalQuestsCompleted),
+      'lastActivityAt': serializer.toJson<DateTime?>(lastActivityAt),
+      'pendingPromotion': serializer.toJson<bool>(pendingPromotion),
       'rank': serializer.toJson<String>(rank),
       'classType': serializer.toJson<String>(classType),
       'gold': serializer.toJson<int>(gold),
@@ -367,6 +573,12 @@ class Player extends DataClass implements Insertable<Player> {
     int? level,
     int? xp,
     int? totalXp,
+    String? tier,
+    int? division,
+    int? lp,
+    int? totalQuestsCompleted,
+    Value<DateTime?> lastActivityAt = const Value.absent(),
+    bool? pendingPromotion,
     String? rank,
     String? classType,
     int? gold,
@@ -378,6 +590,13 @@ class Player extends DataClass implements Insertable<Player> {
     level: level ?? this.level,
     xp: xp ?? this.xp,
     totalXp: totalXp ?? this.totalXp,
+    tier: tier ?? this.tier,
+    division: division ?? this.division,
+    lp: lp ?? this.lp,
+    totalQuestsCompleted: totalQuestsCompleted ?? this.totalQuestsCompleted,
+    lastActivityAt:
+        lastActivityAt.present ? lastActivityAt.value : this.lastActivityAt,
+    pendingPromotion: pendingPromotion ?? this.pendingPromotion,
     rank: rank ?? this.rank,
     classType: classType ?? this.classType,
     gold: gold ?? this.gold,
@@ -391,6 +610,21 @@ class Player extends DataClass implements Insertable<Player> {
       level: data.level.present ? data.level.value : this.level,
       xp: data.xp.present ? data.xp.value : this.xp,
       totalXp: data.totalXp.present ? data.totalXp.value : this.totalXp,
+      tier: data.tier.present ? data.tier.value : this.tier,
+      division: data.division.present ? data.division.value : this.division,
+      lp: data.lp.present ? data.lp.value : this.lp,
+      totalQuestsCompleted:
+          data.totalQuestsCompleted.present
+              ? data.totalQuestsCompleted.value
+              : this.totalQuestsCompleted,
+      lastActivityAt:
+          data.lastActivityAt.present
+              ? data.lastActivityAt.value
+              : this.lastActivityAt,
+      pendingPromotion:
+          data.pendingPromotion.present
+              ? data.pendingPromotion.value
+              : this.pendingPromotion,
       rank: data.rank.present ? data.rank.value : this.rank,
       classType: data.classType.present ? data.classType.value : this.classType,
       gold: data.gold.present ? data.gold.value : this.gold,
@@ -410,6 +644,12 @@ class Player extends DataClass implements Insertable<Player> {
           ..write('level: $level, ')
           ..write('xp: $xp, ')
           ..write('totalXp: $totalXp, ')
+          ..write('tier: $tier, ')
+          ..write('division: $division, ')
+          ..write('lp: $lp, ')
+          ..write('totalQuestsCompleted: $totalQuestsCompleted, ')
+          ..write('lastActivityAt: $lastActivityAt, ')
+          ..write('pendingPromotion: $pendingPromotion, ')
           ..write('rank: $rank, ')
           ..write('classType: $classType, ')
           ..write('gold: $gold, ')
@@ -426,6 +666,12 @@ class Player extends DataClass implements Insertable<Player> {
     level,
     xp,
     totalXp,
+    tier,
+    division,
+    lp,
+    totalQuestsCompleted,
+    lastActivityAt,
+    pendingPromotion,
     rank,
     classType,
     gold,
@@ -441,6 +687,12 @@ class Player extends DataClass implements Insertable<Player> {
           other.level == this.level &&
           other.xp == this.xp &&
           other.totalXp == this.totalXp &&
+          other.tier == this.tier &&
+          other.division == this.division &&
+          other.lp == this.lp &&
+          other.totalQuestsCompleted == this.totalQuestsCompleted &&
+          other.lastActivityAt == this.lastActivityAt &&
+          other.pendingPromotion == this.pendingPromotion &&
           other.rank == this.rank &&
           other.classType == this.classType &&
           other.gold == this.gold &&
@@ -454,6 +706,12 @@ class PlayersCompanion extends UpdateCompanion<Player> {
   final Value<int> level;
   final Value<int> xp;
   final Value<int> totalXp;
+  final Value<String> tier;
+  final Value<int> division;
+  final Value<int> lp;
+  final Value<int> totalQuestsCompleted;
+  final Value<DateTime?> lastActivityAt;
+  final Value<bool> pendingPromotion;
   final Value<String> rank;
   final Value<String> classType;
   final Value<int> gold;
@@ -465,6 +723,12 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.level = const Value.absent(),
     this.xp = const Value.absent(),
     this.totalXp = const Value.absent(),
+    this.tier = const Value.absent(),
+    this.division = const Value.absent(),
+    this.lp = const Value.absent(),
+    this.totalQuestsCompleted = const Value.absent(),
+    this.lastActivityAt = const Value.absent(),
+    this.pendingPromotion = const Value.absent(),
     this.rank = const Value.absent(),
     this.classType = const Value.absent(),
     this.gold = const Value.absent(),
@@ -477,6 +741,12 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.level = const Value.absent(),
     this.xp = const Value.absent(),
     this.totalXp = const Value.absent(),
+    this.tier = const Value.absent(),
+    this.division = const Value.absent(),
+    this.lp = const Value.absent(),
+    this.totalQuestsCompleted = const Value.absent(),
+    this.lastActivityAt = const Value.absent(),
+    this.pendingPromotion = const Value.absent(),
     this.rank = const Value.absent(),
     this.classType = const Value.absent(),
     this.gold = const Value.absent(),
@@ -489,6 +759,12 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Expression<int>? level,
     Expression<int>? xp,
     Expression<int>? totalXp,
+    Expression<String>? tier,
+    Expression<int>? division,
+    Expression<int>? lp,
+    Expression<int>? totalQuestsCompleted,
+    Expression<DateTime>? lastActivityAt,
+    Expression<bool>? pendingPromotion,
     Expression<String>? rank,
     Expression<String>? classType,
     Expression<int>? gold,
@@ -501,6 +777,13 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       if (level != null) 'level': level,
       if (xp != null) 'xp': xp,
       if (totalXp != null) 'total_xp': totalXp,
+      if (tier != null) 'tier': tier,
+      if (division != null) 'division': division,
+      if (lp != null) 'lp': lp,
+      if (totalQuestsCompleted != null)
+        'total_quests_completed': totalQuestsCompleted,
+      if (lastActivityAt != null) 'last_activity_at': lastActivityAt,
+      if (pendingPromotion != null) 'pending_promotion': pendingPromotion,
       if (rank != null) 'rank': rank,
       if (classType != null) 'class_type': classType,
       if (gold != null) 'gold': gold,
@@ -515,6 +798,12 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Value<int>? level,
     Value<int>? xp,
     Value<int>? totalXp,
+    Value<String>? tier,
+    Value<int>? division,
+    Value<int>? lp,
+    Value<int>? totalQuestsCompleted,
+    Value<DateTime?>? lastActivityAt,
+    Value<bool>? pendingPromotion,
     Value<String>? rank,
     Value<String>? classType,
     Value<int>? gold,
@@ -527,6 +816,12 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       level: level ?? this.level,
       xp: xp ?? this.xp,
       totalXp: totalXp ?? this.totalXp,
+      tier: tier ?? this.tier,
+      division: division ?? this.division,
+      lp: lp ?? this.lp,
+      totalQuestsCompleted: totalQuestsCompleted ?? this.totalQuestsCompleted,
+      lastActivityAt: lastActivityAt ?? this.lastActivityAt,
+      pendingPromotion: pendingPromotion ?? this.pendingPromotion,
       rank: rank ?? this.rank,
       classType: classType ?? this.classType,
       gold: gold ?? this.gold,
@@ -552,6 +847,24 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     }
     if (totalXp.present) {
       map['total_xp'] = Variable<int>(totalXp.value);
+    }
+    if (tier.present) {
+      map['tier'] = Variable<String>(tier.value);
+    }
+    if (division.present) {
+      map['division'] = Variable<int>(division.value);
+    }
+    if (lp.present) {
+      map['lp'] = Variable<int>(lp.value);
+    }
+    if (totalQuestsCompleted.present) {
+      map['total_quests_completed'] = Variable<int>(totalQuestsCompleted.value);
+    }
+    if (lastActivityAt.present) {
+      map['last_activity_at'] = Variable<DateTime>(lastActivityAt.value);
+    }
+    if (pendingPromotion.present) {
+      map['pending_promotion'] = Variable<bool>(pendingPromotion.value);
     }
     if (rank.present) {
       map['rank'] = Variable<String>(rank.value);
@@ -579,6 +892,12 @@ class PlayersCompanion extends UpdateCompanion<Player> {
           ..write('level: $level, ')
           ..write('xp: $xp, ')
           ..write('totalXp: $totalXp, ')
+          ..write('tier: $tier, ')
+          ..write('division: $division, ')
+          ..write('lp: $lp, ')
+          ..write('totalQuestsCompleted: $totalQuestsCompleted, ')
+          ..write('lastActivityAt: $lastActivityAt, ')
+          ..write('pendingPromotion: $pendingPromotion, ')
           ..write('rank: $rank, ')
           ..write('classType: $classType, ')
           ..write('gold: $gold, ')
@@ -770,8 +1089,14 @@ class $StatsTable extends Stats with TableInfo<$StatsTable, Stat> {
 class Stat extends DataClass implements Insertable<Stat> {
   final int id;
   final int playerId;
+
+  /// Strength (STR) — earned from strength quests.
   final int str;
+
+  /// Cardio (CDO) — earned from cardio quests (was "endurance").
   final int end;
+
+  /// Flexibility (FLX) — earned from flexibility quests (was "agility").
   final int agi;
   final DateTime updatedAt;
   const Stat({
@@ -1071,6 +1396,18 @@ class $QuestsTable extends Quests with TableInfo<$QuestsTable, Quest> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _lpRewardMeta = const VerificationMeta(
+    'lpReward',
+  );
+  @override
+  late final GeneratedColumn<int> lpReward = GeneratedColumn<int>(
+    'lp_reward',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(8),
+  );
   static const VerificationMeta _goldRewardMeta = const VerificationMeta(
     'goldReward',
   );
@@ -1146,6 +1483,7 @@ class $QuestsTable extends Quests with TableInfo<$QuestsTable, Quest> {
     reps,
     duration,
     xpReward,
+    lpReward,
     goldReward,
     isDaily,
     isCompleted,
@@ -1219,6 +1557,12 @@ class $QuestsTable extends Quests with TableInfo<$QuestsTable, Quest> {
       );
     } else if (isInserting) {
       context.missing(_xpRewardMeta);
+    }
+    if (data.containsKey('lp_reward')) {
+      context.handle(
+        _lpRewardMeta,
+        lpReward.isAcceptableOrUnknown(data['lp_reward']!, _lpRewardMeta),
+      );
     }
     if (data.containsKey('gold_reward')) {
       context.handle(
@@ -1302,6 +1646,11 @@ class $QuestsTable extends Quests with TableInfo<$QuestsTable, Quest> {
             DriftSqlType.int,
             data['${effectivePrefix}xp_reward'],
           )!,
+      lpReward:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}lp_reward'],
+          )!,
       goldReward:
           attachedDatabase.typeMapping.read(
             DriftSqlType.int,
@@ -1343,7 +1692,14 @@ class Quest extends DataClass implements Insertable<Quest> {
   final int? sets;
   final int? reps;
   final int? duration;
+
+  /// Legacy XP reward (kept for migration safety).
   final int xpReward;
+
+  /// v3.0: LP reward for this quest (base, before bonuses).
+  final int lpReward;
+
+  /// v2.0: Gold reward for quest completion.
   final int goldReward;
   final bool isDaily;
   final bool isCompleted;
@@ -1358,6 +1714,7 @@ class Quest extends DataClass implements Insertable<Quest> {
     this.reps,
     this.duration,
     required this.xpReward,
+    required this.lpReward,
     required this.goldReward,
     required this.isDaily,
     required this.isCompleted,
@@ -1381,6 +1738,7 @@ class Quest extends DataClass implements Insertable<Quest> {
       map['duration'] = Variable<int>(duration);
     }
     map['xp_reward'] = Variable<int>(xpReward);
+    map['lp_reward'] = Variable<int>(lpReward);
     map['gold_reward'] = Variable<int>(goldReward);
     map['is_daily'] = Variable<bool>(isDaily);
     map['is_completed'] = Variable<bool>(isCompleted);
@@ -1404,6 +1762,7 @@ class Quest extends DataClass implements Insertable<Quest> {
               ? const Value.absent()
               : Value(duration),
       xpReward: Value(xpReward),
+      lpReward: Value(lpReward),
       goldReward: Value(goldReward),
       isDaily: Value(isDaily),
       isCompleted: Value(isCompleted),
@@ -1429,6 +1788,7 @@ class Quest extends DataClass implements Insertable<Quest> {
       reps: serializer.fromJson<int?>(json['reps']),
       duration: serializer.fromJson<int?>(json['duration']),
       xpReward: serializer.fromJson<int>(json['xpReward']),
+      lpReward: serializer.fromJson<int>(json['lpReward']),
       goldReward: serializer.fromJson<int>(json['goldReward']),
       isDaily: serializer.fromJson<bool>(json['isDaily']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
@@ -1448,6 +1808,7 @@ class Quest extends DataClass implements Insertable<Quest> {
       'reps': serializer.toJson<int?>(reps),
       'duration': serializer.toJson<int?>(duration),
       'xpReward': serializer.toJson<int>(xpReward),
+      'lpReward': serializer.toJson<int>(lpReward),
       'goldReward': serializer.toJson<int>(goldReward),
       'isDaily': serializer.toJson<bool>(isDaily),
       'isCompleted': serializer.toJson<bool>(isCompleted),
@@ -1465,6 +1826,7 @@ class Quest extends DataClass implements Insertable<Quest> {
     Value<int?> reps = const Value.absent(),
     Value<int?> duration = const Value.absent(),
     int? xpReward,
+    int? lpReward,
     int? goldReward,
     bool? isDaily,
     bool? isCompleted,
@@ -1479,6 +1841,7 @@ class Quest extends DataClass implements Insertable<Quest> {
     reps: reps.present ? reps.value : this.reps,
     duration: duration.present ? duration.value : this.duration,
     xpReward: xpReward ?? this.xpReward,
+    lpReward: lpReward ?? this.lpReward,
     goldReward: goldReward ?? this.goldReward,
     isDaily: isDaily ?? this.isDaily,
     isCompleted: isCompleted ?? this.isCompleted,
@@ -1496,6 +1859,7 @@ class Quest extends DataClass implements Insertable<Quest> {
       reps: data.reps.present ? data.reps.value : this.reps,
       duration: data.duration.present ? data.duration.value : this.duration,
       xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
+      lpReward: data.lpReward.present ? data.lpReward.value : this.lpReward,
       goldReward:
           data.goldReward.present ? data.goldReward.value : this.goldReward,
       isDaily: data.isDaily.present ? data.isDaily.value : this.isDaily,
@@ -1518,6 +1882,7 @@ class Quest extends DataClass implements Insertable<Quest> {
           ..write('reps: $reps, ')
           ..write('duration: $duration, ')
           ..write('xpReward: $xpReward, ')
+          ..write('lpReward: $lpReward, ')
           ..write('goldReward: $goldReward, ')
           ..write('isDaily: $isDaily, ')
           ..write('isCompleted: $isCompleted, ')
@@ -1537,6 +1902,7 @@ class Quest extends DataClass implements Insertable<Quest> {
     reps,
     duration,
     xpReward,
+    lpReward,
     goldReward,
     isDaily,
     isCompleted,
@@ -1555,6 +1921,7 @@ class Quest extends DataClass implements Insertable<Quest> {
           other.reps == this.reps &&
           other.duration == this.duration &&
           other.xpReward == this.xpReward &&
+          other.lpReward == this.lpReward &&
           other.goldReward == this.goldReward &&
           other.isDaily == this.isDaily &&
           other.isCompleted == this.isCompleted &&
@@ -1571,6 +1938,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
   final Value<int?> reps;
   final Value<int?> duration;
   final Value<int> xpReward;
+  final Value<int> lpReward;
   final Value<int> goldReward;
   final Value<bool> isDaily;
   final Value<bool> isCompleted;
@@ -1585,6 +1953,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
     this.reps = const Value.absent(),
     this.duration = const Value.absent(),
     this.xpReward = const Value.absent(),
+    this.lpReward = const Value.absent(),
     this.goldReward = const Value.absent(),
     this.isDaily = const Value.absent(),
     this.isCompleted = const Value.absent(),
@@ -1600,6 +1969,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
     this.reps = const Value.absent(),
     this.duration = const Value.absent(),
     required int xpReward,
+    this.lpReward = const Value.absent(),
     this.goldReward = const Value.absent(),
     this.isDaily = const Value.absent(),
     this.isCompleted = const Value.absent(),
@@ -1618,6 +1988,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
     Expression<int>? reps,
     Expression<int>? duration,
     Expression<int>? xpReward,
+    Expression<int>? lpReward,
     Expression<int>? goldReward,
     Expression<bool>? isDaily,
     Expression<bool>? isCompleted,
@@ -1633,6 +2004,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
       if (reps != null) 'reps': reps,
       if (duration != null) 'duration': duration,
       if (xpReward != null) 'xp_reward': xpReward,
+      if (lpReward != null) 'lp_reward': lpReward,
       if (goldReward != null) 'gold_reward': goldReward,
       if (isDaily != null) 'is_daily': isDaily,
       if (isCompleted != null) 'is_completed': isCompleted,
@@ -1650,6 +2022,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
     Value<int?>? reps,
     Value<int?>? duration,
     Value<int>? xpReward,
+    Value<int>? lpReward,
     Value<int>? goldReward,
     Value<bool>? isDaily,
     Value<bool>? isCompleted,
@@ -1665,6 +2038,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
       reps: reps ?? this.reps,
       duration: duration ?? this.duration,
       xpReward: xpReward ?? this.xpReward,
+      lpReward: lpReward ?? this.lpReward,
       goldReward: goldReward ?? this.goldReward,
       isDaily: isDaily ?? this.isDaily,
       isCompleted: isCompleted ?? this.isCompleted,
@@ -1700,6 +2074,9 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
     if (xpReward.present) {
       map['xp_reward'] = Variable<int>(xpReward.value);
     }
+    if (lpReward.present) {
+      map['lp_reward'] = Variable<int>(lpReward.value);
+    }
     if (goldReward.present) {
       map['gold_reward'] = Variable<int>(goldReward.value);
     }
@@ -1729,6 +2106,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
           ..write('reps: $reps, ')
           ..write('duration: $duration, ')
           ..write('xpReward: $xpReward, ')
+          ..write('lpReward: $lpReward, ')
           ..write('goldReward: $goldReward, ')
           ..write('isDaily: $isDaily, ')
           ..write('isCompleted: $isCompleted, ')
@@ -5478,6 +5856,12 @@ typedef $$PlayersTableCreateCompanionBuilder =
       Value<int> level,
       Value<int> xp,
       Value<int> totalXp,
+      Value<String> tier,
+      Value<int> division,
+      Value<int> lp,
+      Value<int> totalQuestsCompleted,
+      Value<DateTime?> lastActivityAt,
+      Value<bool> pendingPromotion,
       Value<String> rank,
       Value<String> classType,
       Value<int> gold,
@@ -5491,6 +5875,12 @@ typedef $$PlayersTableUpdateCompanionBuilder =
       Value<int> level,
       Value<int> xp,
       Value<int> totalXp,
+      Value<String> tier,
+      Value<int> division,
+      Value<int> lp,
+      Value<int> totalQuestsCompleted,
+      Value<DateTime?> lastActivityAt,
+      Value<bool> pendingPromotion,
       Value<String> rank,
       Value<String> classType,
       Value<int> gold,
@@ -5666,6 +6056,36 @@ class $$PlayersTableFilterComposer
 
   ColumnFilters<int> get totalXp => $composableBuilder(
     column: $table.totalXp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tier => $composableBuilder(
+    column: $table.tier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get division => $composableBuilder(
+    column: $table.division,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lp => $composableBuilder(
+    column: $table.lp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalQuestsCompleted => $composableBuilder(
+    column: $table.totalQuestsCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastActivityAt => $composableBuilder(
+    column: $table.lastActivityAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get pendingPromotion => $composableBuilder(
+    column: $table.pendingPromotion,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5904,6 +6324,36 @@ class $$PlayersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get tier => $composableBuilder(
+    column: $table.tier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get division => $composableBuilder(
+    column: $table.division,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lp => $composableBuilder(
+    column: $table.lp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalQuestsCompleted => $composableBuilder(
+    column: $table.totalQuestsCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastActivityAt => $composableBuilder(
+    column: $table.lastActivityAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get pendingPromotion => $composableBuilder(
+    column: $table.pendingPromotion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get rank => $composableBuilder(
     column: $table.rank,
     builder: (column) => ColumnOrderings(column),
@@ -5953,6 +6403,30 @@ class $$PlayersTableAnnotationComposer
 
   GeneratedColumn<int> get totalXp =>
       $composableBuilder(column: $table.totalXp, builder: (column) => column);
+
+  GeneratedColumn<String> get tier =>
+      $composableBuilder(column: $table.tier, builder: (column) => column);
+
+  GeneratedColumn<int> get division =>
+      $composableBuilder(column: $table.division, builder: (column) => column);
+
+  GeneratedColumn<int> get lp =>
+      $composableBuilder(column: $table.lp, builder: (column) => column);
+
+  GeneratedColumn<int> get totalQuestsCompleted => $composableBuilder(
+    column: $table.totalQuestsCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastActivityAt => $composableBuilder(
+    column: $table.lastActivityAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get pendingPromotion => $composableBuilder(
+    column: $table.pendingPromotion,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get rank =>
       $composableBuilder(column: $table.rank, builder: (column) => column);
@@ -6188,6 +6662,12 @@ class $$PlayersTableTableManager
                 Value<int> level = const Value.absent(),
                 Value<int> xp = const Value.absent(),
                 Value<int> totalXp = const Value.absent(),
+                Value<String> tier = const Value.absent(),
+                Value<int> division = const Value.absent(),
+                Value<int> lp = const Value.absent(),
+                Value<int> totalQuestsCompleted = const Value.absent(),
+                Value<DateTime?> lastActivityAt = const Value.absent(),
+                Value<bool> pendingPromotion = const Value.absent(),
                 Value<String> rank = const Value.absent(),
                 Value<String> classType = const Value.absent(),
                 Value<int> gold = const Value.absent(),
@@ -6199,6 +6679,12 @@ class $$PlayersTableTableManager
                 level: level,
                 xp: xp,
                 totalXp: totalXp,
+                tier: tier,
+                division: division,
+                lp: lp,
+                totalQuestsCompleted: totalQuestsCompleted,
+                lastActivityAt: lastActivityAt,
+                pendingPromotion: pendingPromotion,
                 rank: rank,
                 classType: classType,
                 gold: gold,
@@ -6212,6 +6698,12 @@ class $$PlayersTableTableManager
                 Value<int> level = const Value.absent(),
                 Value<int> xp = const Value.absent(),
                 Value<int> totalXp = const Value.absent(),
+                Value<String> tier = const Value.absent(),
+                Value<int> division = const Value.absent(),
+                Value<int> lp = const Value.absent(),
+                Value<int> totalQuestsCompleted = const Value.absent(),
+                Value<DateTime?> lastActivityAt = const Value.absent(),
+                Value<bool> pendingPromotion = const Value.absent(),
                 Value<String> rank = const Value.absent(),
                 Value<String> classType = const Value.absent(),
                 Value<int> gold = const Value.absent(),
@@ -6223,6 +6715,12 @@ class $$PlayersTableTableManager
                 level: level,
                 xp: xp,
                 totalXp: totalXp,
+                tier: tier,
+                division: division,
+                lp: lp,
+                totalQuestsCompleted: totalQuestsCompleted,
+                lastActivityAt: lastActivityAt,
+                pendingPromotion: pendingPromotion,
                 rank: rank,
                 classType: classType,
                 gold: gold,
@@ -6771,6 +7269,7 @@ typedef $$QuestsTableCreateCompanionBuilder =
       Value<int?> reps,
       Value<int?> duration,
       required int xpReward,
+      Value<int> lpReward,
       Value<int> goldReward,
       Value<bool> isDaily,
       Value<bool> isCompleted,
@@ -6787,6 +7286,7 @@ typedef $$QuestsTableUpdateCompanionBuilder =
       Value<int?> reps,
       Value<int?> duration,
       Value<int> xpReward,
+      Value<int> lpReward,
       Value<int> goldReward,
       Value<bool> isDaily,
       Value<bool> isCompleted,
@@ -6863,6 +7363,11 @@ class $$QuestsTableFilterComposer
 
   ColumnFilters<int> get xpReward => $composableBuilder(
     column: $table.xpReward,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lpReward => $composableBuilder(
+    column: $table.lpReward,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6966,6 +7471,11 @@ class $$QuestsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get lpReward => $composableBuilder(
+    column: $table.lpReward,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get goldReward => $composableBuilder(
     column: $table.goldReward,
     builder: (column) => ColumnOrderings(column),
@@ -7026,6 +7536,9 @@ class $$QuestsTableAnnotationComposer
 
   GeneratedColumn<int> get xpReward =>
       $composableBuilder(column: $table.xpReward, builder: (column) => column);
+
+  GeneratedColumn<int> get lpReward =>
+      $composableBuilder(column: $table.lpReward, builder: (column) => column);
 
   GeneratedColumn<int> get goldReward => $composableBuilder(
     column: $table.goldReward,
@@ -7110,6 +7623,7 @@ class $$QuestsTableTableManager
                 Value<int?> reps = const Value.absent(),
                 Value<int?> duration = const Value.absent(),
                 Value<int> xpReward = const Value.absent(),
+                Value<int> lpReward = const Value.absent(),
                 Value<int> goldReward = const Value.absent(),
                 Value<bool> isDaily = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
@@ -7124,6 +7638,7 @@ class $$QuestsTableTableManager
                 reps: reps,
                 duration: duration,
                 xpReward: xpReward,
+                lpReward: lpReward,
                 goldReward: goldReward,
                 isDaily: isDaily,
                 isCompleted: isCompleted,
@@ -7140,6 +7655,7 @@ class $$QuestsTableTableManager
                 Value<int?> reps = const Value.absent(),
                 Value<int?> duration = const Value.absent(),
                 required int xpReward,
+                Value<int> lpReward = const Value.absent(),
                 Value<int> goldReward = const Value.absent(),
                 Value<bool> isDaily = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
@@ -7154,6 +7670,7 @@ class $$QuestsTableTableManager
                 reps: reps,
                 duration: duration,
                 xpReward: xpReward,
+                lpReward: lpReward,
                 goldReward: goldReward,
                 isDaily: isDaily,
                 isCompleted: isCompleted,

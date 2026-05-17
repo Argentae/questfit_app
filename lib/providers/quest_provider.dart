@@ -2,7 +2,9 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../db/database.dart';
 import '../engine/gold_engine.dart';
+import '../engine/lp_engine.dart';
 import '../engine/quest_engine.dart';
+import '../engine/rank_engine.dart';
 import '../engine/streak_engine.dart';
 import 'database_provider.dart';
 import 'equipment_provider.dart';
@@ -12,18 +14,18 @@ import 'user_provider.dart';
 
 /// Result from completing a quest — carries data the UI needs for feedback.
 class QuestCompletionResult {
-  final int xpAwarded;
+  final int lpAwarded;
   final int goldAwarded;
-  final bool didLevelUp;
-  final int newLevel;
-  final bool isXpCapped;
+  final bool isPromotionReady;
+  final String tierName;
+  final int division;
 
   const QuestCompletionResult({
-    required this.xpAwarded,
+    required this.lpAwarded,
     required this.goldAwarded,
-    required this.didLevelUp,
-    required this.newLevel,
-    this.isXpCapped = false,
+    required this.isPromotionReady,
+    required this.tierName,
+    required this.division,
   });
 }
 
@@ -64,19 +66,34 @@ class QuestNotifier extends AsyncNotifier<void> {
 
   QuestFitDatabase get _db => ref.read(databaseProvider);
 
-  /// Mark a quest as completed and award XP + gold + stat points.
-  /// Returns a [QuestCompletionResult] with XP, gold, and level-up info.
+  /// Mark a quest as completed and award LP + gold + stat points.
+  /// Returns a [QuestCompletionResult] with LP, gold, and promotion info.
   Future<QuestCompletionResult> completeQuest(Quest quest) async {
     if (quest.isCompleted) {
       return const QuestCompletionResult(
-          xpAwarded: 0, goldAwarded: 0, didLevelUp: false, newLevel: 0);
+          lpAwarded: 0, goldAwarded: 0, isPromotionReady: false,
+          tierName: 'iron', division: 4);
     }
 
-    // Get streak multiplier
+    // Get player and streak for bonus calculations
+    final player =
+        await ((_db.select(_db.players))..limit(1)).getSingle();
     final streak =
         await ((_db.select(_db.streaks))..limit(1)).getSingle();
-    final xpMultiplier = StreakEngine.getMultiplier(streak.currentStreak);
-    final xp = QuestEngine.completeQuest(quest.xpReward, xpMultiplier);
+
+    // Get mastery points for this quest's category
+    final statKey = QuestEngine.categoryToStat(quest.category);
+    final masteryPoints = await ref
+        .read(userNotifierProvider.notifier)
+        .getMasteryPoints(statKey);
+
+    // Calculate LP reward with mastery and streak bonuses
+    final baseLp = quest.lpReward > 0 ? quest.lpReward : LpEngine.baseQuestLp;
+    final totalLp = LpEngine.calculateQuestLp(
+      baseLp: baseLp,
+      masteryPoints: masteryPoints,
+      currentStreak: streak.currentStreak,
+    );
 
     // v2.0: Calculate gold reward with streak multiplier
     final goldReward = GoldEngine.calculateReward(
@@ -93,36 +110,36 @@ class QuestNotifier extends AsyncNotifier<void> {
     ));
 
     // Log the workout
-    final player =
-        await ((_db.select(_db.players))..limit(1)).getSingle();
     await _db.into(_db.workoutLogs).insert(WorkoutLogsCompanion(
       questId: Value(quest.id),
       playerId: Value(player.id),
       completedAt: Value(DateTime.now()),
-      xpEarned: Value(xp),
+      xpEarned: Value(totalLp), // Store LP in the xpEarned column
       source: const Value('manual'),
     ));
 
-    // Award XP to the player
-    final xpResult =
-        await ref.read(userNotifierProvider.notifier).awardXp(xp);
+    // Award LP to the player
+    final lpResult =
+        await ref.read(userNotifierProvider.notifier).awardLp(totalLp);
 
     // Award gold
     await ref.read(userNotifierProvider.notifier).awardGold(goldReward.totalGold);
 
     // Award stat point based on category
-    final stat = QuestEngine.categoryToStat(quest.category);
-    await ref.read(userNotifierProvider.notifier).addStat(stat, 1);
+    await ref.read(userNotifierProvider.notifier).addStat(statKey, 1);
+
+    // Increment total quests completed
+    await ref.read(userNotifierProvider.notifier).incrementQuestsCompleted();
 
     // Update streak
     await _updateStreak();
 
     return QuestCompletionResult(
-      xpAwarded: xp,
+      lpAwarded: lpResult.lpGained,
       goldAwarded: goldReward.totalGold,
-      didLevelUp: xpResult.didLevelUp,
-      newLevel: xpResult.newLevel,
-      isXpCapped: xpResult.isXpCapped,
+      isPromotionReady: lpResult.isPromotionReady,
+      tierName: player.tier,
+      division: player.division,
     );
   }
 
@@ -138,11 +155,12 @@ class QuestNotifier extends AsyncNotifier<void> {
     ));
   }
 
-  /// v2.0: Generate fresh daily quests from equipped loadout.
+  /// v3.0: Generate fresh daily quests from equipped loadout.
   /// Falls back to legacy generation if no weapons equipped.
   Future<void> regenerateDaily() async {
     final player =
         await ((_db.select(_db.players))..limit(1)).getSingle();
+    final tierInfo = RankEngine.getTierInfo(player.tier, player.division);
 
     // Delete old daily quests
     await (_db.delete(_db.quests)
@@ -157,7 +175,7 @@ class QuestNotifier extends AsyncNotifier<void> {
     final generated = QuestEngine.generateFromLoadout(
       equippedWeapons: equippedWeapons,
       classType: player.classType,
-      playerLevel: player.level,
+      tierIndex: tierInfo.tierIndex,
     );
 
     for (final g in generated) {
@@ -169,6 +187,7 @@ class QuestNotifier extends AsyncNotifier<void> {
         reps: Value(g.reps),
         duration: Value(g.duration),
         xpReward: Value(g.xpReward),
+        lpReward: Value(g.lpReward),
         goldReward: Value(g.goldReward),
         isDaily: const Value(true),
         isCompleted: const Value(false),

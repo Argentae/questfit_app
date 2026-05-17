@@ -34,10 +34,14 @@ class StreakBar extends ConsumerWidget {
                       fontSize: 16,
                       color: QuestFitColors.orangeAccent)),
               const SizedBox(width: 6),
-              Text('day streak',
-                  style: Theme.of(context).textTheme.bodySmall),
-              const Spacer(),
+              Flexible(
+                child: Text('day streak',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall),
+              ),
+              const SizedBox(width: 8),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: weekDays.map((day) {
                   final isDone = day.status == 'done';
                   final isToday = day.status == 'today';

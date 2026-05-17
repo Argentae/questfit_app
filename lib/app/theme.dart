@@ -20,15 +20,17 @@ class QuestFitColors {
   static const textSecondary = Color(0x8CEEF0F6);
   static const textMuted = Color(0x4DEEF0F6);
 
-  // Rank colors
+  // Tier colors (v3.0: LoL-style 10-tier system)
   static const rankIron = Color(0xFF8B8B8B);
   static const rankBronze = Color(0xFFCD7F32);
   static const rankSilver = Color(0xFFC0C0C0);
   static const rankGold = Color(0xFFF0C850);
   static const rankPlatinum = Color(0xFF60A5FA);
+  static const rankEmerald = Color(0xFF2DD4A8);
   static const rankDiamond = Color(0xFFA78BFA);
-  static const rankEsmeralda = Color(0xFF2DD4A8);
-  static const rankLegend = Color(0xFFF87171);
+  static const rankMaster = Color(0xFFF87171);
+  static const rankGrandmaster = Color(0xFFFF6B35);
+  static const rankChallenger = Color(0xFF00D4FF);
 }
 
 /// Dark RPG theme for QuestFit.

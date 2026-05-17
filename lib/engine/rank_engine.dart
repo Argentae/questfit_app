@@ -1,211 +1,197 @@
 import 'package:flutter/material.dart';
 
-/// QuestFit Rank Tier System.
-/// 8 ranks from Iron to Legend, level-gated with Roman numeral tiers.
+/// QuestFit LP Tier System — League of Legends style.
 ///
-/// v2.0: Promotion boundaries and trial requirements.
+/// Tiers: Iron → Challenger (10 tiers)
+/// Divisions: IV, III, II, I (within tiered ranks; Master+ have 1)
+/// LP: 0–100 per division
+/// Reaching 100 LP → auto-promote next app launch
+/// 48h inactivity → LP decay (scales with tier)
+/// 0 LP + decay → demotion to previous division at 75 LP
 class RankEngine {
   const RankEngine._();
 
-  static const List<RankDef> _ranks = [
-    RankDef(name: 'Iron',      tiers: 4, startLevel: 1,  color: Color(0xFF8B8B8B)),
-    RankDef(name: 'Bronze',    tiers: 4, startLevel: 5,  color: Color(0xFFCD7F32)),
-    RankDef(name: 'Silver',    tiers: 4, startLevel: 13, color: Color(0xFFC0C0C0)),
-    RankDef(name: 'Gold',      tiers: 4, startLevel: 23, color: Color(0xFFF0C850)),
-    RankDef(name: 'Platinum',  tiers: 4, startLevel: 35, color: Color(0xFF60A5FA)),
-    RankDef(name: 'Diamond',   tiers: 4, startLevel: 49, color: Color(0xFFA78BFA)),
-    RankDef(name: 'Esmeralda', tiers: 4, startLevel: 65, color: Color(0xFF2DD4A8)),
-    RankDef(name: 'Legend',    tiers: 1, startLevel: 81, color: Color(0xFFF87171)),
+  static const List<TierDef> _tiers = [
+    TierDef(name: 'Iron',        divisions: 4, color: Color(0xFF8B8B8B)),
+    TierDef(name: 'Bronze',      divisions: 4, color: Color(0xFFCD7F32)),
+    TierDef(name: 'Silver',      divisions: 4, color: Color(0xFFC0C0C0)),
+    TierDef(name: 'Gold',        divisions: 4, color: Color(0xFFF0C850)),
+    TierDef(name: 'Platinum',    divisions: 4, color: Color(0xFF60A5FA)),
+    TierDef(name: 'Emerald',     divisions: 4, color: Color(0xFF2DD4A8)),
+    TierDef(name: 'Diamond',     divisions: 4, color: Color(0xFFA78BFA)),
+    TierDef(name: 'Master',      divisions: 1, color: Color(0xFFF87171)),
+    TierDef(name: 'Grandmaster', divisions: 1, color: Color(0xFFFF6B35)),
+    TierDef(name: 'Challenger',  divisions: 1, color: Color(0xFF00D4FF)),
   ];
 
-  static const _roman = ['I', 'II', 'III', 'IV'];
+  static const _roman = ['IV', 'III', 'II', 'I'];
 
-  /// Get rank info for a given level.
-  static RankInfo getRank(int level) {
-    var rankIdx = 0;
-    for (var i = _ranks.length - 1; i >= 0; i--) {
-      if (level >= _ranks[i].startLevel) {
-        rankIdx = i;
-        break;
-      }
-    }
+  // ─── Tier Info ──────────────────────────────────────────────────────
 
-    final rank = _ranks[rankIdx];
-    var tier = 1;
+  /// Get tier info from tier name and division.
+  static TierInfo getTierInfo(String tierName, int division) {
+    final tierIdx = _findTierIndex(tierName);
+    if (tierIdx < 0) return defaultTierInfo;
 
-    if (rank.tiers > 1 && rankIdx < _ranks.length - 1) {
-      final nextStart = _ranks[rankIdx + 1].startLevel;
-      final range = nextStart - rank.startLevel;
-      final tierSize = (range / rank.tiers).ceil();
-      tier = ((level - rank.startLevel) ~/ tierSize + 1).clamp(1, rank.tiers);
-    }
+    final tier = _tiers[tierIdx];
+    final clampedDiv = division.clamp(1, tier.divisions);
+    final divStr = tier.divisions > 1 ? ' ${_roman[clampedDiv - 1]}' : '';
 
-    final tierStr = rank.tiers > 1 ? ' ${_roman[tier - 1]}' : '';
-
-    return RankInfo(
-      name: rank.name,
-      tier: tier,
-      fullName: '${rank.name}$tierStr',
-      color: rank.color,
-      rankIndex: rankIdx,
+    return TierInfo(
+      name: tier.name,
+      division: clampedDiv,
+      fullName: '${tier.name}$divStr',
+      color: tier.color,
+      tierIndex: tierIdx,
     );
   }
 
-  /// Get rank key for storage (e.g., "iron_1").
-  static String getRankKey(int level) {
-    final r = getRank(level);
-    return '${r.name.toLowerCase()}_${r.tier}';
-  }
+  static TierInfo get defaultTierInfo => const TierInfo(
+    name: 'Iron',
+    division: 4,
+    fullName: 'Iron IV',
+    color: Color(0xFF8B8B8B),
+    tierIndex: 0,
+  );
 
-  /// Check if a rank-up occurred between two levels.
-  static bool didRankUp(int oldLevel, int newLevel) {
-    return getRank(oldLevel).fullName != getRank(newLevel).fullName;
-  }
+  /// Get the tier key for storage (lowercase name, e.g. "iron").
+  static String getTierKey(String tierName) => tierName.toLowerCase();
 
-  /// Get levels until next rank change.
-  static RankMilestone getNextMilestone(int level) {
-    final current = getRank(level);
-    for (var l = level + 1; l <= 200; l++) {
-      final next = getRank(l);
-      if (next.fullName != current.fullName) {
-        return RankMilestone(levelsAway: l - level, nextRank: next);
-      }
+  // ─── Promotion / Demotion ──────────────────────────────────────────
+
+  /// Get the next rank after the current one.
+  /// Returns null if already at Challenger (max).
+  static ({String tier, int division})? getNextRank(
+      String tierName, int division) {
+    final tierIdx = _findTierIndex(tierName);
+    if (tierIdx < 0) return null;
+
+    final tier = _tiers[tierIdx];
+
+    if (tier.divisions > 1 && division > 1) {
+      // Promote within same tier: IV→III, III→II, II→I
+      return (tier: tier.name.toLowerCase(), division: division - 1);
+    } else if (tierIdx < _tiers.length - 1) {
+      // Promote to next tier's lowest division
+      final nextTier = _tiers[tierIdx + 1];
+      return (
+        tier: nextTier.name.toLowerCase(),
+        division: nextTier.divisions,
+      );
     }
-    return RankMilestone(levelsAway: 0, nextRank: current);
+
+    return null; // Already at Challenger
   }
 
-  // ─── v2.0: Promotion Series ────────────────────────────────────────
+  /// Get the previous rank (for demotion).
+  /// Returns null if already at Iron IV (min).
+  static ({String tier, int division})? getPreviousRank(
+      String tierName, int division) {
+    final tierIdx = _findTierIndex(tierName);
+    if (tierIdx < 0) return null;
 
-  /// The levels at which a rank changes (the last level of each tier).
-  /// These are the "boundary" levels where a Promotion Trial is required.
-  static final Set<int> _promotionBoundaryLevels = _computeBoundaries();
+    final tier = _tiers[tierIdx];
 
-  static Set<int> _computeBoundaries() {
-    final boundaries = <int>{};
-    for (var i = 0; i < _ranks.length - 1; i++) {
-      // The level just before a major rank start is a boundary
-      boundaries.add(_ranks[i + 1].startLevel - 1);
-      // Also add tier boundaries within each rank
-      final rank = _ranks[i];
-      if (rank.tiers > 1) {
-        final nextStart = _ranks[i + 1].startLevel;
-        final range = nextStart - rank.startLevel;
-        final tierSize = (range / rank.tiers).ceil();
-        for (var t = 1; t < rank.tiers; t++) {
-          final boundaryLevel = rank.startLevel + (tierSize * t) - 1;
-          if (boundaryLevel > rank.startLevel && boundaryLevel < nextStart) {
-            boundaries.add(boundaryLevel);
-          }
+    if (tier.divisions > 1 && division < tier.divisions) {
+      // Demote within same tier: I→II, II→III, III→IV
+      return (tier: tier.name.toLowerCase(), division: division + 1);
+    } else if (tierIdx > 0) {
+      // Demote to previous tier's highest division (I)
+      final prevTier = _tiers[tierIdx - 1];
+      return (tier: prevTier.name.toLowerCase(), division: 1);
+    }
+
+    return null; // Already at Iron IV
+  }
+
+  /// Whether the player is at the absolute lowest rank (can't demote further).
+  static bool isLowestRank(String tierName, int division) {
+    return _findTierIndex(tierName) == 0 && division >= _tiers[0].divisions;
+  }
+
+  /// Whether the player is at the absolute highest rank.
+  static bool isHighestRank(String tierName) {
+    return _findTierIndex(tierName) == _tiers.length - 1;
+  }
+
+  // ─── LP Decay ─────────────────────────────────────────────────────
+
+  /// LP decay amount for 48h inactivity, scaled by tier.
+  static int getDecayAmount(String tierName) {
+    final tierIdx = _findTierIndex(tierName);
+    if (tierIdx <= 1) return 5;    // Iron, Bronze
+    if (tierIdx == 2) return 8;    // Silver
+    if (tierIdx == 3) return 10;   // Gold
+    if (tierIdx == 4) return 15;   // Platinum
+    return 20;                      // Emerald, Diamond, Master+
+  }
+
+  /// Check if 48h have passed since last activity.
+  static bool shouldDecay(DateTime? lastActivityAt) {
+    if (lastActivityAt == null) return false;
+    return DateTime.now().difference(lastActivityAt).inHours >= 48;
+  }
+
+  // ─── Rank Position (for progress visualization) ───────────────────
+
+  /// Get ordinal position from 0 (Iron IV) to totalPositions-1 (Challenger).
+  static int getRankPosition(String tierName, int division) {
+    var position = 0;
+    for (final tier in _tiers) {
+      if (tier.name.toLowerCase() == tierName.toLowerCase()) {
+        if (tier.divisions > 1) {
+          position += (tier.divisions - division);
         }
+        return position;
       }
+      position += tier.divisions;
     }
-    return boundaries;
+    return 0;
   }
 
-  /// Check if the given level is a promotion boundary
-  /// (top of a tier, requiring a trial to advance).
-  static bool isPromotionBoundary(int level) {
-    return _promotionBoundaryLevels.contains(level);
+  /// Total number of rank positions in the ladder.
+  static int get totalPositions {
+    return _tiers.fold(0, (sum, t) => sum + t.divisions);
   }
 
-  /// Get the trial requirements for promoting past a given level.
-  static TrialRequirement getTrialRequirements(int currentLevel) {
-    final currentRank = getRank(currentLevel);
-    final nextRank = getRank(currentLevel + 1);
+  // ─── Helpers ──────────────────────────────────────────────────────
 
-    // Major rank transition (e.g., Iron → Bronze) = Gatekeeper Boss
-    final isMajorTransition = currentRank.name != nextRank.name;
-
-    if (isMajorTransition) {
-      // Gatekeeper Boss: 24-hour calorie/step challenge
-      // Scales with rank index
-      final calorieGoal = 500 + (currentRank.rankIndex * 200);
-      final stepGoal = 8000 + (currentRank.rankIndex * 2000);
-
-      return TrialRequirement(
-        trialType: 'gatekeeper',
-        description: 'Defeat the ${nextRank.name} Gatekeeper',
-        targetRankKey: getRankKey(currentLevel + 1),
-        targetRankName: nextRank.fullName,
-        requiredStreakDays: 0,
-        calorieGoal: calorieGoal,
-        stepGoal: stepGoal,
-      );
-    } else {
-      // Tier transition = Consistency Trial (5-day streak)
-      return TrialRequirement(
-        trialType: 'consistency',
-        description: 'Prove your consistency for ${nextRank.fullName}',
-        targetRankKey: getRankKey(currentLevel + 1),
-        targetRankName: nextRank.fullName,
-        requiredStreakDays: 5,
-        calorieGoal: null,
-        stepGoal: null,
-      );
-    }
+  static int _findTierIndex(String tierName) {
+    return _tiers.indexWhere(
+      (t) => t.name.toLowerCase() == tierName.toLowerCase(),
+    );
   }
 
-  /// XP decay percentage on trial failure.
-  static const double decayPercentage = 0.15;
-
-  /// All rank definitions.
-  static List<RankDef> get allRanks => _ranks;
+  /// All tier definitions (for UI tier ladder display).
+  static List<TierDef> get allTiers => _tiers;
 }
 
-class RankDef {
+// ─── Data Classes ──────────────────────────────────────────────────────
+
+class TierDef {
   final String name;
-  final int tiers;
-  final int startLevel;
+  final int divisions;
   final Color color;
 
-  const RankDef({
+  const TierDef({
     required this.name,
-    required this.tiers,
-    required this.startLevel,
+    required this.divisions,
     required this.color,
   });
 }
 
-class RankInfo {
+class TierInfo {
   final String name;
-  final int tier;
+  final int division;
   final String fullName;
   final Color color;
-  final int rankIndex;
+  final int tierIndex;
 
-  const RankInfo({
+  const TierInfo({
     required this.name,
-    required this.tier,
+    required this.division,
     required this.fullName,
     required this.color,
-    required this.rankIndex,
-  });
-}
-
-class RankMilestone {
-  final int levelsAway;
-  final RankInfo nextRank;
-
-  const RankMilestone({required this.levelsAway, required this.nextRank});
-}
-
-/// v2.0: Promotion Trial requirement definition.
-class TrialRequirement {
-  final String trialType; // 'consistency' or 'gatekeeper'
-  final String description;
-  final String targetRankKey;
-  final String targetRankName;
-  final int requiredStreakDays;
-  final int? calorieGoal;
-  final int? stepGoal;
-
-  const TrialRequirement({
-    required this.trialType,
-    required this.description,
-    required this.targetRankKey,
-    required this.targetRankName,
-    required this.requiredStreakDays,
-    this.calorieGoal,
-    this.stepGoal,
+    required this.tierIndex,
   });
 }

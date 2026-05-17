@@ -79,7 +79,7 @@ class HealthSyncNotifier extends Notifier<HealthSyncState> {
     }
   }
 
-  /// Run a full sync: fetch new workouts → convert to XP → write to DB.
+  /// Run a full sync: fetch new workouts → convert to LP → write to DB.
   Future<SyncResult> sync() async {
     if (state.isSyncing) {
       return const SyncResult(importedCount: 0, totalXp: 0, results: []);
@@ -88,7 +88,7 @@ class HealthSyncNotifier extends Notifier<HealthSyncState> {
     state = state.copyWith(isSyncing: true, error: null);
 
     try {
-      // Get player for level scaling
+      // Get player for tier scaling
       final player =
           await ((_db.select(_db.players))..limit(1)).getSingle();
 
@@ -102,7 +102,8 @@ class HealthSyncNotifier extends Notifier<HealthSyncState> {
           .map((l) => l.healthConnectId!)
           .toSet();
 
-      // Fetch and convert
+      // Fetch and convert (service still uses playerLevel internally,
+      // but the LP amounts are now scaled in the service)
       final result = await _service.syncNewWorkouts(
         playerLevel: player.level,
         existingHealthIds: existingIds,
@@ -115,7 +116,8 @@ class HealthSyncNotifier extends Notifier<HealthSyncState> {
           title: Value(r.questTitle),
           category: Value(r.category),
           description: Value(r.questDescription),
-          xpReward: Value(r.xpAwarded),
+          xpReward: Value(r.lpAwarded),
+          lpReward: Value(r.lpAwarded),
           isDaily: const Value(false),
           isCompleted: const Value(true),
           completedAt: Value(DateTime.now()),
@@ -127,16 +129,19 @@ class HealthSyncNotifier extends Notifier<HealthSyncState> {
           questId: Value(questId),
           playerId: Value(player.id),
           completedAt: Value(DateTime.now()),
-          xpEarned: Value(r.xpAwarded),
+          xpEarned: Value(r.lpAwarded),
           source: const Value('health_connect'),
         ));
 
-        // Award XP
-        await ref.read(userNotifierProvider.notifier).awardXp(r.xpAwarded);
+        // Award LP (using the converted value as LP)
+        await ref.read(userNotifierProvider.notifier).awardLp(r.lpAwarded);
 
         // Award stat point
         final stat = QuestEngine.categoryToStat(r.category);
         await ref.read(userNotifierProvider.notifier).addStat(stat, 1);
+
+        // Increment quests completed counter
+        await ref.read(userNotifierProvider.notifier).incrementQuestsCompleted();
       }
 
       // Haptic feedback for imported workouts

@@ -1,7 +1,7 @@
 name: questfit_app
 description: QuestFit — Level up your fitness with RPG-style quests and Samsung Watch integration.
 publish_to: 'none'
-version: 2.0.0+1
+version: 2.1.0+1
 
 environment:
   sdk: ^3.7.0

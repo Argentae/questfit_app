@@ -149,11 +149,11 @@ class _QuestsScreenState extends ConsumerState<QuestsScreen> {
         .read(questNotifierProvider.notifier)
         .completeQuest(quest);
     if (!context.mounted) return;
-    if (result.didLevelUp) {
+    if (result.isPromotionReady) {
       HapticService.onLevelUp();
-      XpToast.show(context, result.xpAwarded, levelUp: true);
+      LpToast.show(context, result.lpAwarded, promoted: true);
     } else {
-      XpToast.show(context, result.xpAwarded);
+      LpToast.show(context, result.lpAwarded);
     }
   }
 }

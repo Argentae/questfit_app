@@ -324,12 +324,15 @@ class _ConsumableCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      name,
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: QuestFitColors.textPrimary,
+                    Flexible(
+                      child: Text(
+                        name,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: QuestFitColors.textPrimary,
+                        ),
                       ),
                     ),
                     if (quantity > 0) ...[
@@ -458,12 +461,15 @@ class _ShopWeaponCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      weapon.name,
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: QuestFitColors.textPrimary,
+                    Flexible(
+                      child: Text(
+                        weapon.name,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: QuestFitColors.textPrimary,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),

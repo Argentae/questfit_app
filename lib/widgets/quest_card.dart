@@ -168,7 +168,7 @@ class _QuestCardState extends State<QuestCard>
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        '+${widget.quest.xpReward} XP',
+                        '+${widget.quest.lpReward} LP',
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,

@@ -12,8 +12,8 @@ class AvatarScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final playerAsync = ref.watch(playerStreamProvider);
     final statsAsync = ref.watch(statsStreamProvider);
-    final xpAsync = ref.watch(xpProgressProvider);
-    final rankAsync = ref.watch(rankInfoProvider);
+    final lpAsync = ref.watch(lpProgressProvider);
+    final tierAsync = ref.watch(tierInfoProvider);
 
     return playerAsync.when(
       loading: () => const Center(
@@ -22,8 +22,8 @@ class AvatarScreen extends ConsumerWidget {
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (player) {
         final stats = statsAsync.valueOrNull;
-        final xp = xpAsync.valueOrNull;
-        final rank = rankAsync.valueOrNull;
+        final lp = lpAsync.valueOrNull;
+        final tier = tierAsync.valueOrNull;
 
         return SafeArea(
           child: ListView(
@@ -38,11 +38,11 @@ class AvatarScreen extends ConsumerWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                          color: rank?.color ?? QuestFitColors.goldDim,
+                          color: tier?.color ?? QuestFitColors.goldDim,
                           width: 3),
                       boxShadow: [
                         BoxShadow(
-                            color: (rank?.color ?? QuestFitColors.gold)
+                            color: (tier?.color ?? QuestFitColors.gold)
                                 .withValues(alpha: 0.2),
                             blurRadius: 40)
                       ],
@@ -59,7 +59,8 @@ class AvatarScreen extends ConsumerWidget {
                           fontWeight: FontWeight.w900, fontSize: 22)),
                   const SizedBox(height: 4),
                   Text(
-                    '${_capitalize(player.classType)} · ${_classPath(player.classType)} · Level ${player.level}',
+                    '${_capitalize(player.classType)} · ${_classPath(player.classType)} · ${tier?.fullName ?? "Iron IV"}',
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 20),
@@ -80,15 +81,15 @@ class AvatarScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            rank?.fullName ?? 'Iron I',
+                            tier?.fullName ?? 'Iron IV',
                             style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14,
-                                color: rank?.color ??
+                                color: tier?.color ??
                                     QuestFitColors.emerald),
                           ),
                           Text(
-                            'Total XP: ${player.totalXp}',
+                            'Quests Completed: ${player.totalQuestsCompleted}',
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall
@@ -100,13 +101,13 @@ class AvatarScreen extends ConsumerWidget {
                 ]),
               ),
               const SizedBox(height: 20),
-              // XP
+              // LP
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: glassCard(),
-                child: XpBar(
-                    current: xp?.current ?? 0,
-                    max: xp?.max ?? 100),
+                child: LpBar(
+                    current: lp?.current ?? 0,
+                    max: lp?.max ?? 100),
               ),
               const SizedBox(height: 24),
               // Stats

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import '../app/theme.dart';
 
-/// Floating "+XP" toast that fades in, floats up, then fades out.
-class XpToast {
-  static void show(BuildContext context, int xpAmount, {bool levelUp = false}) {
+/// Floating "+LP" toast that fades in, floats up, then fades out.
+///
+/// v3.0: Renamed from XP toast to LP toast. Also handles promotion banners.
+class LpToast {
+  static void show(BuildContext context, int lpAmount, {bool promoted = false}) {
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
 
     entry = OverlayEntry(
-      builder: (_) => _XpToastWidget(
-        xpAmount: xpAmount,
-        levelUp: levelUp,
+      builder: (_) => _LpToastWidget(
+        lpAmount: lpAmount,
+        promoted: promoted,
         onDone: () => entry.remove(),
       ),
     );
@@ -19,22 +21,25 @@ class XpToast {
   }
 }
 
-class _XpToastWidget extends StatefulWidget {
-  final int xpAmount;
-  final bool levelUp;
+/// Keep old name as alias for backward compatibility.
+typedef XpToast = LpToast;
+
+class _LpToastWidget extends StatefulWidget {
+  final int lpAmount;
+  final bool promoted;
   final VoidCallback onDone;
 
-  const _XpToastWidget({
-    required this.xpAmount,
-    required this.levelUp,
+  const _LpToastWidget({
+    required this.lpAmount,
+    required this.promoted,
     required this.onDone,
   });
 
   @override
-  State<_XpToastWidget> createState() => _XpToastWidgetState();
+  State<_LpToastWidget> createState() => _LpToastWidgetState();
 }
 
-class _XpToastWidgetState extends State<_XpToastWidget>
+class _LpToastWidgetState extends State<_LpToastWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _opacity;
@@ -92,13 +97,13 @@ class _XpToastWidgetState extends State<_XpToastWidget>
                 padding: const EdgeInsets.symmetric(
                     horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: widget.levelUp
+                  color: widget.promoted
                       ? QuestFitColors.gold.withValues(alpha: 0.95)
                       : QuestFitColors.emerald.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: (widget.levelUp
+                      color: (widget.promoted
                               ? QuestFitColors.gold
                               : QuestFitColors.emerald)
                           .withValues(alpha: 0.4),
@@ -108,13 +113,13 @@ class _XpToastWidgetState extends State<_XpToastWidget>
                   ],
                 ),
                 child: Text(
-                  widget.levelUp
-                      ? '⚡ LEVEL UP! +${widget.xpAmount} XP'
-                      : '+${widget.xpAmount} XP',
+                  widget.promoted
+                      ? '⚡ PROMOTION READY! +${widget.lpAmount} LP'
+                      : '+${widget.lpAmount} LP',
                   style: TextStyle(
-                    fontSize: widget.levelUp ? 18 : 16,
+                    fontSize: widget.promoted ? 18 : 16,
                     fontWeight: FontWeight.w900,
-                    color: widget.levelUp
+                    color: widget.promoted
                         ? const Color(0xFF1A1200)
                         : QuestFitColors.bgDark,
                     letterSpacing: 1.0,

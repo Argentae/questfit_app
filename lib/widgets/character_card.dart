@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app/theme.dart';
+import '../engine/quest_engine.dart';
 import '../providers/user_provider.dart';
 import 'xp_bar.dart';
 
-/// Character dashboard card showing avatar, rank, XP bar, and stat chips.
+/// Character dashboard card showing avatar, tier, LP bar, and stat chips.
+/// v3.0: Uses LP/Tier system instead of XP/Level.
 class CharacterCard extends ConsumerWidget {
   const CharacterCard({super.key});
 
@@ -12,16 +14,16 @@ class CharacterCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final playerAsync = ref.watch(playerStreamProvider);
     final statsAsync = ref.watch(statsStreamProvider);
-    final xpAsync = ref.watch(xpProgressProvider);
-    final rankAsync = ref.watch(rankInfoProvider);
+    final lpAsync = ref.watch(lpProgressProvider);
+    final tierAsync = ref.watch(tierInfoProvider);
 
     return playerAsync.when(
       loading: () => const _CardShimmer(),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (player) {
         final stats = statsAsync.valueOrNull;
-        final xp = xpAsync.valueOrNull;
-        final rank = rankAsync.valueOrNull;
+        final lp = lpAsync.valueOrNull;
+        final tier = tierAsync.valueOrNull;
 
         return Container(
           padding: const EdgeInsets.all(20),
@@ -39,12 +41,12 @@ class CharacterCard extends ConsumerWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: rank?.color ?? QuestFitColors.goldDim,
+                        color: tier?.color ?? QuestFitColors.goldDim,
                         width: 2,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: (rank?.color ?? QuestFitColors.gold)
+                          color: (tier?.color ?? QuestFitColors.gold)
                               .withValues(alpha: 0.15),
                           blurRadius: 20,
                         ),
@@ -61,7 +63,7 @@ class CharacterCard extends ConsumerWidget {
                             height: 80,
                           ),
                         ),
-                        // Level badge
+                        // LP badge (shows current LP)
                         Positioned(
                           bottom: 0,
                           left: 0,
@@ -69,20 +71,21 @@ class CharacterCard extends ConsumerWidget {
                           child: Container(
                             alignment: Alignment.center,
                             padding: const EdgeInsets.symmetric(vertical: 2),
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  QuestFitColors.gold,
-                                  Color(0xFFD4A830),
+                                  tier?.color ?? QuestFitColors.gold,
+                                  (tier?.color ?? QuestFitColors.gold)
+                                      .withValues(alpha: 0.8),
                                 ],
                               ),
-                              borderRadius: BorderRadius.only(
+                              borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(6),
                                 topRight: Radius.circular(6),
                               ),
                             ),
                             child: Text(
-                              'LV ${player.level}',
+                              '${player.lp} LP',
                               style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
@@ -109,21 +112,21 @@ class CharacterCard extends ConsumerWidget {
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const SizedBox(height: 10),
-                        // Rank badge
+                        // Tier badge
                         Container(
                           padding: const EdgeInsets.fromLTRB(4, 4, 12, 4),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                (rank?.color ?? QuestFitColors.emerald)
+                                (tier?.color ?? QuestFitColors.emerald)
                                     .withValues(alpha: 0.12),
-                                (rank?.color ?? QuestFitColors.emerald)
+                                (tier?.color ?? QuestFitColors.emerald)
                                     .withValues(alpha: 0.04),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: (rank?.color ?? QuestFitColors.emerald)
+                              color: (tier?.color ?? QuestFitColors.emerald)
                                   .withValues(alpha: 0.2),
                             ),
                           ),
@@ -139,14 +142,17 @@ class CharacterCard extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              Text(
-                                rank?.fullName.toUpperCase() ?? 'IRON I',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color:
-                                      rank?.color ?? QuestFitColors.emerald,
-                                  letterSpacing: 0.8,
+                              Flexible(
+                                child: Text(
+                                  tier?.fullName.toUpperCase() ?? 'IRON IV',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color:
+                                        tier?.color ?? QuestFitColors.emerald,
+                                    letterSpacing: 0.8,
+                                  ),
                                 ),
                               ),
                             ],
@@ -158,19 +164,19 @@ class CharacterCard extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              // XP Bar
-              XpBar(
-                current: xp?.current ?? 0,
-                max: xp?.max ?? 100,
+              // LP Bar (0–100)
+              LpBar(
+                current: lp?.current ?? 0,
+                max: lp?.max ?? 100,
               ),
               const SizedBox(height: 14),
-              // Stat chips
+              // Stat chips — renamed: STR, CDO, FLX
               Row(
                 children: [
                   Expanded(
                     child: _StatChip(
                       value: '${stats?.str ?? 0}',
-                      label: 'STR',
+                      label: QuestEngine.statAbbrev('str'),
                       color: QuestFitColors.redAccent,
                     ),
                   ),
@@ -178,7 +184,7 @@ class CharacterCard extends ConsumerWidget {
                   Expanded(
                     child: _StatChip(
                       value: '${stats?.end ?? 0}',
-                      label: 'END',
+                      label: QuestEngine.statAbbrev('end'),
                       color: QuestFitColors.blueAccent,
                     ),
                   ),
@@ -186,7 +192,7 @@ class CharacterCard extends ConsumerWidget {
                   Expanded(
                     child: _StatChip(
                       value: '${stats?.agi ?? 0}',
-                      label: 'AGI',
+                      label: QuestEngine.statAbbrev('agi'),
                       color: QuestFitColors.orangeAccent,
                     ),
                   ),

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../app/theme.dart';
 
-/// XP progress bar with smooth animated fill and glow shimmer.
-/// Uses implicit animation so the bar smoothly transitions when XP changes.
-class XpBar extends StatelessWidget {
+/// LP progress bar with smooth animated fill and glow shimmer.
+/// Uses implicit animation so the bar smoothly transitions when LP changes.
+///
+/// v3.0: Renamed from XP bar to LP bar. Shows 0–100 LP.
+class LpBar extends StatelessWidget {
   final int current;
   final int max;
 
-  const XpBar({super.key, required this.current, required this.max});
+  const LpBar({super.key, required this.current, required this.max});
 
   double get _percentage => max > 0 ? (current / max).clamp(0.0, 1.0) : 0;
 
@@ -19,13 +21,13 @@ class XpBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'EXPERIENCE',
+              'LEAGUE POINTS',
               style: Theme.of(context).textTheme.labelSmall,
             ),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: Text(
-                '${_formatNumber(current)} / ${_formatNumber(max)} XP',
+                '$current / $max LP',
                 key: ValueKey('$current/$max'),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: QuestFitColors.emerald,
@@ -80,14 +82,10 @@ class XpBar extends StatelessWidget {
       ],
     );
   }
-
-  String _formatNumber(int n) {
-    if (n >= 1000) {
-      return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
-    }
-    return n.toString();
-  }
 }
+
+/// Keep old name as alias for backward compatibility.
+typedef XpBar = LpBar;
 
 /// Animated version of FractionallySizedBox that smoothly interpolates widthFactor.
 class AnimatedFractionallySizedBox extends ImplicitlyAnimatedWidget {

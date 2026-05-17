@@ -67,11 +67,24 @@ GoRouter createAppRouter(WidgetRef ref) {
         ),
       ),
       // v2.0: Rank Trial route — outside the shell (full-screen experience)
+      // v3.0: Fixed navigation — now supports back button
       GoRoute(
         path: '/rank-trial',
+        parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const RankTrialScreen(),
-          transitionsBuilder: _fadeTransition,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
         ),
       ),
       // Main app shell with bottom nav

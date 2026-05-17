@@ -70,30 +70,36 @@ class _LoadoutScreenState extends ConsumerState<LoadoutScreen> {
             ),
           ),
         ),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: QuestFitColors.purple.withValues(alpha: 0.1),
-            border: Border.all(
-              color: QuestFitColors.purple.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.auto_awesome,
-                  size: 14, color: QuestFitColors.purple),
-              const SizedBox(width: 6),
-              Text(
-                'Equipped weapons drive your quests',
-                style: GoogleFonts.inter(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  color: QuestFitColors.purple,
-                ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: QuestFitColors.purple.withValues(alpha: 0.1),
+              border: Border.all(
+                color: QuestFitColors.purple.withValues(alpha: 0.2),
               ),
-            ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.auto_awesome,
+                    size: 14, color: QuestFitColors.purple),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    'Equipped weapons drive your quests',
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: QuestFitColors.purple,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -616,15 +622,18 @@ class _WeaponDetailSheet extends ConsumerWidget {
                     children: [
                       Text(ex.emoji, style: const TextStyle(fontSize: 16)),
                       const SizedBox(width: 10),
-                      Text(
-                        ex.exerciseTitle,
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: QuestFitColors.textPrimary,
+                      Expanded(
+                        child: Text(
+                          ex.exerciseTitle,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: QuestFitColors.textPrimary,
+                          ),
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       Text(
                         desc,
                         style: GoogleFonts.inter(

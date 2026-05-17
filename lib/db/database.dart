@@ -25,7 +25,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -50,10 +50,43 @@ class QuestFitDatabase extends _$QuestFitDatabase {
             // Seed weapon catalog for existing users
             await _seedWeaponCatalog();
           }
+          if (from < 3) {
+            // v2 → v3 migration: LP/Tier system
+            await m.addColumn(players, players.tier);
+            await m.addColumn(players, players.division);
+            await m.addColumn(players, players.lp);
+            await m.addColumn(players, players.totalQuestsCompleted);
+            await m.addColumn(players, players.lastActivityAt);
+            await m.addColumn(players, players.pendingPromotion);
+            await m.addColumn(quests, quests.lpReward);
+
+            // Migrate existing player rank data to new tier/division columns
+            await _migrateRankToTier();
+          }
         },
       );
 
-  /// Seeds a Level 1 Iron I player on first launch.
+  /// Migrates legacy rank string (e.g. 'iron_1') into tier + division columns.
+  Future<void> _migrateRankToTier() async {
+    final playerRows = await select(players).get();
+    for (final player in playerRows) {
+      // Parse legacy rank key like 'iron_1', 'bronze_3'
+      final parts = player.rank.split('_');
+      final tierName = parts.isNotEmpty ? parts[0] : 'iron';
+      final div = parts.length > 1 ? int.tryParse(parts[1]) ?? 4 : 4;
+
+      await (update(players)..where((t) => t.id.equals(player.id))).write(
+        PlayersCompanion(
+          tier: Value(tierName),
+          division: Value(div),
+          lp: const Value(0),
+          pendingPromotion: const Value(false),
+        ),
+      );
+    }
+  }
+
+  /// Seeds a new player at Iron IV, 0 LP on first launch.
   Future<void> _seedInitialData() async {
     final now = DateTime.now();
 
@@ -63,7 +96,12 @@ class QuestFitDatabase extends _$QuestFitDatabase {
       level: const Value(1),
       xp: const Value(0),
       totalXp: const Value(0),
-      rank: const Value('iron_1'),
+      tier: const Value('iron'),
+      division: const Value(4),
+      lp: const Value(0),
+      totalQuestsCompleted: const Value(0),
+      pendingPromotion: const Value(false),
+      rank: const Value('iron_4'),
       classType: const Value('berserker'),
       gold: const Value(0),
       awakeningComplete: const Value(false),
@@ -89,7 +127,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
     // Record initial rank
     await into(rankHistory).insert(RankHistoryCompanion(
       playerId: Value(playerId),
-      rank: const Value('iron_1'),
+      rank: const Value('iron_4'),
       achievedAt: Value(now),
     ));
 
