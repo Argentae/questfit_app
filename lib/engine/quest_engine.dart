@@ -1,8 +1,12 @@
 import 'dart:math';
 import '../data/exercises.dart';
+import '../data/weapon_catalog.dart';
+import 'gold_engine.dart';
 
 /// QuestFit Quest Generation & Validation.
-/// Daily quest rotation, XP scaling, and boss raids.
+/// Daily quest rotation, XP scaling, boss raids, and equipment-driven routines.
+///
+/// v2.0: Quests are now generated from equipped weapons.
 class QuestEngine {
   const QuestEngine._();
 
@@ -14,7 +18,64 @@ class QuestEngine {
     'monk': 'flexibility',
   };
 
-  /// Generate 4 daily quests based on player class and level.
+  /// v2.0: Generate daily quests from the player's equipped weapon loadout.
+  ///
+  /// Each equipped weapon contributes its linked exercises.
+  /// The engine picks from the combined exercise pool.
+  /// If fewer than 3 weapons are equipped, supplements from the general pool.
+  static List<GeneratedQuest> generateFromLoadout({
+    required List<WeaponDef> equippedWeapons,
+    required String classType,
+    required int playerLevel,
+  }) {
+    final picks = <GeneratedQuest>[];
+
+    if (equippedWeapons.isEmpty) {
+      // Fallback: use legacy generation
+      return generateDaily(classType: classType, playerLevel: playerLevel);
+    }
+
+    // Gather all exercises from equipped weapons
+    final weaponExercises = <_WeaponExerciseEntry>[];
+    for (final weapon in equippedWeapons) {
+      for (final ex in weapon.exercises) {
+        weaponExercises.add(_WeaponExerciseEntry(weapon: weapon, exercise: ex));
+      }
+    }
+
+    // Shuffle and pick up to 4 quests from the weapon pool
+    weaponExercises.shuffle(_rng);
+    final seen = <String>{};
+
+    for (final entry in weaponExercises) {
+      if (picks.length >= 4) break;
+      if (seen.contains(entry.exercise.title)) continue;
+      seen.add(entry.exercise.title);
+
+      picks.add(_buildFromWeaponExercise(
+        entry.exercise,
+        playerLevel,
+        entry.weapon.name,
+      ));
+    }
+
+    // If we still need more quests, supplement from the general pool
+    if (picks.length < 4) {
+      final primary = _classPrimary[classType] ?? 'strength';
+      final pool = exerciseLibrary[primary] ?? [];
+      final supplement = _pickRandom(
+        pool.where((e) => !seen.contains(e.title)).toList(),
+        4 - picks.length,
+      );
+      for (final ex in supplement) {
+        picks.add(_buildQuest(ex, primary, playerLevel));
+      }
+    }
+
+    return picks;
+  }
+
+  /// Legacy: Generate 4 daily quests based on player class and level.
   static List<GeneratedQuest> generateDaily({
     required String classType,
     required int playerLevel,
@@ -55,6 +116,7 @@ class QuestEngine {
 
     final raid = raids[_rng.nextInt(raids.length)];
     final baseXp = (200 * (1 + playerLevel * 0.03)).round();
+    final goldChest = GoldEngine.bossRaidGold(playerLevel);
 
     return GeneratedQuest(
       title: 'Boss Raid: ${raid.title}',
@@ -62,6 +124,7 @@ class QuestEngine {
       emoji: '⚔️',
       description: raid.desc,
       xpReward: (baseXp * raid.multiplier).round(),
+      goldReward: goldChest,
     );
   }
 
@@ -85,8 +148,41 @@ class QuestEngine {
     }
   }
 
+  static GeneratedQuest _buildFromWeaponExercise(
+    WeaponExerciseDef ex,
+    int playerLevel,
+    String weaponName,
+  ) {
+    final scaledXp = (ex.baseXp * (1 + playerLevel * 0.02)).round();
+    final goldReward = GoldEngine.baseQuestGold;
+    String desc;
+    if (ex.sets != null && ex.reps != null) {
+      desc = '${ex.sets} sets × ${ex.reps} reps';
+    } else if (ex.sets != null && ex.duration != null) {
+      desc = '${ex.sets} × ${ex.duration} min holds';
+    } else if (ex.duration != null) {
+      desc = '${ex.duration} min';
+    } else {
+      desc = '';
+    }
+
+    return GeneratedQuest(
+      title: ex.title,
+      category: ex.category,
+      emoji: ex.emoji,
+      description: desc,
+      sets: ex.sets,
+      reps: ex.reps,
+      duration: ex.duration,
+      xpReward: scaledXp,
+      goldReward: goldReward,
+      sourceWeapon: weaponName,
+    );
+  }
+
   static GeneratedQuest _buildQuest(ExerciseDef ex, String category, int playerLevel) {
     final scaledXp = (ex.baseXp * (1 + playerLevel * 0.02)).round();
+    final goldReward = GoldEngine.baseQuestGold;
     String desc;
     if (ex.sets != null && ex.reps != null) {
       desc = '${ex.sets} sets × ${ex.reps} reps';
@@ -107,6 +203,7 @@ class QuestEngine {
       reps: ex.reps,
       duration: ex.duration,
       xpReward: scaledXp,
+      goldReward: goldReward,
     );
   }
 
@@ -130,6 +227,10 @@ class GeneratedQuest {
   final int? reps;
   final int? duration;
   final int xpReward;
+  /// v2.0: Gold reward for this quest.
+  final int goldReward;
+  /// v2.0: Which weapon generated this quest (null = general pool).
+  final String? sourceWeapon;
 
   const GeneratedQuest({
     required this.title,
@@ -140,6 +241,8 @@ class GeneratedQuest {
     this.reps,
     this.duration,
     required this.xpReward,
+    this.goldReward = 0,
+    this.sourceWeapon,
   });
 }
 
@@ -148,4 +251,10 @@ class _RaidDef {
   final String desc;
   final double multiplier;
   const _RaidDef(this.title, this.desc, this.multiplier);
+}
+
+class _WeaponExerciseEntry {
+  final WeaponDef weapon;
+  final WeaponExerciseDef exercise;
+  const _WeaponExerciseEntry({required this.weapon, required this.exercise});
 }

@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/app_init_provider.dart';
+import '../screens/awakening_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/quests_screen.dart';
 import '../screens/avatar_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/setup_screen.dart';
+import '../screens/loadout_screen.dart';
+import '../screens/shop_screen.dart';
+import '../screens/rank_trial_screen.dart';
 import '../widgets/bottom_nav.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -22,6 +26,7 @@ GoRouter createAppRouter(WidgetRef ref) {
       final initState = ref.read(appInitProvider);
 
       final isSetupRoute = state.uri.toString() == '/setup';
+      final isAwakeningRoute = state.uri.toString() == '/awakening';
 
       return initState.when(
         loading: () => null, // Stay on current route while loading
@@ -30,7 +35,14 @@ GoRouter createAppRouter(WidgetRef ref) {
           if (appState == AppInitState.needsSetup && !isSetupRoute) {
             return '/setup';
           }
+          // v2.0: Redirect to Awakening if not completed
+          if (appState == AppInitState.awakening && !isAwakeningRoute) {
+            return '/awakening';
+          }
           if (appState == AppInitState.ready && isSetupRoute) {
+            return '/';
+          }
+          if (appState == AppInitState.ready && isAwakeningRoute) {
             return '/';
           }
           return null;
@@ -43,6 +55,22 @@ GoRouter createAppRouter(WidgetRef ref) {
         path: '/setup',
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const SetupScreen(),
+          transitionsBuilder: _fadeTransition,
+        ),
+      ),
+      // v2.0: Awakening route — outside the shell (locked screen)
+      GoRoute(
+        path: '/awakening',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const AwakeningScreen(),
+          transitionsBuilder: _fadeTransition,
+        ),
+      ),
+      // v2.0: Rank Trial route — outside the shell (full-screen experience)
+      GoRoute(
+        path: '/rank-trial',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const RankTrialScreen(),
           transitionsBuilder: _fadeTransition,
         ),
       ),
@@ -62,6 +90,22 @@ GoRouter createAppRouter(WidgetRef ref) {
             path: '/quests',
             pageBuilder: (context, state) => CustomTransitionPage(
               child: const QuestsScreen(),
+              transitionsBuilder: _fadeTransition,
+            ),
+          ),
+          // v2.0: Loadout / Equipment screen
+          GoRoute(
+            path: '/loadout',
+            pageBuilder: (context, state) => CustomTransitionPage(
+              child: const LoadoutScreen(),
+              transitionsBuilder: _fadeTransition,
+            ),
+          ),
+          // v2.0: Shop screen
+          GoRoute(
+            path: '/shop',
+            pageBuilder: (context, state) => CustomTransitionPage(
+              child: const ShopScreen(),
               transitionsBuilder: _fadeTransition,
             ),
           ),

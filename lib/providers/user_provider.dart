@@ -46,6 +46,18 @@ final rankInfoProvider = Provider<AsyncValue<RankInfo>>((ref) {
   );
 });
 
+/// v2.0: Player's current gold balance.
+final goldProvider = Provider<AsyncValue<int>>((ref) {
+  final playerAsync = ref.watch(playerStreamProvider);
+  return playerAsync.whenData((player) => player.gold);
+});
+
+/// v2.0: Whether the player has completed the Awakening.
+final awakeningCompleteProvider = Provider<AsyncValue<bool>>((ref) {
+  final playerAsync = ref.watch(playerStreamProvider);
+  return playerAsync.whenData((player) => player.awakeningComplete);
+});
+
 // ─── Mutations ───────────────────────────────────────────────────────
 
 /// Notifier that handles all player-write operations.
@@ -59,16 +71,24 @@ class UserNotifier extends AsyncNotifier<void> {
   QuestFitDatabase get _db => ref.read(databaseProvider);
 
   /// Award XP to the player, handling level-ups and rank changes.
+  /// v2.0: Supports XP capping at promotion boundaries.
   /// Returns the [XpResult] so callers can react (animations, haptics).
   Future<XpResult> awardXp(int amount) async {
     final player =
         await ((_db.select(_db.players))..limit(1)).getSingle();
+
+    // Check if there's a passed trial allowing promotion
+    final passedTrial = await (_db.select(_db.rankTrials)
+          ..where((t) =>
+              t.playerId.equals(player.id) & t.status.equals('passed')))
+        .getSingleOrNull();
 
     final result = XpEngine.addXp(
       currentLevel: player.level,
       currentXp: player.xp,
       totalXp: player.totalXp,
       amount: amount,
+      hasActiveTrialOrPassed: passedTrial != null,
     );
 
     // Update player row
@@ -91,6 +111,35 @@ class UserNotifier extends AsyncNotifier<void> {
     }
 
     return result;
+  }
+
+  /// v2.0: Award gold to the player.
+  Future<void> awardGold(int amount) async {
+    final player =
+        await ((_db.select(_db.players))..limit(1)).getSingle();
+    await (_db.update(_db.players)
+          ..where((t) => t.id.equals(player.id)))
+        .write(PlayersCompanion(gold: Value(player.gold + amount)));
+  }
+
+  /// v2.0: Spend gold. Returns true if successful.
+  Future<bool> spendGold(int amount) async {
+    final player =
+        await ((_db.select(_db.players))..limit(1)).getSingle();
+    if (player.gold < amount) return false;
+    await (_db.update(_db.players)
+          ..where((t) => t.id.equals(player.id)))
+        .write(PlayersCompanion(gold: Value(player.gold - amount)));
+    return true;
+  }
+
+  /// v2.0: Mark the Awakening as complete.
+  Future<void> completeAwakening() async {
+    final player =
+        await ((_db.select(_db.players))..limit(1)).getSingle();
+    await (_db.update(_db.players)
+          ..where((t) => t.id.equals(player.id)))
+        .write(const PlayersCompanion(awakeningComplete: Value(true)));
   }
 
   /// Increment a specific stat (str, end, agi) by [amount].

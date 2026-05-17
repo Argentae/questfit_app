@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 /// QuestFit Rank Tier System.
 /// 8 ranks from Iron to Legend, level-gated with Roman numeral tiers.
+///
+/// v2.0: Promotion boundaries and trial requirements.
 class RankEngine {
   const RankEngine._();
 
@@ -72,6 +74,80 @@ class RankEngine {
     return RankMilestone(levelsAway: 0, nextRank: current);
   }
 
+  // ─── v2.0: Promotion Series ────────────────────────────────────────
+
+  /// The levels at which a rank changes (the last level of each tier).
+  /// These are the "boundary" levels where a Promotion Trial is required.
+  static final Set<int> _promotionBoundaryLevels = _computeBoundaries();
+
+  static Set<int> _computeBoundaries() {
+    final boundaries = <int>{};
+    for (var i = 0; i < _ranks.length - 1; i++) {
+      // The level just before a major rank start is a boundary
+      boundaries.add(_ranks[i + 1].startLevel - 1);
+      // Also add tier boundaries within each rank
+      final rank = _ranks[i];
+      if (rank.tiers > 1) {
+        final nextStart = _ranks[i + 1].startLevel;
+        final range = nextStart - rank.startLevel;
+        final tierSize = (range / rank.tiers).ceil();
+        for (var t = 1; t < rank.tiers; t++) {
+          final boundaryLevel = rank.startLevel + (tierSize * t) - 1;
+          if (boundaryLevel > rank.startLevel && boundaryLevel < nextStart) {
+            boundaries.add(boundaryLevel);
+          }
+        }
+      }
+    }
+    return boundaries;
+  }
+
+  /// Check if the given level is a promotion boundary
+  /// (top of a tier, requiring a trial to advance).
+  static bool isPromotionBoundary(int level) {
+    return _promotionBoundaryLevels.contains(level);
+  }
+
+  /// Get the trial requirements for promoting past a given level.
+  static TrialRequirement getTrialRequirements(int currentLevel) {
+    final currentRank = getRank(currentLevel);
+    final nextRank = getRank(currentLevel + 1);
+
+    // Major rank transition (e.g., Iron → Bronze) = Gatekeeper Boss
+    final isMajorTransition = currentRank.name != nextRank.name;
+
+    if (isMajorTransition) {
+      // Gatekeeper Boss: 24-hour calorie/step challenge
+      // Scales with rank index
+      final calorieGoal = 500 + (currentRank.rankIndex * 200);
+      final stepGoal = 8000 + (currentRank.rankIndex * 2000);
+
+      return TrialRequirement(
+        trialType: 'gatekeeper',
+        description: 'Defeat the ${nextRank.name} Gatekeeper',
+        targetRankKey: getRankKey(currentLevel + 1),
+        targetRankName: nextRank.fullName,
+        requiredStreakDays: 0,
+        calorieGoal: calorieGoal,
+        stepGoal: stepGoal,
+      );
+    } else {
+      // Tier transition = Consistency Trial (5-day streak)
+      return TrialRequirement(
+        trialType: 'consistency',
+        description: 'Prove your consistency for ${nextRank.fullName}',
+        targetRankKey: getRankKey(currentLevel + 1),
+        targetRankName: nextRank.fullName,
+        requiredStreakDays: 5,
+        calorieGoal: null,
+        stepGoal: null,
+      );
+    }
+  }
+
+  /// XP decay percentage on trial failure.
+  static const double decayPercentage = 0.15;
+
   /// All rank definitions.
   static List<RankDef> get allRanks => _ranks;
 }
@@ -111,4 +187,25 @@ class RankMilestone {
   final RankInfo nextRank;
 
   const RankMilestone({required this.levelsAway, required this.nextRank});
+}
+
+/// v2.0: Promotion Trial requirement definition.
+class TrialRequirement {
+  final String trialType; // 'consistency' or 'gatekeeper'
+  final String description;
+  final String targetRankKey;
+  final String targetRankName;
+  final int requiredStreakDays;
+  final int? calorieGoal;
+  final int? stepGoal;
+
+  const TrialRequirement({
+    required this.trialType,
+    required this.description,
+    required this.targetRankKey,
+    required this.targetRankName,
+    required this.requiredStreakDays,
+    this.calorieGoal,
+    this.stepGoal,
+  });
 }

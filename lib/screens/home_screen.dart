@@ -4,10 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 import '../app/theme.dart';
 import '../db/database.dart';
 import '../providers/quest_provider.dart';
+import '../providers/user_provider.dart';
+import '../providers/rank_trial_provider.dart';
 import '../services/haptic_service.dart';
 import '../widgets/character_card.dart';
 import '../widgets/streak_bar.dart';
 import '../widgets/quest_card.dart';
+import 'package:go_router/go_router.dart';
 import '../widgets/xp_toast.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -23,13 +26,16 @@ class HomeScreen extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
-          _buildTopBar(),
+          _buildTopBar(context, ref),
           const SizedBox(height: 20),
           const CharacterCard(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          // v2.0: Promotion Series banner
+          _buildPromotionBanner(context, ref),
+          const SizedBox(height: 16),
           const StreakBar(),
           const SizedBox(height: 24),
-          _buildQuestHeader(completedAsync, totalAsync),
+          _buildQuestHeader(context, ref, completedAsync, totalAsync),
           const SizedBox(height: 8),
           _buildQuestList(context, questsAsync, ref),
           const SizedBox(height: 24),
@@ -39,7 +45,9 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTopBar() {
+  Widget _buildTopBar(BuildContext context, WidgetRef ref) {
+    final goldAsync = ref.watch(goldProvider);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -57,17 +65,139 @@ class HomeScreen extends ConsumerWidget {
         ),
         Row(
           children: [
-            _IconButton(icon: Icons.notifications_outlined, badge: true),
+            // v2.0: Gold display
+            goldAsync.when(
+              data: (gold) => GestureDetector(
+                onTap: () => context.go('/shop'),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: QuestFitColors.gold.withValues(alpha: 0.1),
+                    border: Border.all(
+                      color: QuestFitColors.gold.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('🪙', style: TextStyle(fontSize: 12)),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$gold',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                          color: QuestFitColors.gold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
             const SizedBox(width: 8),
-            _IconButton(icon: Icons.settings_outlined),
+            _IconButton(
+              icon: Icons.notifications_outlined,
+              badge: true,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('No new notifications')),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            _IconButton(
+              icon: Icons.settings_outlined,
+              onTap: () {
+                context.go('/settings');
+              },
+            ),
           ],
         ),
       ],
     );
   }
 
+  /// v2.0: Shows a promotion banner when XP is capped at a boundary.
+  Widget _buildPromotionBanner(BuildContext context, WidgetRef ref) {
+    final isAtBoundary = ref.watch(isAtPromotionBoundaryProvider);
+
+    return isAtBoundary.when(
+      data: (atBoundary) {
+        if (!atBoundary) return const SizedBox.shrink();
+
+        return GestureDetector(
+          onTap: () => context.go('/rank-trial'),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [
+                QuestFitColors.gold.withValues(alpha: 0.12),
+                QuestFitColors.orangeAccent.withValues(alpha: 0.08),
+              ]),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: QuestFitColors.gold.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: QuestFitColors.gold.withValues(alpha: 0.2),
+                  ),
+                  child: const Icon(Icons.military_tech_rounded,
+                      size: 20, color: QuestFitColors.gold),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'PROMOTION AVAILABLE',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                          color: QuestFitColors.gold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'XP is capped — pass a Rank Trial to advance!',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: QuestFitColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded,
+                    size: 14, color: QuestFitColors.gold),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
   Widget _buildQuestHeader(
-      AsyncValue<int> completedAsync, AsyncValue<int> totalAsync) {
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<int> completedAsync,
+    AsyncValue<int> totalAsync,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -101,7 +231,7 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: () => context.go('/quests'),
           child: const Text('View All',
               style: TextStyle(
                   color: QuestFitColors.emerald,
@@ -138,7 +268,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  /// Handles quest completion with haptics + XP toast.
+  /// Handles quest completion with haptics + XP/Gold toast.
   Future<void> _onQuestComplete(
       BuildContext context, WidgetRef ref, Quest quest) async {
     if (quest.isCompleted) return;
@@ -157,6 +287,14 @@ class HomeScreen extends ConsumerWidget {
     if (result.didLevelUp) {
       HapticService.onLevelUp();
       XpToast.show(context, result.xpAwarded, levelUp: true);
+    } else if (result.isXpCapped) {
+      // v2.0: XP capped — show promotion notification
+      XpToast.show(context, result.xpAwarded);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('⚔️ XP CAPPED — Promotion Trial required!'),
+        backgroundColor: QuestFitColors.gold,
+        duration: Duration(seconds: 3),
+      ));
     } else {
       XpToast.show(context, result.xpAwarded);
     }
@@ -193,11 +331,22 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const Text('+500 XP',
-              style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  color: QuestFitColors.gold)),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const Text('+500 XP',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: QuestFitColors.gold)),
+              const SizedBox(height: 2),
+              Text('+🪙 250',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10,
+                      color: QuestFitColors.gold.withValues(alpha: 0.7))),
+            ],
+          ),
         ],
       ),
     );
@@ -207,40 +356,44 @@ class HomeScreen extends ConsumerWidget {
 class _IconButton extends StatelessWidget {
   final IconData icon;
   final bool badge;
-  const _IconButton({required this.icon, this.badge = false});
+  final VoidCallback? onTap;
+  const _IconButton({required this.icon, this.badge = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: QuestFitColors.bgCard,
-        border: Border.all(color: QuestFitColors.glassBorder),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Icon(icon, size: 20, color: QuestFitColors.textSecondary),
-          if (badge)
-            Positioned(
-              top: 10,
-              right: 10,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: QuestFitColors.redAccent,
-                  boxShadow: [
-                    BoxShadow(
-                        color: QuestFitColors.redAccent, blurRadius: 6),
-                  ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: QuestFitColors.bgCard,
+          border: Border.all(color: QuestFitColors.glassBorder),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(icon, size: 20, color: QuestFitColors.textSecondary),
+            if (badge)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: QuestFitColors.redAccent,
+                    boxShadow: [
+                      BoxShadow(
+                          color: QuestFitColors.redAccent, blurRadius: 6),
+                    ],
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

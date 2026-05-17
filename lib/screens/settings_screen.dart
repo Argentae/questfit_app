@@ -31,10 +31,16 @@ class SettingsScreen extends ConsumerWidget {
           playerAsync.when(
             data: (player) => Column(
               children: [
-                _SettingsRow(label: 'Display Name', value: player.name),
                 _SettingsRow(
-                    label: 'Class',
-                    value: _capitalize(player.classType)),
+                  label: 'Display Name', 
+                  value: player.name,
+                  onTap: () => _showEditNameDialog(context, ref, player.name),
+                ),
+                _SettingsRow(
+                  label: 'Class',
+                  value: _capitalize(player.classType),
+                  onTap: () => _showEditClassDialog(context, ref, player.classType),
+                ),
               ],
             ),
             loading: () =>
@@ -252,6 +258,60 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _showEditNameDialog(BuildContext context, WidgetRef ref, String currentName) async {
+    final controller = TextEditingController(text: currentName);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: QuestFitColors.bgCard,
+        title: const Text('Edit Display Name', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: 'Enter new name',
+            hintStyle: TextStyle(color: QuestFitColors.textMuted),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: QuestFitColors.textMuted))),
+          TextButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('Save', style: TextStyle(color: QuestFitColors.emerald))),
+        ],
+      ),
+    );
+    if (newName != null && newName.trim().isNotEmpty && newName != currentName) {
+      ref.read(userNotifierProvider.notifier).updateName(newName.trim());
+    }
+  }
+
+  Future<void> _showEditClassDialog(BuildContext context, WidgetRef ref, String currentClass) async {
+    final controller = TextEditingController(text: currentClass);
+    final newClass = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: QuestFitColors.bgCard,
+        title: const Text('Edit Class', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: 'Enter new class (e.g. warrior)',
+            hintStyle: TextStyle(color: QuestFitColors.textMuted),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: QuestFitColors.textMuted))),
+          TextButton(onPressed: () => Navigator.pop(ctx, controller.text.toLowerCase()), child: const Text('Save', style: TextStyle(color: QuestFitColors.emerald))),
+        ],
+      ),
+    );
+    if (newClass != null && newClass.trim().isNotEmpty && newClass.toLowerCase() != currentClass.toLowerCase()) {
+      ref.read(userNotifierProvider.notifier).updateClassType(newClass.trim().toLowerCase());
+    }
+  }
+
   static String _capitalize(String s) =>
       s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
 }
@@ -274,17 +334,20 @@ class _SettingsRow extends StatelessWidget {
   final String? value;
   final Color? valueColor;
   final Widget? trailing;
+  final VoidCallback? onTap;
   const _SettingsRow(
-      {required this.label, this.value, this.valueColor, this.trailing});
+      {required this.label, this.value, this.valueColor, this.trailing, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(
-          border:
-              Border(bottom: BorderSide(color: QuestFitColors.glassBorder))),
-      child: Row(
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+            border:
+                Border(bottom: BorderSide(color: QuestFitColors.glassBorder))),
+        child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
@@ -298,7 +361,7 @@ class _SettingsRow extends StatelessWidget {
                           valueColor ?? QuestFitColors.textSecondary)),
         ],
       ),
-    );
+    ));
   }
 }
 

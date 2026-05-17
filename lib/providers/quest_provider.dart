@@ -1,9 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../db/database.dart';
+import '../engine/gold_engine.dart';
 import '../engine/quest_engine.dart';
 import '../engine/streak_engine.dart';
 import 'database_provider.dart';
+import 'equipment_provider.dart';
 import 'user_provider.dart';
 
 // ─── Result type ─────────────────────────────────────────────────────
@@ -11,13 +13,17 @@ import 'user_provider.dart';
 /// Result from completing a quest — carries data the UI needs for feedback.
 class QuestCompletionResult {
   final int xpAwarded;
+  final int goldAwarded;
   final bool didLevelUp;
   final int newLevel;
+  final bool isXpCapped;
 
   const QuestCompletionResult({
     required this.xpAwarded,
+    required this.goldAwarded,
     required this.didLevelUp,
     required this.newLevel,
+    this.isXpCapped = false,
   });
 }
 
@@ -58,19 +64,25 @@ class QuestNotifier extends AsyncNotifier<void> {
 
   QuestFitDatabase get _db => ref.read(databaseProvider);
 
-  /// Mark a quest as completed and award XP + stat points.
-  /// Returns a [QuestCompletionResult] with XP and level-up info.
+  /// Mark a quest as completed and award XP + gold + stat points.
+  /// Returns a [QuestCompletionResult] with XP, gold, and level-up info.
   Future<QuestCompletionResult> completeQuest(Quest quest) async {
     if (quest.isCompleted) {
       return const QuestCompletionResult(
-          xpAwarded: 0, didLevelUp: false, newLevel: 0);
+          xpAwarded: 0, goldAwarded: 0, didLevelUp: false, newLevel: 0);
     }
 
     // Get streak multiplier
     final streak =
         await ((_db.select(_db.streaks))..limit(1)).getSingle();
-    final multiplier = StreakEngine.getMultiplier(streak.currentStreak);
-    final xp = QuestEngine.completeQuest(quest.xpReward, multiplier);
+    final xpMultiplier = StreakEngine.getMultiplier(streak.currentStreak);
+    final xp = QuestEngine.completeQuest(quest.xpReward, xpMultiplier);
+
+    // v2.0: Calculate gold reward with streak multiplier
+    final goldReward = GoldEngine.calculateReward(
+      baseGold: quest.goldReward > 0 ? quest.goldReward : GoldEngine.baseQuestGold,
+      currentStreak: streak.currentStreak,
+    );
 
     // Mark quest completed
     await (_db.update(_db.quests)
@@ -95,6 +107,9 @@ class QuestNotifier extends AsyncNotifier<void> {
     final xpResult =
         await ref.read(userNotifierProvider.notifier).awardXp(xp);
 
+    // Award gold
+    await ref.read(userNotifierProvider.notifier).awardGold(goldReward.totalGold);
+
     // Award stat point based on category
     final stat = QuestEngine.categoryToStat(quest.category);
     await ref.read(userNotifierProvider.notifier).addStat(stat, 1);
@@ -104,8 +119,10 @@ class QuestNotifier extends AsyncNotifier<void> {
 
     return QuestCompletionResult(
       xpAwarded: xp,
+      goldAwarded: goldReward.totalGold,
       didLevelUp: xpResult.didLevelUp,
       newLevel: xpResult.newLevel,
+      isXpCapped: xpResult.isXpCapped,
     );
   }
 
@@ -121,7 +138,8 @@ class QuestNotifier extends AsyncNotifier<void> {
     ));
   }
 
-  /// Generate fresh daily quests (clears old ones and inserts new).
+  /// v2.0: Generate fresh daily quests from equipped loadout.
+  /// Falls back to legacy generation if no weapons equipped.
   Future<void> regenerateDaily() async {
     final player =
         await ((_db.select(_db.players))..limit(1)).getSingle();
@@ -131,8 +149,13 @@ class QuestNotifier extends AsyncNotifier<void> {
           ..where((t) => t.isDaily.equals(true)))
         .go();
 
-    // Generate new quests from engine
-    final generated = QuestEngine.generateDaily(
+    // Try to load equipped weapon definitions
+    final equippedWeapons =
+        await ref.read(equippedWeaponDefsProvider.future);
+
+    // Generate quests from loadout or fallback
+    final generated = QuestEngine.generateFromLoadout(
+      equippedWeapons: equippedWeapons,
       classType: player.classType,
       playerLevel: player.level,
     );
@@ -146,11 +169,36 @@ class QuestNotifier extends AsyncNotifier<void> {
         reps: Value(g.reps),
         duration: Value(g.duration),
         xpReward: Value(g.xpReward),
+        goldReward: Value(g.goldReward),
         isDaily: const Value(true),
         isCompleted: const Value(false),
         createdAt: Value(DateTime.now()),
       ));
     }
+  }
+
+  /// v2.0: Reroll daily quests using a consumable.
+  /// Returns true if successful.
+  Future<bool> rerollDailyQuests() async {
+    // Check for quest reroll consumable
+    final player =
+        await ((_db.select(_db.players))..limit(1)).getSingle();
+    final rerollItem = await (_db.select(_db.inventory)
+          ..where((t) =>
+              t.playerId.equals(player.id) &
+              t.itemKey.equals('quest_reroll')))
+        .getSingleOrNull();
+
+    if (rerollItem == null || rerollItem.quantity <= 0) return false;
+
+    // Consume the reroll
+    await (_db.update(_db.inventory)
+          ..where((t) => t.id.equals(rerollItem.id)))
+        .write(InventoryCompanion(quantity: Value(rerollItem.quantity - 1)));
+
+    // Regenerate quests
+    await regenerateDaily();
+    return true;
   }
 
   /// Update the streak after completing a quest.

@@ -4,10 +4,15 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'tables.dart';
+import '../data/weapon_catalog.dart';
 
 part 'database.g.dart';
 
-@DriftDatabase(tables: [Players, Stats, Quests, WorkoutLogs, Streaks, RankHistory])
+@DriftDatabase(tables: [
+  Players, Stats, Quests, WorkoutLogs, Streaks, RankHistory,
+  // v2.0 tables
+  Equipment, EquipmentExercises, EquippedSlots, Inventory, RankTrials,
+])
 class QuestFitDatabase extends _$QuestFitDatabase {
   QuestFitDatabase._() : super(_openConnection());
 
@@ -20,7 +25,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
   }
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -28,6 +33,23 @@ class QuestFitDatabase extends _$QuestFitDatabase {
           await m.createAll();
           // Seed default player on first run
           await _seedInitialData();
+          // Seed weapon catalog
+          await _seedWeaponCatalog();
+        },
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            // v1 → v2 migration: add new columns and tables
+            await m.addColumn(players, players.gold);
+            await m.addColumn(players, players.awakeningComplete);
+            await m.addColumn(quests, quests.goldReward);
+            await m.createTable(equipment);
+            await m.createTable(equipmentExercises);
+            await m.createTable(equippedSlots);
+            await m.createTable(inventory);
+            await m.createTable(rankTrials);
+            // Seed weapon catalog for existing users
+            await _seedWeaponCatalog();
+          }
         },
       );
 
@@ -43,6 +65,8 @@ class QuestFitDatabase extends _$QuestFitDatabase {
       totalXp: const Value(0),
       rank: const Value('iron_1'),
       classType: const Value('berserker'),
+      gold: const Value(0),
+      awakeningComplete: const Value(false),
       createdAt: Value(now),
     ));
 
@@ -69,51 +93,62 @@ class QuestFitDatabase extends _$QuestFitDatabase {
       achievedAt: Value(now),
     ));
 
-    // Seed 4 initial daily quests
-    final seedQuests = [
-      QuestsCompanion(
-        title: const Value('Barbell Squats'),
-        category: const Value('strength'),
-        description: const Value('3 sets × 10 reps'),
-        sets: const Value(3),
-        reps: const Value(10),
-        xpReward: const Value(120),
-        createdAt: Value(now),
-      ),
-      QuestsCompanion(
-        title: const Value('Treadmill Sprint'),
-        category: const Value('cardio'),
-        description: const Value('15 min HIIT'),
-        duration: const Value(15),
-        xpReward: const Value(90),
-        createdAt: Value(now),
-      ),
-      QuestsCompanion(
-        title: const Value('Hip Mobility Flow'),
-        category: const Value('flexibility'),
-        description: const Value('10 min stretching'),
-        duration: const Value(10),
-        xpReward: const Value(50),
-        createdAt: Value(now),
-      ),
-      QuestsCompanion(
-        title: const Value('Plank Challenge'),
-        category: const Value('core'),
-        description: const Value('3 × 60 sec holds'),
-        sets: const Value(3),
-        duration: const Value(1),
-        xpReward: const Value(75),
-        createdAt: Value(now),
-      ),
-    ];
+    // Seed starter consumable inventory
+    await into(inventory).insert(InventoryCompanion(
+      playerId: Value(playerId),
+      itemKey: const Value('streak_insurance'),
+      quantity: const Value(0),
+    ));
+    await into(inventory).insert(InventoryCompanion(
+      playerId: Value(playerId),
+      itemKey: const Value('quest_reroll'),
+      quantity: const Value(0),
+    ));
+  }
 
-    for (final q in seedQuests) {
-      await into(quests).insert(q);
+  /// Seeds the 20 weapons + their exercise linkages from the catalog.
+  Future<void> _seedWeaponCatalog() async {
+    for (final def in weaponCatalog) {
+      // Check if already seeded (for upgrade path)
+      final existing = await (select(equipment)
+            ..where((t) => t.key.equals(def.key)))
+          .get();
+      if (existing.isNotEmpty) continue;
+
+      final equipId = await into(equipment).insert(EquipmentCompanion(
+        key: Value(def.key),
+        name: Value(def.name),
+        description: Value(def.description),
+        rarity: Value(def.rarity),
+        imagePath: Value(def.imagePath),
+        category: Value(def.category),
+        isOwned: Value(def.isOwned),
+        price: Value(def.price),
+      ));
+
+      // Seed linked exercises
+      for (final ex in def.exercises) {
+        await into(equipmentExercises).insert(EquipmentExercisesCompanion(
+          equipmentId: Value(equipId),
+          exerciseTitle: Value(ex.title),
+          exerciseCategory: Value(ex.category),
+          sets: Value(ex.sets),
+          reps: Value(ex.reps),
+          duration: Value(ex.duration),
+          baseXp: Value(ex.baseXp),
+          emoji: Value(ex.emoji),
+        ));
+      }
     }
   }
 
   /// Resets the database to its initial state.
   Future<void> resetAllProgress() async {
+    await delete(equippedSlots).go();
+    await delete(equipmentExercises).go();
+    await delete(equipment).go();
+    await delete(inventory).go();
+    await delete(rankTrials).go();
     await delete(quests).go();
     await delete(workoutLogs).go();
     await delete(rankHistory).go();
@@ -121,6 +156,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
     await delete(streaks).go();
     await delete(players).go();
     await _seedInitialData();
+    await _seedWeaponCatalog();
   }
 }
 

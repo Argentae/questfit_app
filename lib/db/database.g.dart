@@ -85,6 +85,31 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     requiredDuringInsert: false,
     defaultValue: const Constant('berserker'),
   );
+  static const VerificationMeta _goldMeta = const VerificationMeta('gold');
+  @override
+  late final GeneratedColumn<int> gold = GeneratedColumn<int>(
+    'gold',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _awakeningCompleteMeta = const VerificationMeta(
+    'awakeningComplete',
+  );
+  @override
+  late final GeneratedColumn<bool> awakeningComplete = GeneratedColumn<bool>(
+    'awakening_complete',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("awakening_complete" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -106,6 +131,8 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     totalXp,
     rank,
     classType,
+    gold,
+    awakeningComplete,
     createdAt,
   ];
   @override
@@ -154,6 +181,21 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
       context.handle(
         _classTypeMeta,
         classType.isAcceptableOrUnknown(data['class_type']!, _classTypeMeta),
+      );
+    }
+    if (data.containsKey('gold')) {
+      context.handle(
+        _goldMeta,
+        gold.isAcceptableOrUnknown(data['gold']!, _goldMeta),
+      );
+    }
+    if (data.containsKey('awakening_complete')) {
+      context.handle(
+        _awakeningCompleteMeta,
+        awakeningComplete.isAcceptableOrUnknown(
+          data['awakening_complete']!,
+          _awakeningCompleteMeta,
+        ),
       );
     }
     if (data.containsKey('created_at')) {
@@ -206,6 +248,16 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
             DriftSqlType.string,
             data['${effectivePrefix}class_type'],
           )!,
+      gold:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}gold'],
+          )!,
+      awakeningComplete:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}awakening_complete'],
+          )!,
       createdAt:
           attachedDatabase.typeMapping.read(
             DriftSqlType.dateTime,
@@ -228,6 +280,8 @@ class Player extends DataClass implements Insertable<Player> {
   final int totalXp;
   final String rank;
   final String classType;
+  final int gold;
+  final bool awakeningComplete;
   final DateTime createdAt;
   const Player({
     required this.id,
@@ -237,6 +291,8 @@ class Player extends DataClass implements Insertable<Player> {
     required this.totalXp,
     required this.rank,
     required this.classType,
+    required this.gold,
+    required this.awakeningComplete,
     required this.createdAt,
   });
   @override
@@ -249,6 +305,8 @@ class Player extends DataClass implements Insertable<Player> {
     map['total_xp'] = Variable<int>(totalXp);
     map['rank'] = Variable<String>(rank);
     map['class_type'] = Variable<String>(classType);
+    map['gold'] = Variable<int>(gold);
+    map['awakening_complete'] = Variable<bool>(awakeningComplete);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -262,6 +320,8 @@ class Player extends DataClass implements Insertable<Player> {
       totalXp: Value(totalXp),
       rank: Value(rank),
       classType: Value(classType),
+      gold: Value(gold),
+      awakeningComplete: Value(awakeningComplete),
       createdAt: Value(createdAt),
     );
   }
@@ -279,6 +339,8 @@ class Player extends DataClass implements Insertable<Player> {
       totalXp: serializer.fromJson<int>(json['totalXp']),
       rank: serializer.fromJson<String>(json['rank']),
       classType: serializer.fromJson<String>(json['classType']),
+      gold: serializer.fromJson<int>(json['gold']),
+      awakeningComplete: serializer.fromJson<bool>(json['awakeningComplete']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -293,6 +355,8 @@ class Player extends DataClass implements Insertable<Player> {
       'totalXp': serializer.toJson<int>(totalXp),
       'rank': serializer.toJson<String>(rank),
       'classType': serializer.toJson<String>(classType),
+      'gold': serializer.toJson<int>(gold),
+      'awakeningComplete': serializer.toJson<bool>(awakeningComplete),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -305,6 +369,8 @@ class Player extends DataClass implements Insertable<Player> {
     int? totalXp,
     String? rank,
     String? classType,
+    int? gold,
+    bool? awakeningComplete,
     DateTime? createdAt,
   }) => Player(
     id: id ?? this.id,
@@ -314,6 +380,8 @@ class Player extends DataClass implements Insertable<Player> {
     totalXp: totalXp ?? this.totalXp,
     rank: rank ?? this.rank,
     classType: classType ?? this.classType,
+    gold: gold ?? this.gold,
+    awakeningComplete: awakeningComplete ?? this.awakeningComplete,
     createdAt: createdAt ?? this.createdAt,
   );
   Player copyWithCompanion(PlayersCompanion data) {
@@ -325,6 +393,11 @@ class Player extends DataClass implements Insertable<Player> {
       totalXp: data.totalXp.present ? data.totalXp.value : this.totalXp,
       rank: data.rank.present ? data.rank.value : this.rank,
       classType: data.classType.present ? data.classType.value : this.classType,
+      gold: data.gold.present ? data.gold.value : this.gold,
+      awakeningComplete:
+          data.awakeningComplete.present
+              ? data.awakeningComplete.value
+              : this.awakeningComplete,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -339,14 +412,26 @@ class Player extends DataClass implements Insertable<Player> {
           ..write('totalXp: $totalXp, ')
           ..write('rank: $rank, ')
           ..write('classType: $classType, ')
+          ..write('gold: $gold, ')
+          ..write('awakeningComplete: $awakeningComplete, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, level, xp, totalXp, rank, classType, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    level,
+    xp,
+    totalXp,
+    rank,
+    classType,
+    gold,
+    awakeningComplete,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -358,6 +443,8 @@ class Player extends DataClass implements Insertable<Player> {
           other.totalXp == this.totalXp &&
           other.rank == this.rank &&
           other.classType == this.classType &&
+          other.gold == this.gold &&
+          other.awakeningComplete == this.awakeningComplete &&
           other.createdAt == this.createdAt);
 }
 
@@ -369,6 +456,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
   final Value<int> totalXp;
   final Value<String> rank;
   final Value<String> classType;
+  final Value<int> gold;
+  final Value<bool> awakeningComplete;
   final Value<DateTime> createdAt;
   const PlayersCompanion({
     this.id = const Value.absent(),
@@ -378,6 +467,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.totalXp = const Value.absent(),
     this.rank = const Value.absent(),
     this.classType = const Value.absent(),
+    this.gold = const Value.absent(),
+    this.awakeningComplete = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   PlayersCompanion.insert({
@@ -388,6 +479,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.totalXp = const Value.absent(),
     this.rank = const Value.absent(),
     this.classType = const Value.absent(),
+    this.gold = const Value.absent(),
+    this.awakeningComplete = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   static Insertable<Player> custom({
@@ -398,6 +491,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Expression<int>? totalXp,
     Expression<String>? rank,
     Expression<String>? classType,
+    Expression<int>? gold,
+    Expression<bool>? awakeningComplete,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -408,6 +503,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       if (totalXp != null) 'total_xp': totalXp,
       if (rank != null) 'rank': rank,
       if (classType != null) 'class_type': classType,
+      if (gold != null) 'gold': gold,
+      if (awakeningComplete != null) 'awakening_complete': awakeningComplete,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -420,6 +517,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Value<int>? totalXp,
     Value<String>? rank,
     Value<String>? classType,
+    Value<int>? gold,
+    Value<bool>? awakeningComplete,
     Value<DateTime>? createdAt,
   }) {
     return PlayersCompanion(
@@ -430,6 +529,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       totalXp: totalXp ?? this.totalXp,
       rank: rank ?? this.rank,
       classType: classType ?? this.classType,
+      gold: gold ?? this.gold,
+      awakeningComplete: awakeningComplete ?? this.awakeningComplete,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -458,6 +559,12 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     if (classType.present) {
       map['class_type'] = Variable<String>(classType.value);
     }
+    if (gold.present) {
+      map['gold'] = Variable<int>(gold.value);
+    }
+    if (awakeningComplete.present) {
+      map['awakening_complete'] = Variable<bool>(awakeningComplete.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -474,6 +581,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
           ..write('totalXp: $totalXp, ')
           ..write('rank: $rank, ')
           ..write('classType: $classType, ')
+          ..write('gold: $gold, ')
+          ..write('awakeningComplete: $awakeningComplete, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -962,6 +1071,18 @@ class $QuestsTable extends Quests with TableInfo<$QuestsTable, Quest> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _goldRewardMeta = const VerificationMeta(
+    'goldReward',
+  );
+  @override
+  late final GeneratedColumn<int> goldReward = GeneratedColumn<int>(
+    'gold_reward',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _isDailyMeta = const VerificationMeta(
     'isDaily',
   );
@@ -1025,6 +1146,7 @@ class $QuestsTable extends Quests with TableInfo<$QuestsTable, Quest> {
     reps,
     duration,
     xpReward,
+    goldReward,
     isDaily,
     isCompleted,
     completedAt,
@@ -1097,6 +1219,12 @@ class $QuestsTable extends Quests with TableInfo<$QuestsTable, Quest> {
       );
     } else if (isInserting) {
       context.missing(_xpRewardMeta);
+    }
+    if (data.containsKey('gold_reward')) {
+      context.handle(
+        _goldRewardMeta,
+        goldReward.isAcceptableOrUnknown(data['gold_reward']!, _goldRewardMeta),
+      );
     }
     if (data.containsKey('is_daily')) {
       context.handle(
@@ -1174,6 +1302,11 @@ class $QuestsTable extends Quests with TableInfo<$QuestsTable, Quest> {
             DriftSqlType.int,
             data['${effectivePrefix}xp_reward'],
           )!,
+      goldReward:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}gold_reward'],
+          )!,
       isDaily:
           attachedDatabase.typeMapping.read(
             DriftSqlType.bool,
@@ -1211,6 +1344,7 @@ class Quest extends DataClass implements Insertable<Quest> {
   final int? reps;
   final int? duration;
   final int xpReward;
+  final int goldReward;
   final bool isDaily;
   final bool isCompleted;
   final DateTime? completedAt;
@@ -1224,6 +1358,7 @@ class Quest extends DataClass implements Insertable<Quest> {
     this.reps,
     this.duration,
     required this.xpReward,
+    required this.goldReward,
     required this.isDaily,
     required this.isCompleted,
     this.completedAt,
@@ -1246,6 +1381,7 @@ class Quest extends DataClass implements Insertable<Quest> {
       map['duration'] = Variable<int>(duration);
     }
     map['xp_reward'] = Variable<int>(xpReward);
+    map['gold_reward'] = Variable<int>(goldReward);
     map['is_daily'] = Variable<bool>(isDaily);
     map['is_completed'] = Variable<bool>(isCompleted);
     if (!nullToAbsent || completedAt != null) {
@@ -1268,6 +1404,7 @@ class Quest extends DataClass implements Insertable<Quest> {
               ? const Value.absent()
               : Value(duration),
       xpReward: Value(xpReward),
+      goldReward: Value(goldReward),
       isDaily: Value(isDaily),
       isCompleted: Value(isCompleted),
       completedAt:
@@ -1292,6 +1429,7 @@ class Quest extends DataClass implements Insertable<Quest> {
       reps: serializer.fromJson<int?>(json['reps']),
       duration: serializer.fromJson<int?>(json['duration']),
       xpReward: serializer.fromJson<int>(json['xpReward']),
+      goldReward: serializer.fromJson<int>(json['goldReward']),
       isDaily: serializer.fromJson<bool>(json['isDaily']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
@@ -1310,6 +1448,7 @@ class Quest extends DataClass implements Insertable<Quest> {
       'reps': serializer.toJson<int?>(reps),
       'duration': serializer.toJson<int?>(duration),
       'xpReward': serializer.toJson<int>(xpReward),
+      'goldReward': serializer.toJson<int>(goldReward),
       'isDaily': serializer.toJson<bool>(isDaily),
       'isCompleted': serializer.toJson<bool>(isCompleted),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
@@ -1326,6 +1465,7 @@ class Quest extends DataClass implements Insertable<Quest> {
     Value<int?> reps = const Value.absent(),
     Value<int?> duration = const Value.absent(),
     int? xpReward,
+    int? goldReward,
     bool? isDaily,
     bool? isCompleted,
     Value<DateTime?> completedAt = const Value.absent(),
@@ -1339,6 +1479,7 @@ class Quest extends DataClass implements Insertable<Quest> {
     reps: reps.present ? reps.value : this.reps,
     duration: duration.present ? duration.value : this.duration,
     xpReward: xpReward ?? this.xpReward,
+    goldReward: goldReward ?? this.goldReward,
     isDaily: isDaily ?? this.isDaily,
     isCompleted: isCompleted ?? this.isCompleted,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
@@ -1355,6 +1496,8 @@ class Quest extends DataClass implements Insertable<Quest> {
       reps: data.reps.present ? data.reps.value : this.reps,
       duration: data.duration.present ? data.duration.value : this.duration,
       xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
+      goldReward:
+          data.goldReward.present ? data.goldReward.value : this.goldReward,
       isDaily: data.isDaily.present ? data.isDaily.value : this.isDaily,
       isCompleted:
           data.isCompleted.present ? data.isCompleted.value : this.isCompleted,
@@ -1375,6 +1518,7 @@ class Quest extends DataClass implements Insertable<Quest> {
           ..write('reps: $reps, ')
           ..write('duration: $duration, ')
           ..write('xpReward: $xpReward, ')
+          ..write('goldReward: $goldReward, ')
           ..write('isDaily: $isDaily, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('completedAt: $completedAt, ')
@@ -1393,6 +1537,7 @@ class Quest extends DataClass implements Insertable<Quest> {
     reps,
     duration,
     xpReward,
+    goldReward,
     isDaily,
     isCompleted,
     completedAt,
@@ -1410,6 +1555,7 @@ class Quest extends DataClass implements Insertable<Quest> {
           other.reps == this.reps &&
           other.duration == this.duration &&
           other.xpReward == this.xpReward &&
+          other.goldReward == this.goldReward &&
           other.isDaily == this.isDaily &&
           other.isCompleted == this.isCompleted &&
           other.completedAt == this.completedAt &&
@@ -1425,6 +1571,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
   final Value<int?> reps;
   final Value<int?> duration;
   final Value<int> xpReward;
+  final Value<int> goldReward;
   final Value<bool> isDaily;
   final Value<bool> isCompleted;
   final Value<DateTime?> completedAt;
@@ -1438,6 +1585,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
     this.reps = const Value.absent(),
     this.duration = const Value.absent(),
     this.xpReward = const Value.absent(),
+    this.goldReward = const Value.absent(),
     this.isDaily = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.completedAt = const Value.absent(),
@@ -1452,6 +1600,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
     this.reps = const Value.absent(),
     this.duration = const Value.absent(),
     required int xpReward,
+    this.goldReward = const Value.absent(),
     this.isDaily = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.completedAt = const Value.absent(),
@@ -1469,6 +1618,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
     Expression<int>? reps,
     Expression<int>? duration,
     Expression<int>? xpReward,
+    Expression<int>? goldReward,
     Expression<bool>? isDaily,
     Expression<bool>? isCompleted,
     Expression<DateTime>? completedAt,
@@ -1483,6 +1633,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
       if (reps != null) 'reps': reps,
       if (duration != null) 'duration': duration,
       if (xpReward != null) 'xp_reward': xpReward,
+      if (goldReward != null) 'gold_reward': goldReward,
       if (isDaily != null) 'is_daily': isDaily,
       if (isCompleted != null) 'is_completed': isCompleted,
       if (completedAt != null) 'completed_at': completedAt,
@@ -1499,6 +1650,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
     Value<int?>? reps,
     Value<int?>? duration,
     Value<int>? xpReward,
+    Value<int>? goldReward,
     Value<bool>? isDaily,
     Value<bool>? isCompleted,
     Value<DateTime?>? completedAt,
@@ -1513,6 +1665,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
       reps: reps ?? this.reps,
       duration: duration ?? this.duration,
       xpReward: xpReward ?? this.xpReward,
+      goldReward: goldReward ?? this.goldReward,
       isDaily: isDaily ?? this.isDaily,
       isCompleted: isCompleted ?? this.isCompleted,
       completedAt: completedAt ?? this.completedAt,
@@ -1547,6 +1700,9 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
     if (xpReward.present) {
       map['xp_reward'] = Variable<int>(xpReward.value);
     }
+    if (goldReward.present) {
+      map['gold_reward'] = Variable<int>(goldReward.value);
+    }
     if (isDaily.present) {
       map['is_daily'] = Variable<bool>(isDaily.value);
     }
@@ -1573,6 +1729,7 @@ class QuestsCompanion extends UpdateCompanion<Quest> {
           ..write('reps: $reps, ')
           ..write('duration: $duration, ')
           ..write('xpReward: $xpReward, ')
+          ..write('goldReward: $goldReward, ')
           ..write('isDaily: $isDaily, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('completedAt: $completedAt, ')
@@ -2738,6 +2895,2548 @@ class RankHistoryCompanion extends UpdateCompanion<RankHistoryData> {
   }
 }
 
+class $EquipmentTable extends Equipment
+    with TableInfo<$EquipmentTable, EquipmentData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EquipmentTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rarityMeta = const VerificationMeta('rarity');
+  @override
+  late final GeneratedColumn<String> rarity = GeneratedColumn<String>(
+    'rarity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('common'),
+  );
+  static const VerificationMeta _imagePathMeta = const VerificationMeta(
+    'imagePath',
+  );
+  @override
+  late final GeneratedColumn<String> imagePath = GeneratedColumn<String>(
+    'image_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isOwnedMeta = const VerificationMeta(
+    'isOwned',
+  );
+  @override
+  late final GeneratedColumn<bool> isOwned = GeneratedColumn<bool>(
+    'is_owned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_owned" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _priceMeta = const VerificationMeta('price');
+  @override
+  late final GeneratedColumn<int> price = GeneratedColumn<int>(
+    'price',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    key,
+    name,
+    description,
+    rarity,
+    imagePath,
+    category,
+    isOwned,
+    price,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'equipment';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EquipmentData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('rarity')) {
+      context.handle(
+        _rarityMeta,
+        rarity.isAcceptableOrUnknown(data['rarity']!, _rarityMeta),
+      );
+    }
+    if (data.containsKey('image_path')) {
+      context.handle(
+        _imagePathMeta,
+        imagePath.isAcceptableOrUnknown(data['image_path']!, _imagePathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_imagePathMeta);
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('is_owned')) {
+      context.handle(
+        _isOwnedMeta,
+        isOwned.isAcceptableOrUnknown(data['is_owned']!, _isOwnedMeta),
+      );
+    }
+    if (data.containsKey('price')) {
+      context.handle(
+        _priceMeta,
+        price.isAcceptableOrUnknown(data['price']!, _priceMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EquipmentData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EquipmentData(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      key:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}key'],
+          )!,
+      name:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}name'],
+          )!,
+      description:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}description'],
+          )!,
+      rarity:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}rarity'],
+          )!,
+      imagePath:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}image_path'],
+          )!,
+      category:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}category'],
+          )!,
+      isOwned:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_owned'],
+          )!,
+      price:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}price'],
+          )!,
+    );
+  }
+
+  @override
+  $EquipmentTable createAlias(String alias) {
+    return $EquipmentTable(attachedDatabase, alias);
+  }
+}
+
+class EquipmentData extends DataClass implements Insertable<EquipmentData> {
+  final int id;
+
+  /// Unique slug key (e.g. 'dusted_longsword')
+  final String key;
+  final String name;
+  final String description;
+
+  /// Rarity: common, rare, epic, legendary
+  final String rarity;
+
+  /// Path to asset image (e.g. 'assets/images/dusted_longsword.webp')
+  final String imagePath;
+
+  /// Primary exercise category this weapon maps to
+  final String category;
+
+  /// Whether the player owns this weapon
+  final bool isOwned;
+
+  /// Price in gold (0 = starter/free)
+  final int price;
+  const EquipmentData({
+    required this.id,
+    required this.key,
+    required this.name,
+    required this.description,
+    required this.rarity,
+    required this.imagePath,
+    required this.category,
+    required this.isOwned,
+    required this.price,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['key'] = Variable<String>(key);
+    map['name'] = Variable<String>(name);
+    map['description'] = Variable<String>(description);
+    map['rarity'] = Variable<String>(rarity);
+    map['image_path'] = Variable<String>(imagePath);
+    map['category'] = Variable<String>(category);
+    map['is_owned'] = Variable<bool>(isOwned);
+    map['price'] = Variable<int>(price);
+    return map;
+  }
+
+  EquipmentCompanion toCompanion(bool nullToAbsent) {
+    return EquipmentCompanion(
+      id: Value(id),
+      key: Value(key),
+      name: Value(name),
+      description: Value(description),
+      rarity: Value(rarity),
+      imagePath: Value(imagePath),
+      category: Value(category),
+      isOwned: Value(isOwned),
+      price: Value(price),
+    );
+  }
+
+  factory EquipmentData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EquipmentData(
+      id: serializer.fromJson<int>(json['id']),
+      key: serializer.fromJson<String>(json['key']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String>(json['description']),
+      rarity: serializer.fromJson<String>(json['rarity']),
+      imagePath: serializer.fromJson<String>(json['imagePath']),
+      category: serializer.fromJson<String>(json['category']),
+      isOwned: serializer.fromJson<bool>(json['isOwned']),
+      price: serializer.fromJson<int>(json['price']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'key': serializer.toJson<String>(key),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String>(description),
+      'rarity': serializer.toJson<String>(rarity),
+      'imagePath': serializer.toJson<String>(imagePath),
+      'category': serializer.toJson<String>(category),
+      'isOwned': serializer.toJson<bool>(isOwned),
+      'price': serializer.toJson<int>(price),
+    };
+  }
+
+  EquipmentData copyWith({
+    int? id,
+    String? key,
+    String? name,
+    String? description,
+    String? rarity,
+    String? imagePath,
+    String? category,
+    bool? isOwned,
+    int? price,
+  }) => EquipmentData(
+    id: id ?? this.id,
+    key: key ?? this.key,
+    name: name ?? this.name,
+    description: description ?? this.description,
+    rarity: rarity ?? this.rarity,
+    imagePath: imagePath ?? this.imagePath,
+    category: category ?? this.category,
+    isOwned: isOwned ?? this.isOwned,
+    price: price ?? this.price,
+  );
+  EquipmentData copyWithCompanion(EquipmentCompanion data) {
+    return EquipmentData(
+      id: data.id.present ? data.id.value : this.id,
+      key: data.key.present ? data.key.value : this.key,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      rarity: data.rarity.present ? data.rarity.value : this.rarity,
+      imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
+      category: data.category.present ? data.category.value : this.category,
+      isOwned: data.isOwned.present ? data.isOwned.value : this.isOwned,
+      price: data.price.present ? data.price.value : this.price,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EquipmentData(')
+          ..write('id: $id, ')
+          ..write('key: $key, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('rarity: $rarity, ')
+          ..write('imagePath: $imagePath, ')
+          ..write('category: $category, ')
+          ..write('isOwned: $isOwned, ')
+          ..write('price: $price')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    key,
+    name,
+    description,
+    rarity,
+    imagePath,
+    category,
+    isOwned,
+    price,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EquipmentData &&
+          other.id == this.id &&
+          other.key == this.key &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.rarity == this.rarity &&
+          other.imagePath == this.imagePath &&
+          other.category == this.category &&
+          other.isOwned == this.isOwned &&
+          other.price == this.price);
+}
+
+class EquipmentCompanion extends UpdateCompanion<EquipmentData> {
+  final Value<int> id;
+  final Value<String> key;
+  final Value<String> name;
+  final Value<String> description;
+  final Value<String> rarity;
+  final Value<String> imagePath;
+  final Value<String> category;
+  final Value<bool> isOwned;
+  final Value<int> price;
+  const EquipmentCompanion({
+    this.id = const Value.absent(),
+    this.key = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.rarity = const Value.absent(),
+    this.imagePath = const Value.absent(),
+    this.category = const Value.absent(),
+    this.isOwned = const Value.absent(),
+    this.price = const Value.absent(),
+  });
+  EquipmentCompanion.insert({
+    this.id = const Value.absent(),
+    required String key,
+    required String name,
+    required String description,
+    this.rarity = const Value.absent(),
+    required String imagePath,
+    required String category,
+    this.isOwned = const Value.absent(),
+    this.price = const Value.absent(),
+  }) : key = Value(key),
+       name = Value(name),
+       description = Value(description),
+       imagePath = Value(imagePath),
+       category = Value(category);
+  static Insertable<EquipmentData> custom({
+    Expression<int>? id,
+    Expression<String>? key,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<String>? rarity,
+    Expression<String>? imagePath,
+    Expression<String>? category,
+    Expression<bool>? isOwned,
+    Expression<int>? price,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (key != null) 'key': key,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (rarity != null) 'rarity': rarity,
+      if (imagePath != null) 'image_path': imagePath,
+      if (category != null) 'category': category,
+      if (isOwned != null) 'is_owned': isOwned,
+      if (price != null) 'price': price,
+    });
+  }
+
+  EquipmentCompanion copyWith({
+    Value<int>? id,
+    Value<String>? key,
+    Value<String>? name,
+    Value<String>? description,
+    Value<String>? rarity,
+    Value<String>? imagePath,
+    Value<String>? category,
+    Value<bool>? isOwned,
+    Value<int>? price,
+  }) {
+    return EquipmentCompanion(
+      id: id ?? this.id,
+      key: key ?? this.key,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      rarity: rarity ?? this.rarity,
+      imagePath: imagePath ?? this.imagePath,
+      category: category ?? this.category,
+      isOwned: isOwned ?? this.isOwned,
+      price: price ?? this.price,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (rarity.present) {
+      map['rarity'] = Variable<String>(rarity.value);
+    }
+    if (imagePath.present) {
+      map['image_path'] = Variable<String>(imagePath.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (isOwned.present) {
+      map['is_owned'] = Variable<bool>(isOwned.value);
+    }
+    if (price.present) {
+      map['price'] = Variable<int>(price.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EquipmentCompanion(')
+          ..write('id: $id, ')
+          ..write('key: $key, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('rarity: $rarity, ')
+          ..write('imagePath: $imagePath, ')
+          ..write('category: $category, ')
+          ..write('isOwned: $isOwned, ')
+          ..write('price: $price')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $EquipmentExercisesTable extends EquipmentExercises
+    with TableInfo<$EquipmentExercisesTable, EquipmentExercise> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EquipmentExercisesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _equipmentIdMeta = const VerificationMeta(
+    'equipmentId',
+  );
+  @override
+  late final GeneratedColumn<int> equipmentId = GeneratedColumn<int>(
+    'equipment_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES equipment (id)',
+    ),
+  );
+  static const VerificationMeta _exerciseTitleMeta = const VerificationMeta(
+    'exerciseTitle',
+  );
+  @override
+  late final GeneratedColumn<String> exerciseTitle = GeneratedColumn<String>(
+    'exercise_title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _exerciseCategoryMeta = const VerificationMeta(
+    'exerciseCategory',
+  );
+  @override
+  late final GeneratedColumn<String> exerciseCategory = GeneratedColumn<String>(
+    'exercise_category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _setsMeta = const VerificationMeta('sets');
+  @override
+  late final GeneratedColumn<int> sets = GeneratedColumn<int>(
+    'sets',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _repsMeta = const VerificationMeta('reps');
+  @override
+  late final GeneratedColumn<int> reps = GeneratedColumn<int>(
+    'reps',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationMeta = const VerificationMeta(
+    'duration',
+  );
+  @override
+  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
+    'duration',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _baseXpMeta = const VerificationMeta('baseXp');
+  @override
+  late final GeneratedColumn<int> baseXp = GeneratedColumn<int>(
+    'base_xp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
+  @override
+  late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
+    'emoji',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('⚔️'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    equipmentId,
+    exerciseTitle,
+    exerciseCategory,
+    sets,
+    reps,
+    duration,
+    baseXp,
+    emoji,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'equipment_exercises';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EquipmentExercise> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('equipment_id')) {
+      context.handle(
+        _equipmentIdMeta,
+        equipmentId.isAcceptableOrUnknown(
+          data['equipment_id']!,
+          _equipmentIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_equipmentIdMeta);
+    }
+    if (data.containsKey('exercise_title')) {
+      context.handle(
+        _exerciseTitleMeta,
+        exerciseTitle.isAcceptableOrUnknown(
+          data['exercise_title']!,
+          _exerciseTitleMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_exerciseTitleMeta);
+    }
+    if (data.containsKey('exercise_category')) {
+      context.handle(
+        _exerciseCategoryMeta,
+        exerciseCategory.isAcceptableOrUnknown(
+          data['exercise_category']!,
+          _exerciseCategoryMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_exerciseCategoryMeta);
+    }
+    if (data.containsKey('sets')) {
+      context.handle(
+        _setsMeta,
+        sets.isAcceptableOrUnknown(data['sets']!, _setsMeta),
+      );
+    }
+    if (data.containsKey('reps')) {
+      context.handle(
+        _repsMeta,
+        reps.isAcceptableOrUnknown(data['reps']!, _repsMeta),
+      );
+    }
+    if (data.containsKey('duration')) {
+      context.handle(
+        _durationMeta,
+        duration.isAcceptableOrUnknown(data['duration']!, _durationMeta),
+      );
+    }
+    if (data.containsKey('base_xp')) {
+      context.handle(
+        _baseXpMeta,
+        baseXp.isAcceptableOrUnknown(data['base_xp']!, _baseXpMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_baseXpMeta);
+    }
+    if (data.containsKey('emoji')) {
+      context.handle(
+        _emojiMeta,
+        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EquipmentExercise map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EquipmentExercise(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      equipmentId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}equipment_id'],
+          )!,
+      exerciseTitle:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}exercise_title'],
+          )!,
+      exerciseCategory:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}exercise_category'],
+          )!,
+      sets: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sets'],
+      ),
+      reps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reps'],
+      ),
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      ),
+      baseXp:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}base_xp'],
+          )!,
+      emoji:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}emoji'],
+          )!,
+    );
+  }
+
+  @override
+  $EquipmentExercisesTable createAlias(String alias) {
+    return $EquipmentExercisesTable(attachedDatabase, alias);
+  }
+}
+
+class EquipmentExercise extends DataClass
+    implements Insertable<EquipmentExercise> {
+  final int id;
+  final int equipmentId;
+  final String exerciseTitle;
+  final String exerciseCategory;
+  final int? sets;
+  final int? reps;
+  final int? duration;
+  final int baseXp;
+  final String emoji;
+  const EquipmentExercise({
+    required this.id,
+    required this.equipmentId,
+    required this.exerciseTitle,
+    required this.exerciseCategory,
+    this.sets,
+    this.reps,
+    this.duration,
+    required this.baseXp,
+    required this.emoji,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['equipment_id'] = Variable<int>(equipmentId);
+    map['exercise_title'] = Variable<String>(exerciseTitle);
+    map['exercise_category'] = Variable<String>(exerciseCategory);
+    if (!nullToAbsent || sets != null) {
+      map['sets'] = Variable<int>(sets);
+    }
+    if (!nullToAbsent || reps != null) {
+      map['reps'] = Variable<int>(reps);
+    }
+    if (!nullToAbsent || duration != null) {
+      map['duration'] = Variable<int>(duration);
+    }
+    map['base_xp'] = Variable<int>(baseXp);
+    map['emoji'] = Variable<String>(emoji);
+    return map;
+  }
+
+  EquipmentExercisesCompanion toCompanion(bool nullToAbsent) {
+    return EquipmentExercisesCompanion(
+      id: Value(id),
+      equipmentId: Value(equipmentId),
+      exerciseTitle: Value(exerciseTitle),
+      exerciseCategory: Value(exerciseCategory),
+      sets: sets == null && nullToAbsent ? const Value.absent() : Value(sets),
+      reps: reps == null && nullToAbsent ? const Value.absent() : Value(reps),
+      duration:
+          duration == null && nullToAbsent
+              ? const Value.absent()
+              : Value(duration),
+      baseXp: Value(baseXp),
+      emoji: Value(emoji),
+    );
+  }
+
+  factory EquipmentExercise.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EquipmentExercise(
+      id: serializer.fromJson<int>(json['id']),
+      equipmentId: serializer.fromJson<int>(json['equipmentId']),
+      exerciseTitle: serializer.fromJson<String>(json['exerciseTitle']),
+      exerciseCategory: serializer.fromJson<String>(json['exerciseCategory']),
+      sets: serializer.fromJson<int?>(json['sets']),
+      reps: serializer.fromJson<int?>(json['reps']),
+      duration: serializer.fromJson<int?>(json['duration']),
+      baseXp: serializer.fromJson<int>(json['baseXp']),
+      emoji: serializer.fromJson<String>(json['emoji']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'equipmentId': serializer.toJson<int>(equipmentId),
+      'exerciseTitle': serializer.toJson<String>(exerciseTitle),
+      'exerciseCategory': serializer.toJson<String>(exerciseCategory),
+      'sets': serializer.toJson<int?>(sets),
+      'reps': serializer.toJson<int?>(reps),
+      'duration': serializer.toJson<int?>(duration),
+      'baseXp': serializer.toJson<int>(baseXp),
+      'emoji': serializer.toJson<String>(emoji),
+    };
+  }
+
+  EquipmentExercise copyWith({
+    int? id,
+    int? equipmentId,
+    String? exerciseTitle,
+    String? exerciseCategory,
+    Value<int?> sets = const Value.absent(),
+    Value<int?> reps = const Value.absent(),
+    Value<int?> duration = const Value.absent(),
+    int? baseXp,
+    String? emoji,
+  }) => EquipmentExercise(
+    id: id ?? this.id,
+    equipmentId: equipmentId ?? this.equipmentId,
+    exerciseTitle: exerciseTitle ?? this.exerciseTitle,
+    exerciseCategory: exerciseCategory ?? this.exerciseCategory,
+    sets: sets.present ? sets.value : this.sets,
+    reps: reps.present ? reps.value : this.reps,
+    duration: duration.present ? duration.value : this.duration,
+    baseXp: baseXp ?? this.baseXp,
+    emoji: emoji ?? this.emoji,
+  );
+  EquipmentExercise copyWithCompanion(EquipmentExercisesCompanion data) {
+    return EquipmentExercise(
+      id: data.id.present ? data.id.value : this.id,
+      equipmentId:
+          data.equipmentId.present ? data.equipmentId.value : this.equipmentId,
+      exerciseTitle:
+          data.exerciseTitle.present
+              ? data.exerciseTitle.value
+              : this.exerciseTitle,
+      exerciseCategory:
+          data.exerciseCategory.present
+              ? data.exerciseCategory.value
+              : this.exerciseCategory,
+      sets: data.sets.present ? data.sets.value : this.sets,
+      reps: data.reps.present ? data.reps.value : this.reps,
+      duration: data.duration.present ? data.duration.value : this.duration,
+      baseXp: data.baseXp.present ? data.baseXp.value : this.baseXp,
+      emoji: data.emoji.present ? data.emoji.value : this.emoji,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EquipmentExercise(')
+          ..write('id: $id, ')
+          ..write('equipmentId: $equipmentId, ')
+          ..write('exerciseTitle: $exerciseTitle, ')
+          ..write('exerciseCategory: $exerciseCategory, ')
+          ..write('sets: $sets, ')
+          ..write('reps: $reps, ')
+          ..write('duration: $duration, ')
+          ..write('baseXp: $baseXp, ')
+          ..write('emoji: $emoji')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    equipmentId,
+    exerciseTitle,
+    exerciseCategory,
+    sets,
+    reps,
+    duration,
+    baseXp,
+    emoji,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EquipmentExercise &&
+          other.id == this.id &&
+          other.equipmentId == this.equipmentId &&
+          other.exerciseTitle == this.exerciseTitle &&
+          other.exerciseCategory == this.exerciseCategory &&
+          other.sets == this.sets &&
+          other.reps == this.reps &&
+          other.duration == this.duration &&
+          other.baseXp == this.baseXp &&
+          other.emoji == this.emoji);
+}
+
+class EquipmentExercisesCompanion extends UpdateCompanion<EquipmentExercise> {
+  final Value<int> id;
+  final Value<int> equipmentId;
+  final Value<String> exerciseTitle;
+  final Value<String> exerciseCategory;
+  final Value<int?> sets;
+  final Value<int?> reps;
+  final Value<int?> duration;
+  final Value<int> baseXp;
+  final Value<String> emoji;
+  const EquipmentExercisesCompanion({
+    this.id = const Value.absent(),
+    this.equipmentId = const Value.absent(),
+    this.exerciseTitle = const Value.absent(),
+    this.exerciseCategory = const Value.absent(),
+    this.sets = const Value.absent(),
+    this.reps = const Value.absent(),
+    this.duration = const Value.absent(),
+    this.baseXp = const Value.absent(),
+    this.emoji = const Value.absent(),
+  });
+  EquipmentExercisesCompanion.insert({
+    this.id = const Value.absent(),
+    required int equipmentId,
+    required String exerciseTitle,
+    required String exerciseCategory,
+    this.sets = const Value.absent(),
+    this.reps = const Value.absent(),
+    this.duration = const Value.absent(),
+    required int baseXp,
+    this.emoji = const Value.absent(),
+  }) : equipmentId = Value(equipmentId),
+       exerciseTitle = Value(exerciseTitle),
+       exerciseCategory = Value(exerciseCategory),
+       baseXp = Value(baseXp);
+  static Insertable<EquipmentExercise> custom({
+    Expression<int>? id,
+    Expression<int>? equipmentId,
+    Expression<String>? exerciseTitle,
+    Expression<String>? exerciseCategory,
+    Expression<int>? sets,
+    Expression<int>? reps,
+    Expression<int>? duration,
+    Expression<int>? baseXp,
+    Expression<String>? emoji,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (equipmentId != null) 'equipment_id': equipmentId,
+      if (exerciseTitle != null) 'exercise_title': exerciseTitle,
+      if (exerciseCategory != null) 'exercise_category': exerciseCategory,
+      if (sets != null) 'sets': sets,
+      if (reps != null) 'reps': reps,
+      if (duration != null) 'duration': duration,
+      if (baseXp != null) 'base_xp': baseXp,
+      if (emoji != null) 'emoji': emoji,
+    });
+  }
+
+  EquipmentExercisesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? equipmentId,
+    Value<String>? exerciseTitle,
+    Value<String>? exerciseCategory,
+    Value<int?>? sets,
+    Value<int?>? reps,
+    Value<int?>? duration,
+    Value<int>? baseXp,
+    Value<String>? emoji,
+  }) {
+    return EquipmentExercisesCompanion(
+      id: id ?? this.id,
+      equipmentId: equipmentId ?? this.equipmentId,
+      exerciseTitle: exerciseTitle ?? this.exerciseTitle,
+      exerciseCategory: exerciseCategory ?? this.exerciseCategory,
+      sets: sets ?? this.sets,
+      reps: reps ?? this.reps,
+      duration: duration ?? this.duration,
+      baseXp: baseXp ?? this.baseXp,
+      emoji: emoji ?? this.emoji,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (equipmentId.present) {
+      map['equipment_id'] = Variable<int>(equipmentId.value);
+    }
+    if (exerciseTitle.present) {
+      map['exercise_title'] = Variable<String>(exerciseTitle.value);
+    }
+    if (exerciseCategory.present) {
+      map['exercise_category'] = Variable<String>(exerciseCategory.value);
+    }
+    if (sets.present) {
+      map['sets'] = Variable<int>(sets.value);
+    }
+    if (reps.present) {
+      map['reps'] = Variable<int>(reps.value);
+    }
+    if (duration.present) {
+      map['duration'] = Variable<int>(duration.value);
+    }
+    if (baseXp.present) {
+      map['base_xp'] = Variable<int>(baseXp.value);
+    }
+    if (emoji.present) {
+      map['emoji'] = Variable<String>(emoji.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EquipmentExercisesCompanion(')
+          ..write('id: $id, ')
+          ..write('equipmentId: $equipmentId, ')
+          ..write('exerciseTitle: $exerciseTitle, ')
+          ..write('exerciseCategory: $exerciseCategory, ')
+          ..write('sets: $sets, ')
+          ..write('reps: $reps, ')
+          ..write('duration: $duration, ')
+          ..write('baseXp: $baseXp, ')
+          ..write('emoji: $emoji')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $EquippedSlotsTable extends EquippedSlots
+    with TableInfo<$EquippedSlotsTable, EquippedSlot> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EquippedSlotsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (id)',
+    ),
+  );
+  static const VerificationMeta _slotIndexMeta = const VerificationMeta(
+    'slotIndex',
+  );
+  @override
+  late final GeneratedColumn<int> slotIndex = GeneratedColumn<int>(
+    'slot_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _equipmentIdMeta = const VerificationMeta(
+    'equipmentId',
+  );
+  @override
+  late final GeneratedColumn<int> equipmentId = GeneratedColumn<int>(
+    'equipment_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES equipment (id)',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, playerId, slotIndex, equipmentId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'equipped_slots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EquippedSlot> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('slot_index')) {
+      context.handle(
+        _slotIndexMeta,
+        slotIndex.isAcceptableOrUnknown(data['slot_index']!, _slotIndexMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_slotIndexMeta);
+    }
+    if (data.containsKey('equipment_id')) {
+      context.handle(
+        _equipmentIdMeta,
+        equipmentId.isAcceptableOrUnknown(
+          data['equipment_id']!,
+          _equipmentIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_equipmentIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EquippedSlot map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EquippedSlot(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      playerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}player_id'],
+          )!,
+      slotIndex:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}slot_index'],
+          )!,
+      equipmentId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}equipment_id'],
+          )!,
+    );
+  }
+
+  @override
+  $EquippedSlotsTable createAlias(String alias) {
+    return $EquippedSlotsTable(attachedDatabase, alias);
+  }
+}
+
+class EquippedSlot extends DataClass implements Insertable<EquippedSlot> {
+  final int id;
+  final int playerId;
+
+  /// Slot index: 1, 2, or 3
+  final int slotIndex;
+  final int equipmentId;
+  const EquippedSlot({
+    required this.id,
+    required this.playerId,
+    required this.slotIndex,
+    required this.equipmentId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['slot_index'] = Variable<int>(slotIndex);
+    map['equipment_id'] = Variable<int>(equipmentId);
+    return map;
+  }
+
+  EquippedSlotsCompanion toCompanion(bool nullToAbsent) {
+    return EquippedSlotsCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      slotIndex: Value(slotIndex),
+      equipmentId: Value(equipmentId),
+    );
+  }
+
+  factory EquippedSlot.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EquippedSlot(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      slotIndex: serializer.fromJson<int>(json['slotIndex']),
+      equipmentId: serializer.fromJson<int>(json['equipmentId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'slotIndex': serializer.toJson<int>(slotIndex),
+      'equipmentId': serializer.toJson<int>(equipmentId),
+    };
+  }
+
+  EquippedSlot copyWith({
+    int? id,
+    int? playerId,
+    int? slotIndex,
+    int? equipmentId,
+  }) => EquippedSlot(
+    id: id ?? this.id,
+    playerId: playerId ?? this.playerId,
+    slotIndex: slotIndex ?? this.slotIndex,
+    equipmentId: equipmentId ?? this.equipmentId,
+  );
+  EquippedSlot copyWithCompanion(EquippedSlotsCompanion data) {
+    return EquippedSlot(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      slotIndex: data.slotIndex.present ? data.slotIndex.value : this.slotIndex,
+      equipmentId:
+          data.equipmentId.present ? data.equipmentId.value : this.equipmentId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EquippedSlot(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('slotIndex: $slotIndex, ')
+          ..write('equipmentId: $equipmentId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, playerId, slotIndex, equipmentId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EquippedSlot &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.slotIndex == this.slotIndex &&
+          other.equipmentId == this.equipmentId);
+}
+
+class EquippedSlotsCompanion extends UpdateCompanion<EquippedSlot> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<int> slotIndex;
+  final Value<int> equipmentId;
+  const EquippedSlotsCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.slotIndex = const Value.absent(),
+    this.equipmentId = const Value.absent(),
+  });
+  EquippedSlotsCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required int slotIndex,
+    required int equipmentId,
+  }) : playerId = Value(playerId),
+       slotIndex = Value(slotIndex),
+       equipmentId = Value(equipmentId);
+  static Insertable<EquippedSlot> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<int>? slotIndex,
+    Expression<int>? equipmentId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (slotIndex != null) 'slot_index': slotIndex,
+      if (equipmentId != null) 'equipment_id': equipmentId,
+    });
+  }
+
+  EquippedSlotsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playerId,
+    Value<int>? slotIndex,
+    Value<int>? equipmentId,
+  }) {
+    return EquippedSlotsCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      slotIndex: slotIndex ?? this.slotIndex,
+      equipmentId: equipmentId ?? this.equipmentId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (slotIndex.present) {
+      map['slot_index'] = Variable<int>(slotIndex.value);
+    }
+    if (equipmentId.present) {
+      map['equipment_id'] = Variable<int>(equipmentId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EquippedSlotsCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('slotIndex: $slotIndex, ')
+          ..write('equipmentId: $equipmentId')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $InventoryTable extends Inventory
+    with TableInfo<$InventoryTable, InventoryData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InventoryTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (id)',
+    ),
+  );
+  static const VerificationMeta _itemKeyMeta = const VerificationMeta(
+    'itemKey',
+  );
+  @override
+  late final GeneratedColumn<String> itemKey = GeneratedColumn<String>(
+    'item_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, playerId, itemKey, quantity];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'inventory';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<InventoryData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('item_key')) {
+      context.handle(
+        _itemKeyMeta,
+        itemKey.isAcceptableOrUnknown(data['item_key']!, _itemKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemKeyMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  InventoryData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return InventoryData(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      playerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}player_id'],
+          )!,
+      itemKey:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}item_key'],
+          )!,
+      quantity:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}quantity'],
+          )!,
+    );
+  }
+
+  @override
+  $InventoryTable createAlias(String alias) {
+    return $InventoryTable(attachedDatabase, alias);
+  }
+}
+
+class InventoryData extends DataClass implements Insertable<InventoryData> {
+  final int id;
+  final int playerId;
+
+  /// Item key: 'streak_insurance', 'quest_reroll'
+  final String itemKey;
+  final int quantity;
+  const InventoryData({
+    required this.id,
+    required this.playerId,
+    required this.itemKey,
+    required this.quantity,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['item_key'] = Variable<String>(itemKey);
+    map['quantity'] = Variable<int>(quantity);
+    return map;
+  }
+
+  InventoryCompanion toCompanion(bool nullToAbsent) {
+    return InventoryCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      itemKey: Value(itemKey),
+      quantity: Value(quantity),
+    );
+  }
+
+  factory InventoryData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return InventoryData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      itemKey: serializer.fromJson<String>(json['itemKey']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'itemKey': serializer.toJson<String>(itemKey),
+      'quantity': serializer.toJson<int>(quantity),
+    };
+  }
+
+  InventoryData copyWith({
+    int? id,
+    int? playerId,
+    String? itemKey,
+    int? quantity,
+  }) => InventoryData(
+    id: id ?? this.id,
+    playerId: playerId ?? this.playerId,
+    itemKey: itemKey ?? this.itemKey,
+    quantity: quantity ?? this.quantity,
+  );
+  InventoryData copyWithCompanion(InventoryCompanion data) {
+    return InventoryData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      itemKey: data.itemKey.present ? data.itemKey.value : this.itemKey,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('itemKey: $itemKey, ')
+          ..write('quantity: $quantity')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, playerId, itemKey, quantity);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is InventoryData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.itemKey == this.itemKey &&
+          other.quantity == this.quantity);
+}
+
+class InventoryCompanion extends UpdateCompanion<InventoryData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> itemKey;
+  final Value<int> quantity;
+  const InventoryCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.itemKey = const Value.absent(),
+    this.quantity = const Value.absent(),
+  });
+  InventoryCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String itemKey,
+    this.quantity = const Value.absent(),
+  }) : playerId = Value(playerId),
+       itemKey = Value(itemKey);
+  static Insertable<InventoryData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? itemKey,
+    Expression<int>? quantity,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (itemKey != null) 'item_key': itemKey,
+      if (quantity != null) 'quantity': quantity,
+    });
+  }
+
+  InventoryCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playerId,
+    Value<String>? itemKey,
+    Value<int>? quantity,
+  }) {
+    return InventoryCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      itemKey: itemKey ?? this.itemKey,
+      quantity: quantity ?? this.quantity,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (itemKey.present) {
+      map['item_key'] = Variable<String>(itemKey.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('itemKey: $itemKey, ')
+          ..write('quantity: $quantity')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RankTrialsTable extends RankTrials
+    with TableInfo<$RankTrialsTable, RankTrial> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RankTrialsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (id)',
+    ),
+  );
+  static const VerificationMeta _targetRankMeta = const VerificationMeta(
+    'targetRank',
+  );
+  @override
+  late final GeneratedColumn<String> targetRank = GeneratedColumn<String>(
+    'target_rank',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _trialTypeMeta = const VerificationMeta(
+    'trialType',
+  );
+  @override
+  late final GeneratedColumn<String> trialType = GeneratedColumn<String>(
+    'trial_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+    'started_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('active'),
+  );
+  static const VerificationMeta _streakDaysCompletedMeta =
+      const VerificationMeta('streakDaysCompleted');
+  @override
+  late final GeneratedColumn<int> streakDaysCompleted = GeneratedColumn<int>(
+    'streak_days_completed',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _requiredStreakDaysMeta =
+      const VerificationMeta('requiredStreakDays');
+  @override
+  late final GeneratedColumn<int> requiredStreakDays = GeneratedColumn<int>(
+    'required_streak_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(5),
+  );
+  static const VerificationMeta _calorieGoalMeta = const VerificationMeta(
+    'calorieGoal',
+  );
+  @override
+  late final GeneratedColumn<int> calorieGoal = GeneratedColumn<int>(
+    'calorie_goal',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _stepGoalMeta = const VerificationMeta(
+    'stepGoal',
+  );
+  @override
+  late final GeneratedColumn<int> stepGoal = GeneratedColumn<int>(
+    'step_goal',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _caloriesAchievedMeta = const VerificationMeta(
+    'caloriesAchieved',
+  );
+  @override
+  late final GeneratedColumn<int> caloriesAchieved = GeneratedColumn<int>(
+    'calories_achieved',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _stepsAchievedMeta = const VerificationMeta(
+    'stepsAchieved',
+  );
+  @override
+  late final GeneratedColumn<int> stepsAchieved = GeneratedColumn<int>(
+    'steps_achieved',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    playerId,
+    targetRank,
+    trialType,
+    startedAt,
+    completedAt,
+    status,
+    streakDaysCompleted,
+    requiredStreakDays,
+    calorieGoal,
+    stepGoal,
+    caloriesAchieved,
+    stepsAchieved,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'rank_trials';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RankTrial> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('target_rank')) {
+      context.handle(
+        _targetRankMeta,
+        targetRank.isAcceptableOrUnknown(data['target_rank']!, _targetRankMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_targetRankMeta);
+    }
+    if (data.containsKey('trial_type')) {
+      context.handle(
+        _trialTypeMeta,
+        trialType.isAcceptableOrUnknown(data['trial_type']!, _trialTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_trialTypeMeta);
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('streak_days_completed')) {
+      context.handle(
+        _streakDaysCompletedMeta,
+        streakDaysCompleted.isAcceptableOrUnknown(
+          data['streak_days_completed']!,
+          _streakDaysCompletedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('required_streak_days')) {
+      context.handle(
+        _requiredStreakDaysMeta,
+        requiredStreakDays.isAcceptableOrUnknown(
+          data['required_streak_days']!,
+          _requiredStreakDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('calorie_goal')) {
+      context.handle(
+        _calorieGoalMeta,
+        calorieGoal.isAcceptableOrUnknown(
+          data['calorie_goal']!,
+          _calorieGoalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('step_goal')) {
+      context.handle(
+        _stepGoalMeta,
+        stepGoal.isAcceptableOrUnknown(data['step_goal']!, _stepGoalMeta),
+      );
+    }
+    if (data.containsKey('calories_achieved')) {
+      context.handle(
+        _caloriesAchievedMeta,
+        caloriesAchieved.isAcceptableOrUnknown(
+          data['calories_achieved']!,
+          _caloriesAchievedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('steps_achieved')) {
+      context.handle(
+        _stepsAchievedMeta,
+        stepsAchieved.isAcceptableOrUnknown(
+          data['steps_achieved']!,
+          _stepsAchievedMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RankTrial map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RankTrial(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      playerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}player_id'],
+          )!,
+      targetRank:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}target_rank'],
+          )!,
+      trialType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}trial_type'],
+          )!,
+      startedAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}started_at'],
+          )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      ),
+      status:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}status'],
+          )!,
+      streakDaysCompleted:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}streak_days_completed'],
+          )!,
+      requiredStreakDays:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}required_streak_days'],
+          )!,
+      calorieGoal: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}calorie_goal'],
+      ),
+      stepGoal: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}step_goal'],
+      ),
+      caloriesAchieved:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}calories_achieved'],
+          )!,
+      stepsAchieved:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}steps_achieved'],
+          )!,
+    );
+  }
+
+  @override
+  $RankTrialsTable createAlias(String alias) {
+    return $RankTrialsTable(attachedDatabase, alias);
+  }
+}
+
+class RankTrial extends DataClass implements Insertable<RankTrial> {
+  final int id;
+  final int playerId;
+
+  /// The rank the player is trying to promote into (e.g. 'bronze_1')
+  final String targetRank;
+
+  /// Trial type: 'consistency' or 'gatekeeper'
+  final String trialType;
+  final DateTime startedAt;
+  final DateTime? completedAt;
+
+  /// Status: 'active', 'passed', 'failed'
+  final String status;
+  final int streakDaysCompleted;
+  final int requiredStreakDays;
+  final int? calorieGoal;
+  final int? stepGoal;
+  final int caloriesAchieved;
+  final int stepsAchieved;
+  const RankTrial({
+    required this.id,
+    required this.playerId,
+    required this.targetRank,
+    required this.trialType,
+    required this.startedAt,
+    this.completedAt,
+    required this.status,
+    required this.streakDaysCompleted,
+    required this.requiredStreakDays,
+    this.calorieGoal,
+    this.stepGoal,
+    required this.caloriesAchieved,
+    required this.stepsAchieved,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['target_rank'] = Variable<String>(targetRank);
+    map['trial_type'] = Variable<String>(trialType);
+    map['started_at'] = Variable<DateTime>(startedAt);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    map['status'] = Variable<String>(status);
+    map['streak_days_completed'] = Variable<int>(streakDaysCompleted);
+    map['required_streak_days'] = Variable<int>(requiredStreakDays);
+    if (!nullToAbsent || calorieGoal != null) {
+      map['calorie_goal'] = Variable<int>(calorieGoal);
+    }
+    if (!nullToAbsent || stepGoal != null) {
+      map['step_goal'] = Variable<int>(stepGoal);
+    }
+    map['calories_achieved'] = Variable<int>(caloriesAchieved);
+    map['steps_achieved'] = Variable<int>(stepsAchieved);
+    return map;
+  }
+
+  RankTrialsCompanion toCompanion(bool nullToAbsent) {
+    return RankTrialsCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      targetRank: Value(targetRank),
+      trialType: Value(trialType),
+      startedAt: Value(startedAt),
+      completedAt:
+          completedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(completedAt),
+      status: Value(status),
+      streakDaysCompleted: Value(streakDaysCompleted),
+      requiredStreakDays: Value(requiredStreakDays),
+      calorieGoal:
+          calorieGoal == null && nullToAbsent
+              ? const Value.absent()
+              : Value(calorieGoal),
+      stepGoal:
+          stepGoal == null && nullToAbsent
+              ? const Value.absent()
+              : Value(stepGoal),
+      caloriesAchieved: Value(caloriesAchieved),
+      stepsAchieved: Value(stepsAchieved),
+    );
+  }
+
+  factory RankTrial.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RankTrial(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      targetRank: serializer.fromJson<String>(json['targetRank']),
+      trialType: serializer.fromJson<String>(json['trialType']),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      status: serializer.fromJson<String>(json['status']),
+      streakDaysCompleted: serializer.fromJson<int>(
+        json['streakDaysCompleted'],
+      ),
+      requiredStreakDays: serializer.fromJson<int>(json['requiredStreakDays']),
+      calorieGoal: serializer.fromJson<int?>(json['calorieGoal']),
+      stepGoal: serializer.fromJson<int?>(json['stepGoal']),
+      caloriesAchieved: serializer.fromJson<int>(json['caloriesAchieved']),
+      stepsAchieved: serializer.fromJson<int>(json['stepsAchieved']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'targetRank': serializer.toJson<String>(targetRank),
+      'trialType': serializer.toJson<String>(trialType),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'status': serializer.toJson<String>(status),
+      'streakDaysCompleted': serializer.toJson<int>(streakDaysCompleted),
+      'requiredStreakDays': serializer.toJson<int>(requiredStreakDays),
+      'calorieGoal': serializer.toJson<int?>(calorieGoal),
+      'stepGoal': serializer.toJson<int?>(stepGoal),
+      'caloriesAchieved': serializer.toJson<int>(caloriesAchieved),
+      'stepsAchieved': serializer.toJson<int>(stepsAchieved),
+    };
+  }
+
+  RankTrial copyWith({
+    int? id,
+    int? playerId,
+    String? targetRank,
+    String? trialType,
+    DateTime? startedAt,
+    Value<DateTime?> completedAt = const Value.absent(),
+    String? status,
+    int? streakDaysCompleted,
+    int? requiredStreakDays,
+    Value<int?> calorieGoal = const Value.absent(),
+    Value<int?> stepGoal = const Value.absent(),
+    int? caloriesAchieved,
+    int? stepsAchieved,
+  }) => RankTrial(
+    id: id ?? this.id,
+    playerId: playerId ?? this.playerId,
+    targetRank: targetRank ?? this.targetRank,
+    trialType: trialType ?? this.trialType,
+    startedAt: startedAt ?? this.startedAt,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    status: status ?? this.status,
+    streakDaysCompleted: streakDaysCompleted ?? this.streakDaysCompleted,
+    requiredStreakDays: requiredStreakDays ?? this.requiredStreakDays,
+    calorieGoal: calorieGoal.present ? calorieGoal.value : this.calorieGoal,
+    stepGoal: stepGoal.present ? stepGoal.value : this.stepGoal,
+    caloriesAchieved: caloriesAchieved ?? this.caloriesAchieved,
+    stepsAchieved: stepsAchieved ?? this.stepsAchieved,
+  );
+  RankTrial copyWithCompanion(RankTrialsCompanion data) {
+    return RankTrial(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      targetRank:
+          data.targetRank.present ? data.targetRank.value : this.targetRank,
+      trialType: data.trialType.present ? data.trialType.value : this.trialType,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      status: data.status.present ? data.status.value : this.status,
+      streakDaysCompleted:
+          data.streakDaysCompleted.present
+              ? data.streakDaysCompleted.value
+              : this.streakDaysCompleted,
+      requiredStreakDays:
+          data.requiredStreakDays.present
+              ? data.requiredStreakDays.value
+              : this.requiredStreakDays,
+      calorieGoal:
+          data.calorieGoal.present ? data.calorieGoal.value : this.calorieGoal,
+      stepGoal: data.stepGoal.present ? data.stepGoal.value : this.stepGoal,
+      caloriesAchieved:
+          data.caloriesAchieved.present
+              ? data.caloriesAchieved.value
+              : this.caloriesAchieved,
+      stepsAchieved:
+          data.stepsAchieved.present
+              ? data.stepsAchieved.value
+              : this.stepsAchieved,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RankTrial(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('targetRank: $targetRank, ')
+          ..write('trialType: $trialType, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('status: $status, ')
+          ..write('streakDaysCompleted: $streakDaysCompleted, ')
+          ..write('requiredStreakDays: $requiredStreakDays, ')
+          ..write('calorieGoal: $calorieGoal, ')
+          ..write('stepGoal: $stepGoal, ')
+          ..write('caloriesAchieved: $caloriesAchieved, ')
+          ..write('stepsAchieved: $stepsAchieved')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    playerId,
+    targetRank,
+    trialType,
+    startedAt,
+    completedAt,
+    status,
+    streakDaysCompleted,
+    requiredStreakDays,
+    calorieGoal,
+    stepGoal,
+    caloriesAchieved,
+    stepsAchieved,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RankTrial &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.targetRank == this.targetRank &&
+          other.trialType == this.trialType &&
+          other.startedAt == this.startedAt &&
+          other.completedAt == this.completedAt &&
+          other.status == this.status &&
+          other.streakDaysCompleted == this.streakDaysCompleted &&
+          other.requiredStreakDays == this.requiredStreakDays &&
+          other.calorieGoal == this.calorieGoal &&
+          other.stepGoal == this.stepGoal &&
+          other.caloriesAchieved == this.caloriesAchieved &&
+          other.stepsAchieved == this.stepsAchieved);
+}
+
+class RankTrialsCompanion extends UpdateCompanion<RankTrial> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> targetRank;
+  final Value<String> trialType;
+  final Value<DateTime> startedAt;
+  final Value<DateTime?> completedAt;
+  final Value<String> status;
+  final Value<int> streakDaysCompleted;
+  final Value<int> requiredStreakDays;
+  final Value<int?> calorieGoal;
+  final Value<int?> stepGoal;
+  final Value<int> caloriesAchieved;
+  final Value<int> stepsAchieved;
+  const RankTrialsCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.targetRank = const Value.absent(),
+    this.trialType = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.status = const Value.absent(),
+    this.streakDaysCompleted = const Value.absent(),
+    this.requiredStreakDays = const Value.absent(),
+    this.calorieGoal = const Value.absent(),
+    this.stepGoal = const Value.absent(),
+    this.caloriesAchieved = const Value.absent(),
+    this.stepsAchieved = const Value.absent(),
+  });
+  RankTrialsCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String targetRank,
+    required String trialType,
+    this.startedAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.status = const Value.absent(),
+    this.streakDaysCompleted = const Value.absent(),
+    this.requiredStreakDays = const Value.absent(),
+    this.calorieGoal = const Value.absent(),
+    this.stepGoal = const Value.absent(),
+    this.caloriesAchieved = const Value.absent(),
+    this.stepsAchieved = const Value.absent(),
+  }) : playerId = Value(playerId),
+       targetRank = Value(targetRank),
+       trialType = Value(trialType);
+  static Insertable<RankTrial> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? targetRank,
+    Expression<String>? trialType,
+    Expression<DateTime>? startedAt,
+    Expression<DateTime>? completedAt,
+    Expression<String>? status,
+    Expression<int>? streakDaysCompleted,
+    Expression<int>? requiredStreakDays,
+    Expression<int>? calorieGoal,
+    Expression<int>? stepGoal,
+    Expression<int>? caloriesAchieved,
+    Expression<int>? stepsAchieved,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (targetRank != null) 'target_rank': targetRank,
+      if (trialType != null) 'trial_type': trialType,
+      if (startedAt != null) 'started_at': startedAt,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (status != null) 'status': status,
+      if (streakDaysCompleted != null)
+        'streak_days_completed': streakDaysCompleted,
+      if (requiredStreakDays != null)
+        'required_streak_days': requiredStreakDays,
+      if (calorieGoal != null) 'calorie_goal': calorieGoal,
+      if (stepGoal != null) 'step_goal': stepGoal,
+      if (caloriesAchieved != null) 'calories_achieved': caloriesAchieved,
+      if (stepsAchieved != null) 'steps_achieved': stepsAchieved,
+    });
+  }
+
+  RankTrialsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playerId,
+    Value<String>? targetRank,
+    Value<String>? trialType,
+    Value<DateTime>? startedAt,
+    Value<DateTime?>? completedAt,
+    Value<String>? status,
+    Value<int>? streakDaysCompleted,
+    Value<int>? requiredStreakDays,
+    Value<int?>? calorieGoal,
+    Value<int?>? stepGoal,
+    Value<int>? caloriesAchieved,
+    Value<int>? stepsAchieved,
+  }) {
+    return RankTrialsCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      targetRank: targetRank ?? this.targetRank,
+      trialType: trialType ?? this.trialType,
+      startedAt: startedAt ?? this.startedAt,
+      completedAt: completedAt ?? this.completedAt,
+      status: status ?? this.status,
+      streakDaysCompleted: streakDaysCompleted ?? this.streakDaysCompleted,
+      requiredStreakDays: requiredStreakDays ?? this.requiredStreakDays,
+      calorieGoal: calorieGoal ?? this.calorieGoal,
+      stepGoal: stepGoal ?? this.stepGoal,
+      caloriesAchieved: caloriesAchieved ?? this.caloriesAchieved,
+      stepsAchieved: stepsAchieved ?? this.stepsAchieved,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (targetRank.present) {
+      map['target_rank'] = Variable<String>(targetRank.value);
+    }
+    if (trialType.present) {
+      map['trial_type'] = Variable<String>(trialType.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (streakDaysCompleted.present) {
+      map['streak_days_completed'] = Variable<int>(streakDaysCompleted.value);
+    }
+    if (requiredStreakDays.present) {
+      map['required_streak_days'] = Variable<int>(requiredStreakDays.value);
+    }
+    if (calorieGoal.present) {
+      map['calorie_goal'] = Variable<int>(calorieGoal.value);
+    }
+    if (stepGoal.present) {
+      map['step_goal'] = Variable<int>(stepGoal.value);
+    }
+    if (caloriesAchieved.present) {
+      map['calories_achieved'] = Variable<int>(caloriesAchieved.value);
+    }
+    if (stepsAchieved.present) {
+      map['steps_achieved'] = Variable<int>(stepsAchieved.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RankTrialsCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('targetRank: $targetRank, ')
+          ..write('trialType: $trialType, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('status: $status, ')
+          ..write('streakDaysCompleted: $streakDaysCompleted, ')
+          ..write('requiredStreakDays: $requiredStreakDays, ')
+          ..write('calorieGoal: $calorieGoal, ')
+          ..write('stepGoal: $stepGoal, ')
+          ..write('caloriesAchieved: $caloriesAchieved, ')
+          ..write('stepsAchieved: $stepsAchieved')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$QuestFitDatabase extends GeneratedDatabase {
   _$QuestFitDatabase(QueryExecutor e) : super(e);
   $QuestFitDatabaseManager get managers => $QuestFitDatabaseManager(this);
@@ -2747,6 +5446,12 @@ abstract class _$QuestFitDatabase extends GeneratedDatabase {
   late final $WorkoutLogsTable workoutLogs = $WorkoutLogsTable(this);
   late final $StreaksTable streaks = $StreaksTable(this);
   late final $RankHistoryTable rankHistory = $RankHistoryTable(this);
+  late final $EquipmentTable equipment = $EquipmentTable(this);
+  late final $EquipmentExercisesTable equipmentExercises =
+      $EquipmentExercisesTable(this);
+  late final $EquippedSlotsTable equippedSlots = $EquippedSlotsTable(this);
+  late final $InventoryTable inventory = $InventoryTable(this);
+  late final $RankTrialsTable rankTrials = $RankTrialsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2758,6 +5463,11 @@ abstract class _$QuestFitDatabase extends GeneratedDatabase {
     workoutLogs,
     streaks,
     rankHistory,
+    equipment,
+    equipmentExercises,
+    equippedSlots,
+    inventory,
+    rankTrials,
   ];
 }
 
@@ -2770,6 +5480,8 @@ typedef $$PlayersTableCreateCompanionBuilder =
       Value<int> totalXp,
       Value<String> rank,
       Value<String> classType,
+      Value<int> gold,
+      Value<bool> awakeningComplete,
       Value<DateTime> createdAt,
     });
 typedef $$PlayersTableUpdateCompanionBuilder =
@@ -2781,6 +5493,8 @@ typedef $$PlayersTableUpdateCompanionBuilder =
       Value<int> totalXp,
       Value<String> rank,
       Value<String> classType,
+      Value<int> gold,
+      Value<bool> awakeningComplete,
       Value<DateTime> createdAt,
     });
 
@@ -2861,6 +5575,64 @@ final class $$PlayersTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$EquippedSlotsTable, List<EquippedSlot>>
+  _equippedSlotsRefsTable(_$QuestFitDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.equippedSlots,
+        aliasName: $_aliasNameGenerator(
+          db.players.id,
+          db.equippedSlots.playerId,
+        ),
+      );
+
+  $$EquippedSlotsTableProcessedTableManager get equippedSlotsRefs {
+    final manager = $$EquippedSlotsTableTableManager(
+      $_db,
+      $_db.equippedSlots,
+    ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_equippedSlotsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$InventoryTable, List<InventoryData>>
+  _inventoryRefsTable(_$QuestFitDatabase db) => MultiTypedResultKey.fromTable(
+    db.inventory,
+    aliasName: $_aliasNameGenerator(db.players.id, db.inventory.playerId),
+  );
+
+  $$InventoryTableProcessedTableManager get inventoryRefs {
+    final manager = $$InventoryTableTableManager(
+      $_db,
+      $_db.inventory,
+    ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_inventoryRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$RankTrialsTable, List<RankTrial>>
+  _rankTrialsRefsTable(_$QuestFitDatabase db) => MultiTypedResultKey.fromTable(
+    db.rankTrials,
+    aliasName: $_aliasNameGenerator(db.players.id, db.rankTrials.playerId),
+  );
+
+  $$RankTrialsTableProcessedTableManager get rankTrialsRefs {
+    final manager = $$RankTrialsTableTableManager(
+      $_db,
+      $_db.rankTrials,
+    ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_rankTrialsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$PlayersTableFilterComposer
@@ -2904,6 +5676,16 @@ class $$PlayersTableFilterComposer
 
   ColumnFilters<String> get classType => $composableBuilder(
     column: $table.classType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get gold => $composableBuilder(
+    column: $table.gold,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get awakeningComplete => $composableBuilder(
+    column: $table.awakeningComplete,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3011,6 +5793,81 @@ class $$PlayersTableFilterComposer
     );
     return f(composer);
   }
+
+  Expression<bool> equippedSlotsRefs(
+    Expression<bool> Function($$EquippedSlotsTableFilterComposer f) f,
+  ) {
+    final $$EquippedSlotsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.equippedSlots,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EquippedSlotsTableFilterComposer(
+            $db: $db,
+            $table: $db.equippedSlots,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> inventoryRefs(
+    Expression<bool> Function($$InventoryTableFilterComposer f) f,
+  ) {
+    final $$InventoryTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.inventory,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryTableFilterComposer(
+            $db: $db,
+            $table: $db.inventory,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> rankTrialsRefs(
+    Expression<bool> Function($$RankTrialsTableFilterComposer f) f,
+  ) {
+    final $$RankTrialsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.rankTrials,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RankTrialsTableFilterComposer(
+            $db: $db,
+            $table: $db.rankTrials,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PlayersTableOrderingComposer
@@ -3057,6 +5914,16 @@ class $$PlayersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get gold => $composableBuilder(
+    column: $table.gold,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get awakeningComplete => $composableBuilder(
+    column: $table.awakeningComplete,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3092,6 +5959,14 @@ class $$PlayersTableAnnotationComposer
 
   GeneratedColumn<String> get classType =>
       $composableBuilder(column: $table.classType, builder: (column) => column);
+
+  GeneratedColumn<int> get gold =>
+      $composableBuilder(column: $table.gold, builder: (column) => column);
+
+  GeneratedColumn<bool> get awakeningComplete => $composableBuilder(
+    column: $table.awakeningComplete,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3195,6 +6070,81 @@ class $$PlayersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> equippedSlotsRefs<T extends Object>(
+    Expression<T> Function($$EquippedSlotsTableAnnotationComposer a) f,
+  ) {
+    final $$EquippedSlotsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.equippedSlots,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EquippedSlotsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.equippedSlots,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> inventoryRefs<T extends Object>(
+    Expression<T> Function($$InventoryTableAnnotationComposer a) f,
+  ) {
+    final $$InventoryTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.inventory,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryTableAnnotationComposer(
+            $db: $db,
+            $table: $db.inventory,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> rankTrialsRefs<T extends Object>(
+    Expression<T> Function($$RankTrialsTableAnnotationComposer a) f,
+  ) {
+    final $$RankTrialsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.rankTrials,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RankTrialsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.rankTrials,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PlayersTableTableManager
@@ -3215,6 +6165,9 @@ class $$PlayersTableTableManager
             bool workoutLogsRefs,
             bool streaksRefs,
             bool rankHistoryRefs,
+            bool equippedSlotsRefs,
+            bool inventoryRefs,
+            bool rankTrialsRefs,
           })
         > {
   $$PlayersTableTableManager(_$QuestFitDatabase db, $PlayersTable table)
@@ -3237,6 +6190,8 @@ class $$PlayersTableTableManager
                 Value<int> totalXp = const Value.absent(),
                 Value<String> rank = const Value.absent(),
                 Value<String> classType = const Value.absent(),
+                Value<int> gold = const Value.absent(),
+                Value<bool> awakeningComplete = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => PlayersCompanion(
                 id: id,
@@ -3246,6 +6201,8 @@ class $$PlayersTableTableManager
                 totalXp: totalXp,
                 rank: rank,
                 classType: classType,
+                gold: gold,
+                awakeningComplete: awakeningComplete,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -3257,6 +6214,8 @@ class $$PlayersTableTableManager
                 Value<int> totalXp = const Value.absent(),
                 Value<String> rank = const Value.absent(),
                 Value<String> classType = const Value.absent(),
+                Value<int> gold = const Value.absent(),
+                Value<bool> awakeningComplete = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => PlayersCompanion.insert(
                 id: id,
@@ -3266,6 +6225,8 @@ class $$PlayersTableTableManager
                 totalXp: totalXp,
                 rank: rank,
                 classType: classType,
+                gold: gold,
+                awakeningComplete: awakeningComplete,
                 createdAt: createdAt,
               ),
           withReferenceMapper:
@@ -3283,6 +6244,9 @@ class $$PlayersTableTableManager
             workoutLogsRefs = false,
             streaksRefs = false,
             rankHistoryRefs = false,
+            equippedSlotsRefs = false,
+            inventoryRefs = false,
+            rankTrialsRefs = false,
           }) {
             return PrefetchHooks(
               db: db,
@@ -3291,6 +6255,9 @@ class $$PlayersTableTableManager
                 if (workoutLogsRefs) db.workoutLogs,
                 if (streaksRefs) db.streaks,
                 if (rankHistoryRefs) db.rankHistory,
+                if (equippedSlotsRefs) db.equippedSlots,
+                if (inventoryRefs) db.inventory,
+                if (rankTrialsRefs) db.rankTrials,
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -3372,6 +6339,68 @@ class $$PlayersTableTableManager
                           ),
                       typedResults: items,
                     ),
+                  if (equippedSlotsRefs)
+                    await $_getPrefetchedData<
+                      Player,
+                      $PlayersTable,
+                      EquippedSlot
+                    >(
+                      currentTable: table,
+                      referencedTable: $$PlayersTableReferences
+                          ._equippedSlotsRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PlayersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).equippedSlotsRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.playerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                  if (inventoryRefs)
+                    await $_getPrefetchedData<
+                      Player,
+                      $PlayersTable,
+                      InventoryData
+                    >(
+                      currentTable: table,
+                      referencedTable: $$PlayersTableReferences
+                          ._inventoryRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PlayersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).inventoryRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.playerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                  if (rankTrialsRefs)
+                    await $_getPrefetchedData<Player, $PlayersTable, RankTrial>(
+                      currentTable: table,
+                      referencedTable: $$PlayersTableReferences
+                          ._rankTrialsRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PlayersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).rankTrialsRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.playerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
                 ];
               },
             );
@@ -3397,6 +6426,9 @@ typedef $$PlayersTableProcessedTableManager =
         bool workoutLogsRefs,
         bool streaksRefs,
         bool rankHistoryRefs,
+        bool equippedSlotsRefs,
+        bool inventoryRefs,
+        bool rankTrialsRefs,
       })
     >;
 typedef $$StatsTableCreateCompanionBuilder =
@@ -3739,6 +6771,7 @@ typedef $$QuestsTableCreateCompanionBuilder =
       Value<int?> reps,
       Value<int?> duration,
       required int xpReward,
+      Value<int> goldReward,
       Value<bool> isDaily,
       Value<bool> isCompleted,
       Value<DateTime?> completedAt,
@@ -3754,6 +6787,7 @@ typedef $$QuestsTableUpdateCompanionBuilder =
       Value<int?> reps,
       Value<int?> duration,
       Value<int> xpReward,
+      Value<int> goldReward,
       Value<bool> isDaily,
       Value<bool> isCompleted,
       Value<DateTime?> completedAt,
@@ -3829,6 +6863,11 @@ class $$QuestsTableFilterComposer
 
   ColumnFilters<int> get xpReward => $composableBuilder(
     column: $table.xpReward,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get goldReward => $composableBuilder(
+    column: $table.goldReward,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3927,6 +6966,11 @@ class $$QuestsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get goldReward => $composableBuilder(
+    column: $table.goldReward,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isDaily => $composableBuilder(
     column: $table.isDaily,
     builder: (column) => ColumnOrderings(column),
@@ -3982,6 +7026,11 @@ class $$QuestsTableAnnotationComposer
 
   GeneratedColumn<int> get xpReward =>
       $composableBuilder(column: $table.xpReward, builder: (column) => column);
+
+  GeneratedColumn<int> get goldReward => $composableBuilder(
+    column: $table.goldReward,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isDaily =>
       $composableBuilder(column: $table.isDaily, builder: (column) => column);
@@ -4061,6 +7110,7 @@ class $$QuestsTableTableManager
                 Value<int?> reps = const Value.absent(),
                 Value<int?> duration = const Value.absent(),
                 Value<int> xpReward = const Value.absent(),
+                Value<int> goldReward = const Value.absent(),
                 Value<bool> isDaily = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
@@ -4074,6 +7124,7 @@ class $$QuestsTableTableManager
                 reps: reps,
                 duration: duration,
                 xpReward: xpReward,
+                goldReward: goldReward,
                 isDaily: isDaily,
                 isCompleted: isCompleted,
                 completedAt: completedAt,
@@ -4089,6 +7140,7 @@ class $$QuestsTableTableManager
                 Value<int?> reps = const Value.absent(),
                 Value<int?> duration = const Value.absent(),
                 required int xpReward,
+                Value<int> goldReward = const Value.absent(),
                 Value<bool> isDaily = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
@@ -4102,6 +7154,7 @@ class $$QuestsTableTableManager
                 reps: reps,
                 duration: duration,
                 xpReward: xpReward,
+                goldReward: goldReward,
                 isDaily: isDaily,
                 isCompleted: isCompleted,
                 completedAt: completedAt,
@@ -5226,6 +8279,2084 @@ typedef $$RankHistoryTableProcessedTableManager =
       RankHistoryData,
       PrefetchHooks Function({bool playerId})
     >;
+typedef $$EquipmentTableCreateCompanionBuilder =
+    EquipmentCompanion Function({
+      Value<int> id,
+      required String key,
+      required String name,
+      required String description,
+      Value<String> rarity,
+      required String imagePath,
+      required String category,
+      Value<bool> isOwned,
+      Value<int> price,
+    });
+typedef $$EquipmentTableUpdateCompanionBuilder =
+    EquipmentCompanion Function({
+      Value<int> id,
+      Value<String> key,
+      Value<String> name,
+      Value<String> description,
+      Value<String> rarity,
+      Value<String> imagePath,
+      Value<String> category,
+      Value<bool> isOwned,
+      Value<int> price,
+    });
+
+final class $$EquipmentTableReferences
+    extends BaseReferences<_$QuestFitDatabase, $EquipmentTable, EquipmentData> {
+  $$EquipmentTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$EquipmentExercisesTable, List<EquipmentExercise>>
+  _equipmentExercisesRefsTable(_$QuestFitDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.equipmentExercises,
+        aliasName: $_aliasNameGenerator(
+          db.equipment.id,
+          db.equipmentExercises.equipmentId,
+        ),
+      );
+
+  $$EquipmentExercisesTableProcessedTableManager get equipmentExercisesRefs {
+    final manager = $$EquipmentExercisesTableTableManager(
+      $_db,
+      $_db.equipmentExercises,
+    ).filter((f) => f.equipmentId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _equipmentExercisesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$EquippedSlotsTable, List<EquippedSlot>>
+  _equippedSlotsRefsTable(_$QuestFitDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.equippedSlots,
+        aliasName: $_aliasNameGenerator(
+          db.equipment.id,
+          db.equippedSlots.equipmentId,
+        ),
+      );
+
+  $$EquippedSlotsTableProcessedTableManager get equippedSlotsRefs {
+    final manager = $$EquippedSlotsTableTableManager(
+      $_db,
+      $_db.equippedSlots,
+    ).filter((f) => f.equipmentId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_equippedSlotsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$EquipmentTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $EquipmentTable> {
+  $$EquipmentTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isOwned => $composableBuilder(
+    column: $table.isOwned,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> equipmentExercisesRefs(
+    Expression<bool> Function($$EquipmentExercisesTableFilterComposer f) f,
+  ) {
+    final $$EquipmentExercisesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.equipmentExercises,
+      getReferencedColumn: (t) => t.equipmentId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EquipmentExercisesTableFilterComposer(
+            $db: $db,
+            $table: $db.equipmentExercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> equippedSlotsRefs(
+    Expression<bool> Function($$EquippedSlotsTableFilterComposer f) f,
+  ) {
+    final $$EquippedSlotsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.equippedSlots,
+      getReferencedColumn: (t) => t.equipmentId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EquippedSlotsTableFilterComposer(
+            $db: $db,
+            $table: $db.equippedSlots,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EquipmentTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $EquipmentTable> {
+  $$EquipmentTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isOwned => $composableBuilder(
+    column: $table.isOwned,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EquipmentTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $EquipmentTable> {
+  $$EquipmentTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get rarity =>
+      $composableBuilder(column: $table.rarity, builder: (column) => column);
+
+  GeneratedColumn<String> get imagePath =>
+      $composableBuilder(column: $table.imagePath, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<bool> get isOwned =>
+      $composableBuilder(column: $table.isOwned, builder: (column) => column);
+
+  GeneratedColumn<int> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => column);
+
+  Expression<T> equipmentExercisesRefs<T extends Object>(
+    Expression<T> Function($$EquipmentExercisesTableAnnotationComposer a) f,
+  ) {
+    final $$EquipmentExercisesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.equipmentExercises,
+          getReferencedColumn: (t) => t.equipmentId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$EquipmentExercisesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.equipmentExercises,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> equippedSlotsRefs<T extends Object>(
+    Expression<T> Function($$EquippedSlotsTableAnnotationComposer a) f,
+  ) {
+    final $$EquippedSlotsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.equippedSlots,
+      getReferencedColumn: (t) => t.equipmentId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EquippedSlotsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.equippedSlots,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EquipmentTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $EquipmentTable,
+          EquipmentData,
+          $$EquipmentTableFilterComposer,
+          $$EquipmentTableOrderingComposer,
+          $$EquipmentTableAnnotationComposer,
+          $$EquipmentTableCreateCompanionBuilder,
+          $$EquipmentTableUpdateCompanionBuilder,
+          (EquipmentData, $$EquipmentTableReferences),
+          EquipmentData,
+          PrefetchHooks Function({
+            bool equipmentExercisesRefs,
+            bool equippedSlotsRefs,
+          })
+        > {
+  $$EquipmentTableTableManager(_$QuestFitDatabase db, $EquipmentTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$EquipmentTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$EquipmentTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$EquipmentTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> key = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String> rarity = const Value.absent(),
+                Value<String> imagePath = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<bool> isOwned = const Value.absent(),
+                Value<int> price = const Value.absent(),
+              }) => EquipmentCompanion(
+                id: id,
+                key: key,
+                name: name,
+                description: description,
+                rarity: rarity,
+                imagePath: imagePath,
+                category: category,
+                isOwned: isOwned,
+                price: price,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String key,
+                required String name,
+                required String description,
+                Value<String> rarity = const Value.absent(),
+                required String imagePath,
+                required String category,
+                Value<bool> isOwned = const Value.absent(),
+                Value<int> price = const Value.absent(),
+              }) => EquipmentCompanion.insert(
+                id: id,
+                key: key,
+                name: name,
+                description: description,
+                rarity: rarity,
+                imagePath: imagePath,
+                category: category,
+                isOwned: isOwned,
+                price: price,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$EquipmentTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({
+            equipmentExercisesRefs = false,
+            equippedSlotsRefs = false,
+          }) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (equipmentExercisesRefs) db.equipmentExercises,
+                if (equippedSlotsRefs) db.equippedSlots,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (equipmentExercisesRefs)
+                    await $_getPrefetchedData<
+                      EquipmentData,
+                      $EquipmentTable,
+                      EquipmentExercise
+                    >(
+                      currentTable: table,
+                      referencedTable: $$EquipmentTableReferences
+                          ._equipmentExercisesRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$EquipmentTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).equipmentExercisesRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.equipmentId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                  if (equippedSlotsRefs)
+                    await $_getPrefetchedData<
+                      EquipmentData,
+                      $EquipmentTable,
+                      EquippedSlot
+                    >(
+                      currentTable: table,
+                      referencedTable: $$EquipmentTableReferences
+                          ._equippedSlotsRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$EquipmentTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).equippedSlotsRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.equipmentId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EquipmentTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $EquipmentTable,
+      EquipmentData,
+      $$EquipmentTableFilterComposer,
+      $$EquipmentTableOrderingComposer,
+      $$EquipmentTableAnnotationComposer,
+      $$EquipmentTableCreateCompanionBuilder,
+      $$EquipmentTableUpdateCompanionBuilder,
+      (EquipmentData, $$EquipmentTableReferences),
+      EquipmentData,
+      PrefetchHooks Function({
+        bool equipmentExercisesRefs,
+        bool equippedSlotsRefs,
+      })
+    >;
+typedef $$EquipmentExercisesTableCreateCompanionBuilder =
+    EquipmentExercisesCompanion Function({
+      Value<int> id,
+      required int equipmentId,
+      required String exerciseTitle,
+      required String exerciseCategory,
+      Value<int?> sets,
+      Value<int?> reps,
+      Value<int?> duration,
+      required int baseXp,
+      Value<String> emoji,
+    });
+typedef $$EquipmentExercisesTableUpdateCompanionBuilder =
+    EquipmentExercisesCompanion Function({
+      Value<int> id,
+      Value<int> equipmentId,
+      Value<String> exerciseTitle,
+      Value<String> exerciseCategory,
+      Value<int?> sets,
+      Value<int?> reps,
+      Value<int?> duration,
+      Value<int> baseXp,
+      Value<String> emoji,
+    });
+
+final class $$EquipmentExercisesTableReferences
+    extends
+        BaseReferences<
+          _$QuestFitDatabase,
+          $EquipmentExercisesTable,
+          EquipmentExercise
+        > {
+  $$EquipmentExercisesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $EquipmentTable _equipmentIdTable(_$QuestFitDatabase db) =>
+      db.equipment.createAlias(
+        $_aliasNameGenerator(
+          db.equipmentExercises.equipmentId,
+          db.equipment.id,
+        ),
+      );
+
+  $$EquipmentTableProcessedTableManager get equipmentId {
+    final $_column = $_itemColumn<int>('equipment_id')!;
+
+    final manager = $$EquipmentTableTableManager(
+      $_db,
+      $_db.equipment,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_equipmentIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$EquipmentExercisesTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $EquipmentExercisesTable> {
+  $$EquipmentExercisesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get exerciseTitle => $composableBuilder(
+    column: $table.exerciseTitle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get exerciseCategory => $composableBuilder(
+    column: $table.exerciseCategory,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sets => $composableBuilder(
+    column: $table.sets,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reps => $composableBuilder(
+    column: $table.reps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get duration => $composableBuilder(
+    column: $table.duration,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get baseXp => $composableBuilder(
+    column: $table.baseXp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$EquipmentTableFilterComposer get equipmentId {
+    final $$EquipmentTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.equipmentId,
+      referencedTable: $db.equipment,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EquipmentTableFilterComposer(
+            $db: $db,
+            $table: $db.equipment,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EquipmentExercisesTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $EquipmentExercisesTable> {
+  $$EquipmentExercisesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get exerciseTitle => $composableBuilder(
+    column: $table.exerciseTitle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get exerciseCategory => $composableBuilder(
+    column: $table.exerciseCategory,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sets => $composableBuilder(
+    column: $table.sets,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reps => $composableBuilder(
+    column: $table.reps,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get duration => $composableBuilder(
+    column: $table.duration,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get baseXp => $composableBuilder(
+    column: $table.baseXp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$EquipmentTableOrderingComposer get equipmentId {
+    final $$EquipmentTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.equipmentId,
+      referencedTable: $db.equipment,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EquipmentTableOrderingComposer(
+            $db: $db,
+            $table: $db.equipment,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EquipmentExercisesTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $EquipmentExercisesTable> {
+  $$EquipmentExercisesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get exerciseTitle => $composableBuilder(
+    column: $table.exerciseTitle,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get exerciseCategory => $composableBuilder(
+    column: $table.exerciseCategory,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sets =>
+      $composableBuilder(column: $table.sets, builder: (column) => column);
+
+  GeneratedColumn<int> get reps =>
+      $composableBuilder(column: $table.reps, builder: (column) => column);
+
+  GeneratedColumn<int> get duration =>
+      $composableBuilder(column: $table.duration, builder: (column) => column);
+
+  GeneratedColumn<int> get baseXp =>
+      $composableBuilder(column: $table.baseXp, builder: (column) => column);
+
+  GeneratedColumn<String> get emoji =>
+      $composableBuilder(column: $table.emoji, builder: (column) => column);
+
+  $$EquipmentTableAnnotationComposer get equipmentId {
+    final $$EquipmentTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.equipmentId,
+      referencedTable: $db.equipment,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EquipmentTableAnnotationComposer(
+            $db: $db,
+            $table: $db.equipment,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EquipmentExercisesTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $EquipmentExercisesTable,
+          EquipmentExercise,
+          $$EquipmentExercisesTableFilterComposer,
+          $$EquipmentExercisesTableOrderingComposer,
+          $$EquipmentExercisesTableAnnotationComposer,
+          $$EquipmentExercisesTableCreateCompanionBuilder,
+          $$EquipmentExercisesTableUpdateCompanionBuilder,
+          (EquipmentExercise, $$EquipmentExercisesTableReferences),
+          EquipmentExercise,
+          PrefetchHooks Function({bool equipmentId})
+        > {
+  $$EquipmentExercisesTableTableManager(
+    _$QuestFitDatabase db,
+    $EquipmentExercisesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$EquipmentExercisesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer:
+              () => $$EquipmentExercisesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer:
+              () => $$EquipmentExercisesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> equipmentId = const Value.absent(),
+                Value<String> exerciseTitle = const Value.absent(),
+                Value<String> exerciseCategory = const Value.absent(),
+                Value<int?> sets = const Value.absent(),
+                Value<int?> reps = const Value.absent(),
+                Value<int?> duration = const Value.absent(),
+                Value<int> baseXp = const Value.absent(),
+                Value<String> emoji = const Value.absent(),
+              }) => EquipmentExercisesCompanion(
+                id: id,
+                equipmentId: equipmentId,
+                exerciseTitle: exerciseTitle,
+                exerciseCategory: exerciseCategory,
+                sets: sets,
+                reps: reps,
+                duration: duration,
+                baseXp: baseXp,
+                emoji: emoji,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int equipmentId,
+                required String exerciseTitle,
+                required String exerciseCategory,
+                Value<int?> sets = const Value.absent(),
+                Value<int?> reps = const Value.absent(),
+                Value<int?> duration = const Value.absent(),
+                required int baseXp,
+                Value<String> emoji = const Value.absent(),
+              }) => EquipmentExercisesCompanion.insert(
+                id: id,
+                equipmentId: equipmentId,
+                exerciseTitle: exerciseTitle,
+                exerciseCategory: exerciseCategory,
+                sets: sets,
+                reps: reps,
+                duration: duration,
+                baseXp: baseXp,
+                emoji: emoji,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$EquipmentExercisesTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({equipmentId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (equipmentId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.equipmentId,
+                            referencedTable: $$EquipmentExercisesTableReferences
+                                ._equipmentIdTable(db),
+                            referencedColumn:
+                                $$EquipmentExercisesTableReferences
+                                    ._equipmentIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EquipmentExercisesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $EquipmentExercisesTable,
+      EquipmentExercise,
+      $$EquipmentExercisesTableFilterComposer,
+      $$EquipmentExercisesTableOrderingComposer,
+      $$EquipmentExercisesTableAnnotationComposer,
+      $$EquipmentExercisesTableCreateCompanionBuilder,
+      $$EquipmentExercisesTableUpdateCompanionBuilder,
+      (EquipmentExercise, $$EquipmentExercisesTableReferences),
+      EquipmentExercise,
+      PrefetchHooks Function({bool equipmentId})
+    >;
+typedef $$EquippedSlotsTableCreateCompanionBuilder =
+    EquippedSlotsCompanion Function({
+      Value<int> id,
+      required int playerId,
+      required int slotIndex,
+      required int equipmentId,
+    });
+typedef $$EquippedSlotsTableUpdateCompanionBuilder =
+    EquippedSlotsCompanion Function({
+      Value<int> id,
+      Value<int> playerId,
+      Value<int> slotIndex,
+      Value<int> equipmentId,
+    });
+
+final class $$EquippedSlotsTableReferences
+    extends
+        BaseReferences<_$QuestFitDatabase, $EquippedSlotsTable, EquippedSlot> {
+  $$EquippedSlotsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $PlayersTable _playerIdTable(_$QuestFitDatabase db) =>
+      db.players.createAlias(
+        $_aliasNameGenerator(db.equippedSlots.playerId, db.players.id),
+      );
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<int>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $EquipmentTable _equipmentIdTable(_$QuestFitDatabase db) =>
+      db.equipment.createAlias(
+        $_aliasNameGenerator(db.equippedSlots.equipmentId, db.equipment.id),
+      );
+
+  $$EquipmentTableProcessedTableManager get equipmentId {
+    final $_column = $_itemColumn<int>('equipment_id')!;
+
+    final manager = $$EquipmentTableTableManager(
+      $_db,
+      $_db.equipment,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_equipmentIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$EquippedSlotsTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $EquippedSlotsTable> {
+  $$EquippedSlotsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get slotIndex => $composableBuilder(
+    column: $table.slotIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$EquipmentTableFilterComposer get equipmentId {
+    final $$EquipmentTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.equipmentId,
+      referencedTable: $db.equipment,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EquipmentTableFilterComposer(
+            $db: $db,
+            $table: $db.equipment,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EquippedSlotsTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $EquippedSlotsTable> {
+  $$EquippedSlotsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get slotIndex => $composableBuilder(
+    column: $table.slotIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$EquipmentTableOrderingComposer get equipmentId {
+    final $$EquipmentTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.equipmentId,
+      referencedTable: $db.equipment,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EquipmentTableOrderingComposer(
+            $db: $db,
+            $table: $db.equipment,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EquippedSlotsTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $EquippedSlotsTable> {
+  $$EquippedSlotsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get slotIndex =>
+      $composableBuilder(column: $table.slotIndex, builder: (column) => column);
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$EquipmentTableAnnotationComposer get equipmentId {
+    final $$EquipmentTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.equipmentId,
+      referencedTable: $db.equipment,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EquipmentTableAnnotationComposer(
+            $db: $db,
+            $table: $db.equipment,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EquippedSlotsTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $EquippedSlotsTable,
+          EquippedSlot,
+          $$EquippedSlotsTableFilterComposer,
+          $$EquippedSlotsTableOrderingComposer,
+          $$EquippedSlotsTableAnnotationComposer,
+          $$EquippedSlotsTableCreateCompanionBuilder,
+          $$EquippedSlotsTableUpdateCompanionBuilder,
+          (EquippedSlot, $$EquippedSlotsTableReferences),
+          EquippedSlot,
+          PrefetchHooks Function({bool playerId, bool equipmentId})
+        > {
+  $$EquippedSlotsTableTableManager(
+    _$QuestFitDatabase db,
+    $EquippedSlotsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$EquippedSlotsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () =>
+                  $$EquippedSlotsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$EquippedSlotsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playerId = const Value.absent(),
+                Value<int> slotIndex = const Value.absent(),
+                Value<int> equipmentId = const Value.absent(),
+              }) => EquippedSlotsCompanion(
+                id: id,
+                playerId: playerId,
+                slotIndex: slotIndex,
+                equipmentId: equipmentId,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playerId,
+                required int slotIndex,
+                required int equipmentId,
+              }) => EquippedSlotsCompanion.insert(
+                id: id,
+                playerId: playerId,
+                slotIndex: slotIndex,
+                equipmentId: equipmentId,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$EquippedSlotsTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({playerId = false, equipmentId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (playerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$EquippedSlotsTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn:
+                                $$EquippedSlotsTableReferences
+                                    ._playerIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+                if (equipmentId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.equipmentId,
+                            referencedTable: $$EquippedSlotsTableReferences
+                                ._equipmentIdTable(db),
+                            referencedColumn:
+                                $$EquippedSlotsTableReferences
+                                    ._equipmentIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EquippedSlotsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $EquippedSlotsTable,
+      EquippedSlot,
+      $$EquippedSlotsTableFilterComposer,
+      $$EquippedSlotsTableOrderingComposer,
+      $$EquippedSlotsTableAnnotationComposer,
+      $$EquippedSlotsTableCreateCompanionBuilder,
+      $$EquippedSlotsTableUpdateCompanionBuilder,
+      (EquippedSlot, $$EquippedSlotsTableReferences),
+      EquippedSlot,
+      PrefetchHooks Function({bool playerId, bool equipmentId})
+    >;
+typedef $$InventoryTableCreateCompanionBuilder =
+    InventoryCompanion Function({
+      Value<int> id,
+      required int playerId,
+      required String itemKey,
+      Value<int> quantity,
+    });
+typedef $$InventoryTableUpdateCompanionBuilder =
+    InventoryCompanion Function({
+      Value<int> id,
+      Value<int> playerId,
+      Value<String> itemKey,
+      Value<int> quantity,
+    });
+
+final class $$InventoryTableReferences
+    extends BaseReferences<_$QuestFitDatabase, $InventoryTable, InventoryData> {
+  $$InventoryTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $PlayersTable _playerIdTable(_$QuestFitDatabase db) => db.players
+      .createAlias($_aliasNameGenerator(db.inventory.playerId, db.players.id));
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<int>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$InventoryTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $InventoryTable> {
+  $$InventoryTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemKey => $composableBuilder(
+    column: $table.itemKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$InventoryTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $InventoryTable> {
+  $$InventoryTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemKey => $composableBuilder(
+    column: $table.itemKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$InventoryTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $InventoryTable> {
+  $$InventoryTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get itemKey =>
+      $composableBuilder(column: $table.itemKey, builder: (column) => column);
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$InventoryTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $InventoryTable,
+          InventoryData,
+          $$InventoryTableFilterComposer,
+          $$InventoryTableOrderingComposer,
+          $$InventoryTableAnnotationComposer,
+          $$InventoryTableCreateCompanionBuilder,
+          $$InventoryTableUpdateCompanionBuilder,
+          (InventoryData, $$InventoryTableReferences),
+          InventoryData,
+          PrefetchHooks Function({bool playerId})
+        > {
+  $$InventoryTableTableManager(_$QuestFitDatabase db, $InventoryTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$InventoryTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$InventoryTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$InventoryTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playerId = const Value.absent(),
+                Value<String> itemKey = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+              }) => InventoryCompanion(
+                id: id,
+                playerId: playerId,
+                itemKey: itemKey,
+                quantity: quantity,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playerId,
+                required String itemKey,
+                Value<int> quantity = const Value.absent(),
+              }) => InventoryCompanion.insert(
+                id: id,
+                playerId: playerId,
+                itemKey: itemKey,
+                quantity: quantity,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$InventoryTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({playerId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (playerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$InventoryTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn:
+                                $$InventoryTableReferences
+                                    ._playerIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$InventoryTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $InventoryTable,
+      InventoryData,
+      $$InventoryTableFilterComposer,
+      $$InventoryTableOrderingComposer,
+      $$InventoryTableAnnotationComposer,
+      $$InventoryTableCreateCompanionBuilder,
+      $$InventoryTableUpdateCompanionBuilder,
+      (InventoryData, $$InventoryTableReferences),
+      InventoryData,
+      PrefetchHooks Function({bool playerId})
+    >;
+typedef $$RankTrialsTableCreateCompanionBuilder =
+    RankTrialsCompanion Function({
+      Value<int> id,
+      required int playerId,
+      required String targetRank,
+      required String trialType,
+      Value<DateTime> startedAt,
+      Value<DateTime?> completedAt,
+      Value<String> status,
+      Value<int> streakDaysCompleted,
+      Value<int> requiredStreakDays,
+      Value<int?> calorieGoal,
+      Value<int?> stepGoal,
+      Value<int> caloriesAchieved,
+      Value<int> stepsAchieved,
+    });
+typedef $$RankTrialsTableUpdateCompanionBuilder =
+    RankTrialsCompanion Function({
+      Value<int> id,
+      Value<int> playerId,
+      Value<String> targetRank,
+      Value<String> trialType,
+      Value<DateTime> startedAt,
+      Value<DateTime?> completedAt,
+      Value<String> status,
+      Value<int> streakDaysCompleted,
+      Value<int> requiredStreakDays,
+      Value<int?> calorieGoal,
+      Value<int?> stepGoal,
+      Value<int> caloriesAchieved,
+      Value<int> stepsAchieved,
+    });
+
+final class $$RankTrialsTableReferences
+    extends BaseReferences<_$QuestFitDatabase, $RankTrialsTable, RankTrial> {
+  $$RankTrialsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $PlayersTable _playerIdTable(_$QuestFitDatabase db) => db.players
+      .createAlias($_aliasNameGenerator(db.rankTrials.playerId, db.players.id));
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<int>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RankTrialsTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $RankTrialsTable> {
+  $$RankTrialsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get targetRank => $composableBuilder(
+    column: $table.targetRank,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get trialType => $composableBuilder(
+    column: $table.trialType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get streakDaysCompleted => $composableBuilder(
+    column: $table.streakDaysCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get requiredStreakDays => $composableBuilder(
+    column: $table.requiredStreakDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get calorieGoal => $composableBuilder(
+    column: $table.calorieGoal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepGoal => $composableBuilder(
+    column: $table.stepGoal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get caloriesAchieved => $composableBuilder(
+    column: $table.caloriesAchieved,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepsAchieved => $composableBuilder(
+    column: $table.stepsAchieved,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RankTrialsTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $RankTrialsTable> {
+  $$RankTrialsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get targetRank => $composableBuilder(
+    column: $table.targetRank,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get trialType => $composableBuilder(
+    column: $table.trialType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get streakDaysCompleted => $composableBuilder(
+    column: $table.streakDaysCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get requiredStreakDays => $composableBuilder(
+    column: $table.requiredStreakDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get calorieGoal => $composableBuilder(
+    column: $table.calorieGoal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepGoal => $composableBuilder(
+    column: $table.stepGoal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get caloriesAchieved => $composableBuilder(
+    column: $table.caloriesAchieved,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepsAchieved => $composableBuilder(
+    column: $table.stepsAchieved,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RankTrialsTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $RankTrialsTable> {
+  $$RankTrialsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get targetRank => $composableBuilder(
+    column: $table.targetRank,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get trialType =>
+      $composableBuilder(column: $table.trialType, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get streakDaysCompleted => $composableBuilder(
+    column: $table.streakDaysCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get requiredStreakDays => $composableBuilder(
+    column: $table.requiredStreakDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get calorieGoal => $composableBuilder(
+    column: $table.calorieGoal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get stepGoal =>
+      $composableBuilder(column: $table.stepGoal, builder: (column) => column);
+
+  GeneratedColumn<int> get caloriesAchieved => $composableBuilder(
+    column: $table.caloriesAchieved,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get stepsAchieved => $composableBuilder(
+    column: $table.stepsAchieved,
+    builder: (column) => column,
+  );
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RankTrialsTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $RankTrialsTable,
+          RankTrial,
+          $$RankTrialsTableFilterComposer,
+          $$RankTrialsTableOrderingComposer,
+          $$RankTrialsTableAnnotationComposer,
+          $$RankTrialsTableCreateCompanionBuilder,
+          $$RankTrialsTableUpdateCompanionBuilder,
+          (RankTrial, $$RankTrialsTableReferences),
+          RankTrial,
+          PrefetchHooks Function({bool playerId})
+        > {
+  $$RankTrialsTableTableManager(_$QuestFitDatabase db, $RankTrialsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$RankTrialsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$RankTrialsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$RankTrialsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playerId = const Value.absent(),
+                Value<String> targetRank = const Value.absent(),
+                Value<String> trialType = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> streakDaysCompleted = const Value.absent(),
+                Value<int> requiredStreakDays = const Value.absent(),
+                Value<int?> calorieGoal = const Value.absent(),
+                Value<int?> stepGoal = const Value.absent(),
+                Value<int> caloriesAchieved = const Value.absent(),
+                Value<int> stepsAchieved = const Value.absent(),
+              }) => RankTrialsCompanion(
+                id: id,
+                playerId: playerId,
+                targetRank: targetRank,
+                trialType: trialType,
+                startedAt: startedAt,
+                completedAt: completedAt,
+                status: status,
+                streakDaysCompleted: streakDaysCompleted,
+                requiredStreakDays: requiredStreakDays,
+                calorieGoal: calorieGoal,
+                stepGoal: stepGoal,
+                caloriesAchieved: caloriesAchieved,
+                stepsAchieved: stepsAchieved,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playerId,
+                required String targetRank,
+                required String trialType,
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> streakDaysCompleted = const Value.absent(),
+                Value<int> requiredStreakDays = const Value.absent(),
+                Value<int?> calorieGoal = const Value.absent(),
+                Value<int?> stepGoal = const Value.absent(),
+                Value<int> caloriesAchieved = const Value.absent(),
+                Value<int> stepsAchieved = const Value.absent(),
+              }) => RankTrialsCompanion.insert(
+                id: id,
+                playerId: playerId,
+                targetRank: targetRank,
+                trialType: trialType,
+                startedAt: startedAt,
+                completedAt: completedAt,
+                status: status,
+                streakDaysCompleted: streakDaysCompleted,
+                requiredStreakDays: requiredStreakDays,
+                calorieGoal: calorieGoal,
+                stepGoal: stepGoal,
+                caloriesAchieved: caloriesAchieved,
+                stepsAchieved: stepsAchieved,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$RankTrialsTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({playerId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (playerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$RankTrialsTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn:
+                                $$RankTrialsTableReferences
+                                    ._playerIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RankTrialsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $RankTrialsTable,
+      RankTrial,
+      $$RankTrialsTableFilterComposer,
+      $$RankTrialsTableOrderingComposer,
+      $$RankTrialsTableAnnotationComposer,
+      $$RankTrialsTableCreateCompanionBuilder,
+      $$RankTrialsTableUpdateCompanionBuilder,
+      (RankTrial, $$RankTrialsTableReferences),
+      RankTrial,
+      PrefetchHooks Function({bool playerId})
+    >;
 
 class $QuestFitDatabaseManager {
   final _$QuestFitDatabase _db;
@@ -5242,4 +10373,14 @@ class $QuestFitDatabaseManager {
       $$StreaksTableTableManager(_db, _db.streaks);
   $$RankHistoryTableTableManager get rankHistory =>
       $$RankHistoryTableTableManager(_db, _db.rankHistory);
+  $$EquipmentTableTableManager get equipment =>
+      $$EquipmentTableTableManager(_db, _db.equipment);
+  $$EquipmentExercisesTableTableManager get equipmentExercises =>
+      $$EquipmentExercisesTableTableManager(_db, _db.equipmentExercises);
+  $$EquippedSlotsTableTableManager get equippedSlots =>
+      $$EquippedSlotsTableTableManager(_db, _db.equippedSlots);
+  $$InventoryTableTableManager get inventory =>
+      $$InventoryTableTableManager(_db, _db.inventory);
+  $$RankTrialsTableTableManager get rankTrials =>
+      $$RankTrialsTableTableManager(_db, _db.rankTrials);
 }
