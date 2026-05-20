@@ -217,6 +217,49 @@ class UserNotifier extends AsyncNotifier<void> {
     return result;
   }
 
+  /// v2.3: Apply a direct LP penalty (from bounty defeat).
+  /// Similar to inactivity decay but with a fixed amount.
+  Future<LpDecayResult> applyLpPenalty(int amount) async {
+    final player =
+        await ((_db.select(_db.players))..limit(1)).getSingle();
+
+    final result = LpEngine.removeLp(
+      currentLp: player.lp,
+      amount: amount,
+    );
+
+    if (result.shouldDemote) {
+      final prev = RankEngine.getPreviousRank(player.tier, player.division);
+      if (prev != null) {
+        await (_db.update(_db.players)
+              ..where((t) => t.id.equals(player.id)))
+            .write(PlayersCompanion(
+          tier: Value(prev.tier),
+          division: Value(prev.division),
+          lp: Value(result.newLp),
+          pendingPromotion: const Value(false),
+          rank: Value('${prev.tier}_${prev.division}'),
+        ));
+      } else {
+        await (_db.update(_db.players)
+              ..where((t) => t.id.equals(player.id)))
+            .write(const PlayersCompanion(
+          lp: Value(0),
+          pendingPromotion: Value(false),
+        ));
+      }
+    } else {
+      await (_db.update(_db.players)
+            ..where((t) => t.id.equals(player.id)))
+          .write(PlayersCompanion(
+        lp: Value(result.newLp),
+        pendingPromotion: const Value(false),
+      ));
+    }
+
+    return result;
+  }
+
   /// v3.0: Increment total quests completed counter.
   Future<void> incrementQuestsCompleted() async {
     final player =

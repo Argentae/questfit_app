@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/app_init_provider.dart';
 import '../screens/awakening_screen.dart';
+import '../screens/bounty_board_screen.dart';
 import '../screens/expedition_screen.dart';
 import '../screens/grimoire_screen.dart';
 import '../screens/home_screen.dart';
-import '../screens/quests_screen.dart';
+// quests_screen removed in v2.3 — replaced by bounty_board_screen
 import '../screens/avatar_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/setup_screen.dart';
@@ -101,10 +102,11 @@ GoRouter createAppRouter(WidgetRef ref) {
               transitionsBuilder: _fadeTransition,
             ),
           ),
+          // v2.3: Bounty Board (replaces Quests)
           GoRoute(
-            path: '/quests',
+            path: '/bounty',
             pageBuilder: (context, state) => CustomTransitionPage(
-              child: const QuestsScreen(),
+              child: const BountyBoardScreen(),
               transitionsBuilder: _fadeTransition,
             ),
           ),

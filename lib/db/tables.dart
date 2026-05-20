@@ -248,3 +248,75 @@ class Companions extends Table {
   DateTimeColumn get hatchedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+// ─── v2.3 NEW TABLES ─────────────────────────────────────────────────
+
+/// Master enemy catalog (seeded on migration).
+class Enemies extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  /// Unique slug key (e.g. 'iron_flame_goblin')
+  TextColumn get key => text().unique()();
+  TextColumn get name => text()();
+  TextColumn get description => text()();
+  /// Element: 'fire', 'water', 'wind', 'earth', 'shadow'
+  TextColumn get elementType => text()();
+  /// Player rank tier this enemy is designed for
+  TextColumn get tier => text()();
+  /// Difficulty: 'easy', 'medium', 'hard'
+  TextColumn get difficulty => text()();
+  /// Total HP (volume required to defeat)
+  IntColumn get hp => integer()();
+  /// LP awarded on victory
+  IntColumn get lpReward => integer()();
+  /// Gold awarded on victory
+  IntColumn get goldReward => integer()();
+  /// LP lost on defeat
+  IntColumn get lpPenalty => integer()();
+  /// JSON array of exercise categories that deal 2× damage
+  TextColumn get weaknesses => text()();
+  /// JSON array of exercise categories that deal 0.5× damage
+  TextColumn get resistances => text()();
+  /// JSON array of exercise categories that deal 0× damage
+  TextColumn get immunities => text().withDefault(const Constant('[]'))();
+  /// Stat prerequisite key (e.g. 'str') or null
+  TextColumn get requiredStat => text().nullable()();
+  /// Minimum stat value required, or null
+  IntColumn get requiredStatValue => integer().nullable()();
+  /// Asset path for enemy art
+  TextColumn get imagePath => text()();
+  /// Display emoji
+  TextColumn get emoji => text().withDefault(const Constant('👹'))();
+}
+
+/// Daily bounty state — 1 active per day per player.
+class Bounties extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get playerId => integer().references(Players, #id)();
+  /// Date string 'YYYY-MM-DD'
+  TextColumn get date => text()();
+  /// The locked-in enemy
+  IntColumn get enemyId => integer().nullable().references(Enemies, #id)();
+  /// Status: 'drafting', 'preparing', 'combat', 'victory', 'defeat'
+  TextColumn get status => text().withDefault(const Constant('drafting'))();
+  /// Enemy's remaining HP (starts at enemy.hp)
+  IntColumn get currentHp => integer().withDefault(const Constant(0))();
+  /// JSON array of 3 enemy IDs offered in draft
+  TextColumn get draftedEnemyIds => text().withDefault(const Constant('[]'))();
+  DateTimeColumn get lockedAt => dateTime().nullable()();
+  DateTimeColumn get resolvedAt => dateTime().nullable()();
+}
+
+/// Player's planned/completed workout routine for a bounty.
+class RoutineExercises extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get bountyId => integer().references(Bounties, #id)();
+  /// Reference to the Grimoire exercise
+  IntColumn get exerciseDbId => integer().references(ExerciseDb, #id)();
+  IntColumn get sets => integer()();
+  IntColumn get reps => integer().nullable()();
+  IntColumn get duration => integer().nullable()();
+  BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+  /// Calculated damage from this exercise
+  IntColumn get damageDealt => integer().withDefault(const Constant(0))();
+}
+

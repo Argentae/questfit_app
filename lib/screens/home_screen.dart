@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../app/theme.dart';
 import '../db/database.dart';
-import '../providers/quest_provider.dart';
+import '../providers/bounty_provider.dart';
 import '../providers/step_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/rank_trial_provider.dart';
@@ -11,19 +11,13 @@ import '../engine/rank_engine.dart';
 import '../services/haptic_service.dart';
 import '../widgets/character_card.dart';
 import '../widgets/streak_bar.dart';
-import '../widgets/quest_card.dart';
 import 'package:go_router/go_router.dart';
-import '../widgets/xp_toast.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final questsAsync = ref.watch(dailyQuestsStreamProvider);
-    final completedAsync = ref.watch(completedQuestCountProvider);
-    final totalAsync = ref.watch(totalQuestCountProvider);
-
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -41,9 +35,8 @@ class HomeScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           const StreakBar(),
           const SizedBox(height: 24),
-          _buildQuestHeader(context, ref, completedAsync, totalAsync),
-          const SizedBox(height: 8),
-          _buildQuestList(context, questsAsync, ref),
+          // v2.3: Active Bounty Card (replaces quest list)
+          _buildBountyCard(context, ref),
           const SizedBox(height: 24),
           _buildBossRaid(context),
         ],
@@ -325,110 +318,225 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuestHeader(
-    BuildContext context,
-    WidgetRef ref,
-    AsyncValue<int> completedAsync,
-    AsyncValue<int> totalAsync,
-  ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Flexible(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text('Daily Quests',
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.cinzel(
-                        fontWeight: FontWeight.w700, fontSize: 16)),
+  /// v2.3: Bounty card on home screen — shows today's active bounty status.
+  Widget _buildBountyCard(BuildContext context, WidgetRef ref) {
+    final bountyAsync = ref.watch(activeBountyProvider);
+
+    return bountyAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (bounty) {
+        if (bounty == null) {
+          return _buildNoBountyCard(context);
+        }
+
+        switch (bounty.status) {
+          case 'drafting':
+            return _buildDraftingCard(context);
+          case 'combat':
+          case 'preparing':
+            return _buildCombatCard(context, ref, bounty);
+          case 'victory':
+            return _buildResultCard(context, '⚔️ VICTORY!', QuestFitColors.gold,
+                'Your bounty has been slain. Well fought, warrior.');
+          case 'defeat':
+            return _buildResultCard(context, '💀 DEFEAT', const Color(0xFFFF4444),
+                'Your enemy survived. Train harder tomorrow.');
+          default:
+            return const SizedBox.shrink();
+        }
+      },
+    );
+  }
+
+  Widget _buildNoBountyCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.go('/bounty'),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [
+            QuestFitColors.emerald.withValues(alpha: 0.1),
+            QuestFitColors.gold.withValues(alpha: 0.05),
+          ]),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: QuestFitColors.emerald.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            const Text('🎯', style: TextStyle(fontSize: 32)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Draft Your Bounty!',
+                      style: GoogleFonts.cinzel(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: QuestFitColors.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text('Choose an enemy to hunt today',
+                      style: GoogleFonts.inter(
+                          fontSize: 12, color: QuestFitColors.textSecondary)),
+                ],
               ),
-              const SizedBox(width: 8),
-              completedAsync.when(
-                data: (done) => totalAsync.when(
-                  data: (total) => Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: QuestFitColors.emerald.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text('$done/$total',
-                        style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: QuestFitColors.emerald)),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: QuestFitColors.emerald),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDraftingCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.go('/bounty'),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [
+            const Color(0xFFF0C850).withValues(alpha: 0.1),
+            QuestFitColors.bgCard,
+          ]),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFF0C850).withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            const Text('⚔️', style: TextStyle(fontSize: 32)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Bounty Draft Active',
+                      style: GoogleFonts.cinzel(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: QuestFitColors.gold)),
+                  const SizedBox(height: 2),
+                  Text('3 enemies await your choice',
+                      style: GoogleFonts.inter(
+                          fontSize: 12, color: QuestFitColors.textSecondary)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: QuestFitColors.gold),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCombatCard(BuildContext context, WidgetRef ref, Bounty bounty) {
+    final hpPercent = ref.watch(enemyHpPercentProvider);
+    final enemyAsync = ref.watch(activeEnemyProvider);
+
+    return GestureDetector(
+      onTap: () => context.go('/bounty'),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [
+            const Color(0xFFFF6B35).withValues(alpha: 0.08),
+            QuestFitColors.bgCard,
+          ]),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFFF6B35).withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text('🎯', style: TextStyle(fontSize: 28)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Active Hunt',
+                          style: GoogleFonts.cinzel(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: QuestFitColors.textPrimary)),
+                      enemyAsync.when(
+                        data: (enemy) => Text(
+                          enemy?.name ?? 'Unknown',
+                          style: GoogleFonts.inter(
+                              fontSize: 12, color: QuestFitColors.textSecondary),
+                        ),
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+                    ],
                   ),
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
                 ),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+                Text(
+                  '${(hpPercent * 100).round()}%',
+                  style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: hpPercent > 0.35 ? QuestFitColors.emerald : const Color(0xFFFF4444)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: hpPercent,
+                backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  hpPercent > 0.6
+                      ? QuestFitColors.emerald
+                      : hpPercent > 0.35
+                          ? const Color(0xFFF0C850)
+                          : const Color(0xFFFF4444),
+                ),
+                minHeight: 8,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        TextButton(
-          onPressed: () => context.go('/quests'),
-          child: const Text('View All',
-              style: TextStyle(
-                  color: QuestFitColors.emerald,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuestList(
-      BuildContext context, AsyncValue questsAsync, WidgetRef ref) {
-    return questsAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 40),
-        child: Center(
-          child: CircularProgressIndicator(
-              color: QuestFitColors.emerald, strokeWidth: 2),
-        ),
-      ),
-      error: (e, _) => Center(child: Text('Error: $e')),
-      data: (quests) => Column(
-        children: (quests as List<Quest>)
-            .map((quest) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: QuestCard(
-                    quest: quest,
-                    onComplete: () =>
-                        _onQuestComplete(context, ref, quest),
-                  ),
-                ))
-            .toList(),
       ),
     );
   }
 
-  /// Handles quest completion with haptics + LP/Gold toast.
-  Future<void> _onQuestComplete(
-      BuildContext context, WidgetRef ref, Quest quest) async {
-    if (quest.isCompleted) return;
-
-    // Haptic feedback immediately
-    HapticService.onQuestComplete();
-
-    // Complete quest and get result
-    final result = await ref
-        .read(questNotifierProvider.notifier)
-        .completeQuest(quest);
-
-    if (!context.mounted) return;
-
-    // Promotion-ready haptic + toast
-    if (result.isPromotionReady) {
-      HapticService.onLevelUp();
-      LpToast.show(context, result.lpAwarded, promoted: true);
-    } else {
-      LpToast.show(context, result.lpAwarded);
-    }
+  Widget _buildResultCard(BuildContext context, String title, Color color, String subtitle) {
+    return GestureDetector(
+      onTap: () => context.go('/bounty'),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: GoogleFonts.cinzel(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: color)),
+                  const SizedBox(height: 4),
+                  Text(subtitle,
+                      style: GoogleFonts.inter(
+                          fontSize: 12, color: QuestFitColors.textSecondary)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: QuestFitColors.textMuted),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildBossRaid(BuildContext context) {

@@ -8128,6 +8128,2208 @@ class CompanionsCompanion extends UpdateCompanion<Companion> {
   }
 }
 
+class $EnemiesTable extends Enemies with TableInfo<$EnemiesTable, Enemy> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EnemiesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _elementTypeMeta = const VerificationMeta(
+    'elementType',
+  );
+  @override
+  late final GeneratedColumn<String> elementType = GeneratedColumn<String>(
+    'element_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tierMeta = const VerificationMeta('tier');
+  @override
+  late final GeneratedColumn<String> tier = GeneratedColumn<String>(
+    'tier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _difficultyMeta = const VerificationMeta(
+    'difficulty',
+  );
+  @override
+  late final GeneratedColumn<String> difficulty = GeneratedColumn<String>(
+    'difficulty',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hpMeta = const VerificationMeta('hp');
+  @override
+  late final GeneratedColumn<int> hp = GeneratedColumn<int>(
+    'hp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lpRewardMeta = const VerificationMeta(
+    'lpReward',
+  );
+  @override
+  late final GeneratedColumn<int> lpReward = GeneratedColumn<int>(
+    'lp_reward',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _goldRewardMeta = const VerificationMeta(
+    'goldReward',
+  );
+  @override
+  late final GeneratedColumn<int> goldReward = GeneratedColumn<int>(
+    'gold_reward',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lpPenaltyMeta = const VerificationMeta(
+    'lpPenalty',
+  );
+  @override
+  late final GeneratedColumn<int> lpPenalty = GeneratedColumn<int>(
+    'lp_penalty',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _weaknessesMeta = const VerificationMeta(
+    'weaknesses',
+  );
+  @override
+  late final GeneratedColumn<String> weaknesses = GeneratedColumn<String>(
+    'weaknesses',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _resistancesMeta = const VerificationMeta(
+    'resistances',
+  );
+  @override
+  late final GeneratedColumn<String> resistances = GeneratedColumn<String>(
+    'resistances',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _immunitiesMeta = const VerificationMeta(
+    'immunities',
+  );
+  @override
+  late final GeneratedColumn<String> immunities = GeneratedColumn<String>(
+    'immunities',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _requiredStatMeta = const VerificationMeta(
+    'requiredStat',
+  );
+  @override
+  late final GeneratedColumn<String> requiredStat = GeneratedColumn<String>(
+    'required_stat',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _requiredStatValueMeta = const VerificationMeta(
+    'requiredStatValue',
+  );
+  @override
+  late final GeneratedColumn<int> requiredStatValue = GeneratedColumn<int>(
+    'required_stat_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imagePathMeta = const VerificationMeta(
+    'imagePath',
+  );
+  @override
+  late final GeneratedColumn<String> imagePath = GeneratedColumn<String>(
+    'image_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
+  @override
+  late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
+    'emoji',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('👹'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    key,
+    name,
+    description,
+    elementType,
+    tier,
+    difficulty,
+    hp,
+    lpReward,
+    goldReward,
+    lpPenalty,
+    weaknesses,
+    resistances,
+    immunities,
+    requiredStat,
+    requiredStatValue,
+    imagePath,
+    emoji,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'enemies';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Enemy> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('element_type')) {
+      context.handle(
+        _elementTypeMeta,
+        elementType.isAcceptableOrUnknown(
+          data['element_type']!,
+          _elementTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_elementTypeMeta);
+    }
+    if (data.containsKey('tier')) {
+      context.handle(
+        _tierMeta,
+        tier.isAcceptableOrUnknown(data['tier']!, _tierMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tierMeta);
+    }
+    if (data.containsKey('difficulty')) {
+      context.handle(
+        _difficultyMeta,
+        difficulty.isAcceptableOrUnknown(data['difficulty']!, _difficultyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_difficultyMeta);
+    }
+    if (data.containsKey('hp')) {
+      context.handle(_hpMeta, hp.isAcceptableOrUnknown(data['hp']!, _hpMeta));
+    } else if (isInserting) {
+      context.missing(_hpMeta);
+    }
+    if (data.containsKey('lp_reward')) {
+      context.handle(
+        _lpRewardMeta,
+        lpReward.isAcceptableOrUnknown(data['lp_reward']!, _lpRewardMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lpRewardMeta);
+    }
+    if (data.containsKey('gold_reward')) {
+      context.handle(
+        _goldRewardMeta,
+        goldReward.isAcceptableOrUnknown(data['gold_reward']!, _goldRewardMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_goldRewardMeta);
+    }
+    if (data.containsKey('lp_penalty')) {
+      context.handle(
+        _lpPenaltyMeta,
+        lpPenalty.isAcceptableOrUnknown(data['lp_penalty']!, _lpPenaltyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lpPenaltyMeta);
+    }
+    if (data.containsKey('weaknesses')) {
+      context.handle(
+        _weaknessesMeta,
+        weaknesses.isAcceptableOrUnknown(data['weaknesses']!, _weaknessesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_weaknessesMeta);
+    }
+    if (data.containsKey('resistances')) {
+      context.handle(
+        _resistancesMeta,
+        resistances.isAcceptableOrUnknown(
+          data['resistances']!,
+          _resistancesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_resistancesMeta);
+    }
+    if (data.containsKey('immunities')) {
+      context.handle(
+        _immunitiesMeta,
+        immunities.isAcceptableOrUnknown(data['immunities']!, _immunitiesMeta),
+      );
+    }
+    if (data.containsKey('required_stat')) {
+      context.handle(
+        _requiredStatMeta,
+        requiredStat.isAcceptableOrUnknown(
+          data['required_stat']!,
+          _requiredStatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('required_stat_value')) {
+      context.handle(
+        _requiredStatValueMeta,
+        requiredStatValue.isAcceptableOrUnknown(
+          data['required_stat_value']!,
+          _requiredStatValueMeta,
+        ),
+      );
+    }
+    if (data.containsKey('image_path')) {
+      context.handle(
+        _imagePathMeta,
+        imagePath.isAcceptableOrUnknown(data['image_path']!, _imagePathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_imagePathMeta);
+    }
+    if (data.containsKey('emoji')) {
+      context.handle(
+        _emojiMeta,
+        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Enemy map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Enemy(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      key:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}key'],
+          )!,
+      name:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}name'],
+          )!,
+      description:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}description'],
+          )!,
+      elementType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}element_type'],
+          )!,
+      tier:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}tier'],
+          )!,
+      difficulty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}difficulty'],
+          )!,
+      hp:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}hp'],
+          )!,
+      lpReward:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}lp_reward'],
+          )!,
+      goldReward:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}gold_reward'],
+          )!,
+      lpPenalty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}lp_penalty'],
+          )!,
+      weaknesses:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}weaknesses'],
+          )!,
+      resistances:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}resistances'],
+          )!,
+      immunities:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}immunities'],
+          )!,
+      requiredStat: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}required_stat'],
+      ),
+      requiredStatValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}required_stat_value'],
+      ),
+      imagePath:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}image_path'],
+          )!,
+      emoji:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}emoji'],
+          )!,
+    );
+  }
+
+  @override
+  $EnemiesTable createAlias(String alias) {
+    return $EnemiesTable(attachedDatabase, alias);
+  }
+}
+
+class Enemy extends DataClass implements Insertable<Enemy> {
+  final int id;
+
+  /// Unique slug key (e.g. 'iron_flame_goblin')
+  final String key;
+  final String name;
+  final String description;
+
+  /// Element: 'fire', 'water', 'wind', 'earth', 'shadow'
+  final String elementType;
+
+  /// Player rank tier this enemy is designed for
+  final String tier;
+
+  /// Difficulty: 'easy', 'medium', 'hard'
+  final String difficulty;
+
+  /// Total HP (volume required to defeat)
+  final int hp;
+
+  /// LP awarded on victory
+  final int lpReward;
+
+  /// Gold awarded on victory
+  final int goldReward;
+
+  /// LP lost on defeat
+  final int lpPenalty;
+
+  /// JSON array of exercise categories that deal 2× damage
+  final String weaknesses;
+
+  /// JSON array of exercise categories that deal 0.5× damage
+  final String resistances;
+
+  /// JSON array of exercise categories that deal 0× damage
+  final String immunities;
+
+  /// Stat prerequisite key (e.g. 'str') or null
+  final String? requiredStat;
+
+  /// Minimum stat value required, or null
+  final int? requiredStatValue;
+
+  /// Asset path for enemy art
+  final String imagePath;
+
+  /// Display emoji
+  final String emoji;
+  const Enemy({
+    required this.id,
+    required this.key,
+    required this.name,
+    required this.description,
+    required this.elementType,
+    required this.tier,
+    required this.difficulty,
+    required this.hp,
+    required this.lpReward,
+    required this.goldReward,
+    required this.lpPenalty,
+    required this.weaknesses,
+    required this.resistances,
+    required this.immunities,
+    this.requiredStat,
+    this.requiredStatValue,
+    required this.imagePath,
+    required this.emoji,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['key'] = Variable<String>(key);
+    map['name'] = Variable<String>(name);
+    map['description'] = Variable<String>(description);
+    map['element_type'] = Variable<String>(elementType);
+    map['tier'] = Variable<String>(tier);
+    map['difficulty'] = Variable<String>(difficulty);
+    map['hp'] = Variable<int>(hp);
+    map['lp_reward'] = Variable<int>(lpReward);
+    map['gold_reward'] = Variable<int>(goldReward);
+    map['lp_penalty'] = Variable<int>(lpPenalty);
+    map['weaknesses'] = Variable<String>(weaknesses);
+    map['resistances'] = Variable<String>(resistances);
+    map['immunities'] = Variable<String>(immunities);
+    if (!nullToAbsent || requiredStat != null) {
+      map['required_stat'] = Variable<String>(requiredStat);
+    }
+    if (!nullToAbsent || requiredStatValue != null) {
+      map['required_stat_value'] = Variable<int>(requiredStatValue);
+    }
+    map['image_path'] = Variable<String>(imagePath);
+    map['emoji'] = Variable<String>(emoji);
+    return map;
+  }
+
+  EnemiesCompanion toCompanion(bool nullToAbsent) {
+    return EnemiesCompanion(
+      id: Value(id),
+      key: Value(key),
+      name: Value(name),
+      description: Value(description),
+      elementType: Value(elementType),
+      tier: Value(tier),
+      difficulty: Value(difficulty),
+      hp: Value(hp),
+      lpReward: Value(lpReward),
+      goldReward: Value(goldReward),
+      lpPenalty: Value(lpPenalty),
+      weaknesses: Value(weaknesses),
+      resistances: Value(resistances),
+      immunities: Value(immunities),
+      requiredStat:
+          requiredStat == null && nullToAbsent
+              ? const Value.absent()
+              : Value(requiredStat),
+      requiredStatValue:
+          requiredStatValue == null && nullToAbsent
+              ? const Value.absent()
+              : Value(requiredStatValue),
+      imagePath: Value(imagePath),
+      emoji: Value(emoji),
+    );
+  }
+
+  factory Enemy.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Enemy(
+      id: serializer.fromJson<int>(json['id']),
+      key: serializer.fromJson<String>(json['key']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String>(json['description']),
+      elementType: serializer.fromJson<String>(json['elementType']),
+      tier: serializer.fromJson<String>(json['tier']),
+      difficulty: serializer.fromJson<String>(json['difficulty']),
+      hp: serializer.fromJson<int>(json['hp']),
+      lpReward: serializer.fromJson<int>(json['lpReward']),
+      goldReward: serializer.fromJson<int>(json['goldReward']),
+      lpPenalty: serializer.fromJson<int>(json['lpPenalty']),
+      weaknesses: serializer.fromJson<String>(json['weaknesses']),
+      resistances: serializer.fromJson<String>(json['resistances']),
+      immunities: serializer.fromJson<String>(json['immunities']),
+      requiredStat: serializer.fromJson<String?>(json['requiredStat']),
+      requiredStatValue: serializer.fromJson<int?>(json['requiredStatValue']),
+      imagePath: serializer.fromJson<String>(json['imagePath']),
+      emoji: serializer.fromJson<String>(json['emoji']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'key': serializer.toJson<String>(key),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String>(description),
+      'elementType': serializer.toJson<String>(elementType),
+      'tier': serializer.toJson<String>(tier),
+      'difficulty': serializer.toJson<String>(difficulty),
+      'hp': serializer.toJson<int>(hp),
+      'lpReward': serializer.toJson<int>(lpReward),
+      'goldReward': serializer.toJson<int>(goldReward),
+      'lpPenalty': serializer.toJson<int>(lpPenalty),
+      'weaknesses': serializer.toJson<String>(weaknesses),
+      'resistances': serializer.toJson<String>(resistances),
+      'immunities': serializer.toJson<String>(immunities),
+      'requiredStat': serializer.toJson<String?>(requiredStat),
+      'requiredStatValue': serializer.toJson<int?>(requiredStatValue),
+      'imagePath': serializer.toJson<String>(imagePath),
+      'emoji': serializer.toJson<String>(emoji),
+    };
+  }
+
+  Enemy copyWith({
+    int? id,
+    String? key,
+    String? name,
+    String? description,
+    String? elementType,
+    String? tier,
+    String? difficulty,
+    int? hp,
+    int? lpReward,
+    int? goldReward,
+    int? lpPenalty,
+    String? weaknesses,
+    String? resistances,
+    String? immunities,
+    Value<String?> requiredStat = const Value.absent(),
+    Value<int?> requiredStatValue = const Value.absent(),
+    String? imagePath,
+    String? emoji,
+  }) => Enemy(
+    id: id ?? this.id,
+    key: key ?? this.key,
+    name: name ?? this.name,
+    description: description ?? this.description,
+    elementType: elementType ?? this.elementType,
+    tier: tier ?? this.tier,
+    difficulty: difficulty ?? this.difficulty,
+    hp: hp ?? this.hp,
+    lpReward: lpReward ?? this.lpReward,
+    goldReward: goldReward ?? this.goldReward,
+    lpPenalty: lpPenalty ?? this.lpPenalty,
+    weaknesses: weaknesses ?? this.weaknesses,
+    resistances: resistances ?? this.resistances,
+    immunities: immunities ?? this.immunities,
+    requiredStat: requiredStat.present ? requiredStat.value : this.requiredStat,
+    requiredStatValue:
+        requiredStatValue.present
+            ? requiredStatValue.value
+            : this.requiredStatValue,
+    imagePath: imagePath ?? this.imagePath,
+    emoji: emoji ?? this.emoji,
+  );
+  Enemy copyWithCompanion(EnemiesCompanion data) {
+    return Enemy(
+      id: data.id.present ? data.id.value : this.id,
+      key: data.key.present ? data.key.value : this.key,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      elementType:
+          data.elementType.present ? data.elementType.value : this.elementType,
+      tier: data.tier.present ? data.tier.value : this.tier,
+      difficulty:
+          data.difficulty.present ? data.difficulty.value : this.difficulty,
+      hp: data.hp.present ? data.hp.value : this.hp,
+      lpReward: data.lpReward.present ? data.lpReward.value : this.lpReward,
+      goldReward:
+          data.goldReward.present ? data.goldReward.value : this.goldReward,
+      lpPenalty: data.lpPenalty.present ? data.lpPenalty.value : this.lpPenalty,
+      weaknesses:
+          data.weaknesses.present ? data.weaknesses.value : this.weaknesses,
+      resistances:
+          data.resistances.present ? data.resistances.value : this.resistances,
+      immunities:
+          data.immunities.present ? data.immunities.value : this.immunities,
+      requiredStat:
+          data.requiredStat.present
+              ? data.requiredStat.value
+              : this.requiredStat,
+      requiredStatValue:
+          data.requiredStatValue.present
+              ? data.requiredStatValue.value
+              : this.requiredStatValue,
+      imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
+      emoji: data.emoji.present ? data.emoji.value : this.emoji,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Enemy(')
+          ..write('id: $id, ')
+          ..write('key: $key, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('elementType: $elementType, ')
+          ..write('tier: $tier, ')
+          ..write('difficulty: $difficulty, ')
+          ..write('hp: $hp, ')
+          ..write('lpReward: $lpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('lpPenalty: $lpPenalty, ')
+          ..write('weaknesses: $weaknesses, ')
+          ..write('resistances: $resistances, ')
+          ..write('immunities: $immunities, ')
+          ..write('requiredStat: $requiredStat, ')
+          ..write('requiredStatValue: $requiredStatValue, ')
+          ..write('imagePath: $imagePath, ')
+          ..write('emoji: $emoji')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    key,
+    name,
+    description,
+    elementType,
+    tier,
+    difficulty,
+    hp,
+    lpReward,
+    goldReward,
+    lpPenalty,
+    weaknesses,
+    resistances,
+    immunities,
+    requiredStat,
+    requiredStatValue,
+    imagePath,
+    emoji,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Enemy &&
+          other.id == this.id &&
+          other.key == this.key &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.elementType == this.elementType &&
+          other.tier == this.tier &&
+          other.difficulty == this.difficulty &&
+          other.hp == this.hp &&
+          other.lpReward == this.lpReward &&
+          other.goldReward == this.goldReward &&
+          other.lpPenalty == this.lpPenalty &&
+          other.weaknesses == this.weaknesses &&
+          other.resistances == this.resistances &&
+          other.immunities == this.immunities &&
+          other.requiredStat == this.requiredStat &&
+          other.requiredStatValue == this.requiredStatValue &&
+          other.imagePath == this.imagePath &&
+          other.emoji == this.emoji);
+}
+
+class EnemiesCompanion extends UpdateCompanion<Enemy> {
+  final Value<int> id;
+  final Value<String> key;
+  final Value<String> name;
+  final Value<String> description;
+  final Value<String> elementType;
+  final Value<String> tier;
+  final Value<String> difficulty;
+  final Value<int> hp;
+  final Value<int> lpReward;
+  final Value<int> goldReward;
+  final Value<int> lpPenalty;
+  final Value<String> weaknesses;
+  final Value<String> resistances;
+  final Value<String> immunities;
+  final Value<String?> requiredStat;
+  final Value<int?> requiredStatValue;
+  final Value<String> imagePath;
+  final Value<String> emoji;
+  const EnemiesCompanion({
+    this.id = const Value.absent(),
+    this.key = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.elementType = const Value.absent(),
+    this.tier = const Value.absent(),
+    this.difficulty = const Value.absent(),
+    this.hp = const Value.absent(),
+    this.lpReward = const Value.absent(),
+    this.goldReward = const Value.absent(),
+    this.lpPenalty = const Value.absent(),
+    this.weaknesses = const Value.absent(),
+    this.resistances = const Value.absent(),
+    this.immunities = const Value.absent(),
+    this.requiredStat = const Value.absent(),
+    this.requiredStatValue = const Value.absent(),
+    this.imagePath = const Value.absent(),
+    this.emoji = const Value.absent(),
+  });
+  EnemiesCompanion.insert({
+    this.id = const Value.absent(),
+    required String key,
+    required String name,
+    required String description,
+    required String elementType,
+    required String tier,
+    required String difficulty,
+    required int hp,
+    required int lpReward,
+    required int goldReward,
+    required int lpPenalty,
+    required String weaknesses,
+    required String resistances,
+    this.immunities = const Value.absent(),
+    this.requiredStat = const Value.absent(),
+    this.requiredStatValue = const Value.absent(),
+    required String imagePath,
+    this.emoji = const Value.absent(),
+  }) : key = Value(key),
+       name = Value(name),
+       description = Value(description),
+       elementType = Value(elementType),
+       tier = Value(tier),
+       difficulty = Value(difficulty),
+       hp = Value(hp),
+       lpReward = Value(lpReward),
+       goldReward = Value(goldReward),
+       lpPenalty = Value(lpPenalty),
+       weaknesses = Value(weaknesses),
+       resistances = Value(resistances),
+       imagePath = Value(imagePath);
+  static Insertable<Enemy> custom({
+    Expression<int>? id,
+    Expression<String>? key,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<String>? elementType,
+    Expression<String>? tier,
+    Expression<String>? difficulty,
+    Expression<int>? hp,
+    Expression<int>? lpReward,
+    Expression<int>? goldReward,
+    Expression<int>? lpPenalty,
+    Expression<String>? weaknesses,
+    Expression<String>? resistances,
+    Expression<String>? immunities,
+    Expression<String>? requiredStat,
+    Expression<int>? requiredStatValue,
+    Expression<String>? imagePath,
+    Expression<String>? emoji,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (key != null) 'key': key,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (elementType != null) 'element_type': elementType,
+      if (tier != null) 'tier': tier,
+      if (difficulty != null) 'difficulty': difficulty,
+      if (hp != null) 'hp': hp,
+      if (lpReward != null) 'lp_reward': lpReward,
+      if (goldReward != null) 'gold_reward': goldReward,
+      if (lpPenalty != null) 'lp_penalty': lpPenalty,
+      if (weaknesses != null) 'weaknesses': weaknesses,
+      if (resistances != null) 'resistances': resistances,
+      if (immunities != null) 'immunities': immunities,
+      if (requiredStat != null) 'required_stat': requiredStat,
+      if (requiredStatValue != null) 'required_stat_value': requiredStatValue,
+      if (imagePath != null) 'image_path': imagePath,
+      if (emoji != null) 'emoji': emoji,
+    });
+  }
+
+  EnemiesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? key,
+    Value<String>? name,
+    Value<String>? description,
+    Value<String>? elementType,
+    Value<String>? tier,
+    Value<String>? difficulty,
+    Value<int>? hp,
+    Value<int>? lpReward,
+    Value<int>? goldReward,
+    Value<int>? lpPenalty,
+    Value<String>? weaknesses,
+    Value<String>? resistances,
+    Value<String>? immunities,
+    Value<String?>? requiredStat,
+    Value<int?>? requiredStatValue,
+    Value<String>? imagePath,
+    Value<String>? emoji,
+  }) {
+    return EnemiesCompanion(
+      id: id ?? this.id,
+      key: key ?? this.key,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      elementType: elementType ?? this.elementType,
+      tier: tier ?? this.tier,
+      difficulty: difficulty ?? this.difficulty,
+      hp: hp ?? this.hp,
+      lpReward: lpReward ?? this.lpReward,
+      goldReward: goldReward ?? this.goldReward,
+      lpPenalty: lpPenalty ?? this.lpPenalty,
+      weaknesses: weaknesses ?? this.weaknesses,
+      resistances: resistances ?? this.resistances,
+      immunities: immunities ?? this.immunities,
+      requiredStat: requiredStat ?? this.requiredStat,
+      requiredStatValue: requiredStatValue ?? this.requiredStatValue,
+      imagePath: imagePath ?? this.imagePath,
+      emoji: emoji ?? this.emoji,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (elementType.present) {
+      map['element_type'] = Variable<String>(elementType.value);
+    }
+    if (tier.present) {
+      map['tier'] = Variable<String>(tier.value);
+    }
+    if (difficulty.present) {
+      map['difficulty'] = Variable<String>(difficulty.value);
+    }
+    if (hp.present) {
+      map['hp'] = Variable<int>(hp.value);
+    }
+    if (lpReward.present) {
+      map['lp_reward'] = Variable<int>(lpReward.value);
+    }
+    if (goldReward.present) {
+      map['gold_reward'] = Variable<int>(goldReward.value);
+    }
+    if (lpPenalty.present) {
+      map['lp_penalty'] = Variable<int>(lpPenalty.value);
+    }
+    if (weaknesses.present) {
+      map['weaknesses'] = Variable<String>(weaknesses.value);
+    }
+    if (resistances.present) {
+      map['resistances'] = Variable<String>(resistances.value);
+    }
+    if (immunities.present) {
+      map['immunities'] = Variable<String>(immunities.value);
+    }
+    if (requiredStat.present) {
+      map['required_stat'] = Variable<String>(requiredStat.value);
+    }
+    if (requiredStatValue.present) {
+      map['required_stat_value'] = Variable<int>(requiredStatValue.value);
+    }
+    if (imagePath.present) {
+      map['image_path'] = Variable<String>(imagePath.value);
+    }
+    if (emoji.present) {
+      map['emoji'] = Variable<String>(emoji.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EnemiesCompanion(')
+          ..write('id: $id, ')
+          ..write('key: $key, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('elementType: $elementType, ')
+          ..write('tier: $tier, ')
+          ..write('difficulty: $difficulty, ')
+          ..write('hp: $hp, ')
+          ..write('lpReward: $lpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('lpPenalty: $lpPenalty, ')
+          ..write('weaknesses: $weaknesses, ')
+          ..write('resistances: $resistances, ')
+          ..write('immunities: $immunities, ')
+          ..write('requiredStat: $requiredStat, ')
+          ..write('requiredStatValue: $requiredStatValue, ')
+          ..write('imagePath: $imagePath, ')
+          ..write('emoji: $emoji')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $BountiesTable extends Bounties with TableInfo<$BountiesTable, Bounty> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BountiesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (id)',
+    ),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _enemyIdMeta = const VerificationMeta(
+    'enemyId',
+  );
+  @override
+  late final GeneratedColumn<int> enemyId = GeneratedColumn<int>(
+    'enemy_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES enemies (id)',
+    ),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('drafting'),
+  );
+  static const VerificationMeta _currentHpMeta = const VerificationMeta(
+    'currentHp',
+  );
+  @override
+  late final GeneratedColumn<int> currentHp = GeneratedColumn<int>(
+    'current_hp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _draftedEnemyIdsMeta = const VerificationMeta(
+    'draftedEnemyIds',
+  );
+  @override
+  late final GeneratedColumn<String> draftedEnemyIds = GeneratedColumn<String>(
+    'drafted_enemy_ids',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _lockedAtMeta = const VerificationMeta(
+    'lockedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lockedAt = GeneratedColumn<DateTime>(
+    'locked_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resolvedAtMeta = const VerificationMeta(
+    'resolvedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> resolvedAt = GeneratedColumn<DateTime>(
+    'resolved_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    playerId,
+    date,
+    enemyId,
+    status,
+    currentHp,
+    draftedEnemyIds,
+    lockedAt,
+    resolvedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'bounties';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Bounty> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('enemy_id')) {
+      context.handle(
+        _enemyIdMeta,
+        enemyId.isAcceptableOrUnknown(data['enemy_id']!, _enemyIdMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('current_hp')) {
+      context.handle(
+        _currentHpMeta,
+        currentHp.isAcceptableOrUnknown(data['current_hp']!, _currentHpMeta),
+      );
+    }
+    if (data.containsKey('drafted_enemy_ids')) {
+      context.handle(
+        _draftedEnemyIdsMeta,
+        draftedEnemyIds.isAcceptableOrUnknown(
+          data['drafted_enemy_ids']!,
+          _draftedEnemyIdsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('locked_at')) {
+      context.handle(
+        _lockedAtMeta,
+        lockedAt.isAcceptableOrUnknown(data['locked_at']!, _lockedAtMeta),
+      );
+    }
+    if (data.containsKey('resolved_at')) {
+      context.handle(
+        _resolvedAtMeta,
+        resolvedAt.isAcceptableOrUnknown(data['resolved_at']!, _resolvedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Bounty map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Bounty(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      playerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}player_id'],
+          )!,
+      date:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}date'],
+          )!,
+      enemyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}enemy_id'],
+      ),
+      status:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}status'],
+          )!,
+      currentHp:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}current_hp'],
+          )!,
+      draftedEnemyIds:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}drafted_enemy_ids'],
+          )!,
+      lockedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}locked_at'],
+      ),
+      resolvedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}resolved_at'],
+      ),
+    );
+  }
+
+  @override
+  $BountiesTable createAlias(String alias) {
+    return $BountiesTable(attachedDatabase, alias);
+  }
+}
+
+class Bounty extends DataClass implements Insertable<Bounty> {
+  final int id;
+  final int playerId;
+
+  /// Date string 'YYYY-MM-DD'
+  final String date;
+
+  /// The locked-in enemy
+  final int? enemyId;
+
+  /// Status: 'drafting', 'preparing', 'combat', 'victory', 'defeat'
+  final String status;
+
+  /// Enemy's remaining HP (starts at enemy.hp)
+  final int currentHp;
+
+  /// JSON array of 3 enemy IDs offered in draft
+  final String draftedEnemyIds;
+  final DateTime? lockedAt;
+  final DateTime? resolvedAt;
+  const Bounty({
+    required this.id,
+    required this.playerId,
+    required this.date,
+    this.enemyId,
+    required this.status,
+    required this.currentHp,
+    required this.draftedEnemyIds,
+    this.lockedAt,
+    this.resolvedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['date'] = Variable<String>(date);
+    if (!nullToAbsent || enemyId != null) {
+      map['enemy_id'] = Variable<int>(enemyId);
+    }
+    map['status'] = Variable<String>(status);
+    map['current_hp'] = Variable<int>(currentHp);
+    map['drafted_enemy_ids'] = Variable<String>(draftedEnemyIds);
+    if (!nullToAbsent || lockedAt != null) {
+      map['locked_at'] = Variable<DateTime>(lockedAt);
+    }
+    if (!nullToAbsent || resolvedAt != null) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt);
+    }
+    return map;
+  }
+
+  BountiesCompanion toCompanion(bool nullToAbsent) {
+    return BountiesCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      date: Value(date),
+      enemyId:
+          enemyId == null && nullToAbsent
+              ? const Value.absent()
+              : Value(enemyId),
+      status: Value(status),
+      currentHp: Value(currentHp),
+      draftedEnemyIds: Value(draftedEnemyIds),
+      lockedAt:
+          lockedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(lockedAt),
+      resolvedAt:
+          resolvedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(resolvedAt),
+    );
+  }
+
+  factory Bounty.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Bounty(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      date: serializer.fromJson<String>(json['date']),
+      enemyId: serializer.fromJson<int?>(json['enemyId']),
+      status: serializer.fromJson<String>(json['status']),
+      currentHp: serializer.fromJson<int>(json['currentHp']),
+      draftedEnemyIds: serializer.fromJson<String>(json['draftedEnemyIds']),
+      lockedAt: serializer.fromJson<DateTime?>(json['lockedAt']),
+      resolvedAt: serializer.fromJson<DateTime?>(json['resolvedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'date': serializer.toJson<String>(date),
+      'enemyId': serializer.toJson<int?>(enemyId),
+      'status': serializer.toJson<String>(status),
+      'currentHp': serializer.toJson<int>(currentHp),
+      'draftedEnemyIds': serializer.toJson<String>(draftedEnemyIds),
+      'lockedAt': serializer.toJson<DateTime?>(lockedAt),
+      'resolvedAt': serializer.toJson<DateTime?>(resolvedAt),
+    };
+  }
+
+  Bounty copyWith({
+    int? id,
+    int? playerId,
+    String? date,
+    Value<int?> enemyId = const Value.absent(),
+    String? status,
+    int? currentHp,
+    String? draftedEnemyIds,
+    Value<DateTime?> lockedAt = const Value.absent(),
+    Value<DateTime?> resolvedAt = const Value.absent(),
+  }) => Bounty(
+    id: id ?? this.id,
+    playerId: playerId ?? this.playerId,
+    date: date ?? this.date,
+    enemyId: enemyId.present ? enemyId.value : this.enemyId,
+    status: status ?? this.status,
+    currentHp: currentHp ?? this.currentHp,
+    draftedEnemyIds: draftedEnemyIds ?? this.draftedEnemyIds,
+    lockedAt: lockedAt.present ? lockedAt.value : this.lockedAt,
+    resolvedAt: resolvedAt.present ? resolvedAt.value : this.resolvedAt,
+  );
+  Bounty copyWithCompanion(BountiesCompanion data) {
+    return Bounty(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      date: data.date.present ? data.date.value : this.date,
+      enemyId: data.enemyId.present ? data.enemyId.value : this.enemyId,
+      status: data.status.present ? data.status.value : this.status,
+      currentHp: data.currentHp.present ? data.currentHp.value : this.currentHp,
+      draftedEnemyIds:
+          data.draftedEnemyIds.present
+              ? data.draftedEnemyIds.value
+              : this.draftedEnemyIds,
+      lockedAt: data.lockedAt.present ? data.lockedAt.value : this.lockedAt,
+      resolvedAt:
+          data.resolvedAt.present ? data.resolvedAt.value : this.resolvedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Bounty(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('date: $date, ')
+          ..write('enemyId: $enemyId, ')
+          ..write('status: $status, ')
+          ..write('currentHp: $currentHp, ')
+          ..write('draftedEnemyIds: $draftedEnemyIds, ')
+          ..write('lockedAt: $lockedAt, ')
+          ..write('resolvedAt: $resolvedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    playerId,
+    date,
+    enemyId,
+    status,
+    currentHp,
+    draftedEnemyIds,
+    lockedAt,
+    resolvedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Bounty &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.date == this.date &&
+          other.enemyId == this.enemyId &&
+          other.status == this.status &&
+          other.currentHp == this.currentHp &&
+          other.draftedEnemyIds == this.draftedEnemyIds &&
+          other.lockedAt == this.lockedAt &&
+          other.resolvedAt == this.resolvedAt);
+}
+
+class BountiesCompanion extends UpdateCompanion<Bounty> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> date;
+  final Value<int?> enemyId;
+  final Value<String> status;
+  final Value<int> currentHp;
+  final Value<String> draftedEnemyIds;
+  final Value<DateTime?> lockedAt;
+  final Value<DateTime?> resolvedAt;
+  const BountiesCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.enemyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.currentHp = const Value.absent(),
+    this.draftedEnemyIds = const Value.absent(),
+    this.lockedAt = const Value.absent(),
+    this.resolvedAt = const Value.absent(),
+  });
+  BountiesCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String date,
+    this.enemyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.currentHp = const Value.absent(),
+    this.draftedEnemyIds = const Value.absent(),
+    this.lockedAt = const Value.absent(),
+    this.resolvedAt = const Value.absent(),
+  }) : playerId = Value(playerId),
+       date = Value(date);
+  static Insertable<Bounty> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? date,
+    Expression<int>? enemyId,
+    Expression<String>? status,
+    Expression<int>? currentHp,
+    Expression<String>? draftedEnemyIds,
+    Expression<DateTime>? lockedAt,
+    Expression<DateTime>? resolvedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (date != null) 'date': date,
+      if (enemyId != null) 'enemy_id': enemyId,
+      if (status != null) 'status': status,
+      if (currentHp != null) 'current_hp': currentHp,
+      if (draftedEnemyIds != null) 'drafted_enemy_ids': draftedEnemyIds,
+      if (lockedAt != null) 'locked_at': lockedAt,
+      if (resolvedAt != null) 'resolved_at': resolvedAt,
+    });
+  }
+
+  BountiesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playerId,
+    Value<String>? date,
+    Value<int?>? enemyId,
+    Value<String>? status,
+    Value<int>? currentHp,
+    Value<String>? draftedEnemyIds,
+    Value<DateTime?>? lockedAt,
+    Value<DateTime?>? resolvedAt,
+  }) {
+    return BountiesCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      date: date ?? this.date,
+      enemyId: enemyId ?? this.enemyId,
+      status: status ?? this.status,
+      currentHp: currentHp ?? this.currentHp,
+      draftedEnemyIds: draftedEnemyIds ?? this.draftedEnemyIds,
+      lockedAt: lockedAt ?? this.lockedAt,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (enemyId.present) {
+      map['enemy_id'] = Variable<int>(enemyId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (currentHp.present) {
+      map['current_hp'] = Variable<int>(currentHp.value);
+    }
+    if (draftedEnemyIds.present) {
+      map['drafted_enemy_ids'] = Variable<String>(draftedEnemyIds.value);
+    }
+    if (lockedAt.present) {
+      map['locked_at'] = Variable<DateTime>(lockedAt.value);
+    }
+    if (resolvedAt.present) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BountiesCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('date: $date, ')
+          ..write('enemyId: $enemyId, ')
+          ..write('status: $status, ')
+          ..write('currentHp: $currentHp, ')
+          ..write('draftedEnemyIds: $draftedEnemyIds, ')
+          ..write('lockedAt: $lockedAt, ')
+          ..write('resolvedAt: $resolvedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RoutineExercisesTable extends RoutineExercises
+    with TableInfo<$RoutineExercisesTable, RoutineExercise> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RoutineExercisesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _bountyIdMeta = const VerificationMeta(
+    'bountyId',
+  );
+  @override
+  late final GeneratedColumn<int> bountyId = GeneratedColumn<int>(
+    'bounty_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES bounties (id)',
+    ),
+  );
+  static const VerificationMeta _exerciseDbIdMeta = const VerificationMeta(
+    'exerciseDbId',
+  );
+  @override
+  late final GeneratedColumn<int> exerciseDbId = GeneratedColumn<int>(
+    'exercise_db_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES exercise_db (id)',
+    ),
+  );
+  static const VerificationMeta _setsMeta = const VerificationMeta('sets');
+  @override
+  late final GeneratedColumn<int> sets = GeneratedColumn<int>(
+    'sets',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _repsMeta = const VerificationMeta('reps');
+  @override
+  late final GeneratedColumn<int> reps = GeneratedColumn<int>(
+    'reps',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationMeta = const VerificationMeta(
+    'duration',
+  );
+  @override
+  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
+    'duration',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isCompletedMeta = const VerificationMeta(
+    'isCompleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isCompleted = GeneratedColumn<bool>(
+    'is_completed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_completed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _damageDealtMeta = const VerificationMeta(
+    'damageDealt',
+  );
+  @override
+  late final GeneratedColumn<int> damageDealt = GeneratedColumn<int>(
+    'damage_dealt',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    bountyId,
+    exerciseDbId,
+    sets,
+    reps,
+    duration,
+    isCompleted,
+    completedAt,
+    damageDealt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'routine_exercises';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RoutineExercise> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('bounty_id')) {
+      context.handle(
+        _bountyIdMeta,
+        bountyId.isAcceptableOrUnknown(data['bounty_id']!, _bountyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bountyIdMeta);
+    }
+    if (data.containsKey('exercise_db_id')) {
+      context.handle(
+        _exerciseDbIdMeta,
+        exerciseDbId.isAcceptableOrUnknown(
+          data['exercise_db_id']!,
+          _exerciseDbIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_exerciseDbIdMeta);
+    }
+    if (data.containsKey('sets')) {
+      context.handle(
+        _setsMeta,
+        sets.isAcceptableOrUnknown(data['sets']!, _setsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_setsMeta);
+    }
+    if (data.containsKey('reps')) {
+      context.handle(
+        _repsMeta,
+        reps.isAcceptableOrUnknown(data['reps']!, _repsMeta),
+      );
+    }
+    if (data.containsKey('duration')) {
+      context.handle(
+        _durationMeta,
+        duration.isAcceptableOrUnknown(data['duration']!, _durationMeta),
+      );
+    }
+    if (data.containsKey('is_completed')) {
+      context.handle(
+        _isCompletedMeta,
+        isCompleted.isAcceptableOrUnknown(
+          data['is_completed']!,
+          _isCompletedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('damage_dealt')) {
+      context.handle(
+        _damageDealtMeta,
+        damageDealt.isAcceptableOrUnknown(
+          data['damage_dealt']!,
+          _damageDealtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RoutineExercise map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RoutineExercise(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      bountyId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}bounty_id'],
+          )!,
+      exerciseDbId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}exercise_db_id'],
+          )!,
+      sets:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}sets'],
+          )!,
+      reps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reps'],
+      ),
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      ),
+      isCompleted:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_completed'],
+          )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      ),
+      damageDealt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}damage_dealt'],
+          )!,
+    );
+  }
+
+  @override
+  $RoutineExercisesTable createAlias(String alias) {
+    return $RoutineExercisesTable(attachedDatabase, alias);
+  }
+}
+
+class RoutineExercise extends DataClass implements Insertable<RoutineExercise> {
+  final int id;
+  final int bountyId;
+
+  /// Reference to the Grimoire exercise
+  final int exerciseDbId;
+  final int sets;
+  final int? reps;
+  final int? duration;
+  final bool isCompleted;
+  final DateTime? completedAt;
+
+  /// Calculated damage from this exercise
+  final int damageDealt;
+  const RoutineExercise({
+    required this.id,
+    required this.bountyId,
+    required this.exerciseDbId,
+    required this.sets,
+    this.reps,
+    this.duration,
+    required this.isCompleted,
+    this.completedAt,
+    required this.damageDealt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['bounty_id'] = Variable<int>(bountyId);
+    map['exercise_db_id'] = Variable<int>(exerciseDbId);
+    map['sets'] = Variable<int>(sets);
+    if (!nullToAbsent || reps != null) {
+      map['reps'] = Variable<int>(reps);
+    }
+    if (!nullToAbsent || duration != null) {
+      map['duration'] = Variable<int>(duration);
+    }
+    map['is_completed'] = Variable<bool>(isCompleted);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    map['damage_dealt'] = Variable<int>(damageDealt);
+    return map;
+  }
+
+  RoutineExercisesCompanion toCompanion(bool nullToAbsent) {
+    return RoutineExercisesCompanion(
+      id: Value(id),
+      bountyId: Value(bountyId),
+      exerciseDbId: Value(exerciseDbId),
+      sets: Value(sets),
+      reps: reps == null && nullToAbsent ? const Value.absent() : Value(reps),
+      duration:
+          duration == null && nullToAbsent
+              ? const Value.absent()
+              : Value(duration),
+      isCompleted: Value(isCompleted),
+      completedAt:
+          completedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(completedAt),
+      damageDealt: Value(damageDealt),
+    );
+  }
+
+  factory RoutineExercise.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RoutineExercise(
+      id: serializer.fromJson<int>(json['id']),
+      bountyId: serializer.fromJson<int>(json['bountyId']),
+      exerciseDbId: serializer.fromJson<int>(json['exerciseDbId']),
+      sets: serializer.fromJson<int>(json['sets']),
+      reps: serializer.fromJson<int?>(json['reps']),
+      duration: serializer.fromJson<int?>(json['duration']),
+      isCompleted: serializer.fromJson<bool>(json['isCompleted']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      damageDealt: serializer.fromJson<int>(json['damageDealt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'bountyId': serializer.toJson<int>(bountyId),
+      'exerciseDbId': serializer.toJson<int>(exerciseDbId),
+      'sets': serializer.toJson<int>(sets),
+      'reps': serializer.toJson<int?>(reps),
+      'duration': serializer.toJson<int?>(duration),
+      'isCompleted': serializer.toJson<bool>(isCompleted),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'damageDealt': serializer.toJson<int>(damageDealt),
+    };
+  }
+
+  RoutineExercise copyWith({
+    int? id,
+    int? bountyId,
+    int? exerciseDbId,
+    int? sets,
+    Value<int?> reps = const Value.absent(),
+    Value<int?> duration = const Value.absent(),
+    bool? isCompleted,
+    Value<DateTime?> completedAt = const Value.absent(),
+    int? damageDealt,
+  }) => RoutineExercise(
+    id: id ?? this.id,
+    bountyId: bountyId ?? this.bountyId,
+    exerciseDbId: exerciseDbId ?? this.exerciseDbId,
+    sets: sets ?? this.sets,
+    reps: reps.present ? reps.value : this.reps,
+    duration: duration.present ? duration.value : this.duration,
+    isCompleted: isCompleted ?? this.isCompleted,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    damageDealt: damageDealt ?? this.damageDealt,
+  );
+  RoutineExercise copyWithCompanion(RoutineExercisesCompanion data) {
+    return RoutineExercise(
+      id: data.id.present ? data.id.value : this.id,
+      bountyId: data.bountyId.present ? data.bountyId.value : this.bountyId,
+      exerciseDbId:
+          data.exerciseDbId.present
+              ? data.exerciseDbId.value
+              : this.exerciseDbId,
+      sets: data.sets.present ? data.sets.value : this.sets,
+      reps: data.reps.present ? data.reps.value : this.reps,
+      duration: data.duration.present ? data.duration.value : this.duration,
+      isCompleted:
+          data.isCompleted.present ? data.isCompleted.value : this.isCompleted,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      damageDealt:
+          data.damageDealt.present ? data.damageDealt.value : this.damageDealt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RoutineExercise(')
+          ..write('id: $id, ')
+          ..write('bountyId: $bountyId, ')
+          ..write('exerciseDbId: $exerciseDbId, ')
+          ..write('sets: $sets, ')
+          ..write('reps: $reps, ')
+          ..write('duration: $duration, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('damageDealt: $damageDealt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    bountyId,
+    exerciseDbId,
+    sets,
+    reps,
+    duration,
+    isCompleted,
+    completedAt,
+    damageDealt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RoutineExercise &&
+          other.id == this.id &&
+          other.bountyId == this.bountyId &&
+          other.exerciseDbId == this.exerciseDbId &&
+          other.sets == this.sets &&
+          other.reps == this.reps &&
+          other.duration == this.duration &&
+          other.isCompleted == this.isCompleted &&
+          other.completedAt == this.completedAt &&
+          other.damageDealt == this.damageDealt);
+}
+
+class RoutineExercisesCompanion extends UpdateCompanion<RoutineExercise> {
+  final Value<int> id;
+  final Value<int> bountyId;
+  final Value<int> exerciseDbId;
+  final Value<int> sets;
+  final Value<int?> reps;
+  final Value<int?> duration;
+  final Value<bool> isCompleted;
+  final Value<DateTime?> completedAt;
+  final Value<int> damageDealt;
+  const RoutineExercisesCompanion({
+    this.id = const Value.absent(),
+    this.bountyId = const Value.absent(),
+    this.exerciseDbId = const Value.absent(),
+    this.sets = const Value.absent(),
+    this.reps = const Value.absent(),
+    this.duration = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.damageDealt = const Value.absent(),
+  });
+  RoutineExercisesCompanion.insert({
+    this.id = const Value.absent(),
+    required int bountyId,
+    required int exerciseDbId,
+    required int sets,
+    this.reps = const Value.absent(),
+    this.duration = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.damageDealt = const Value.absent(),
+  }) : bountyId = Value(bountyId),
+       exerciseDbId = Value(exerciseDbId),
+       sets = Value(sets);
+  static Insertable<RoutineExercise> custom({
+    Expression<int>? id,
+    Expression<int>? bountyId,
+    Expression<int>? exerciseDbId,
+    Expression<int>? sets,
+    Expression<int>? reps,
+    Expression<int>? duration,
+    Expression<bool>? isCompleted,
+    Expression<DateTime>? completedAt,
+    Expression<int>? damageDealt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (bountyId != null) 'bounty_id': bountyId,
+      if (exerciseDbId != null) 'exercise_db_id': exerciseDbId,
+      if (sets != null) 'sets': sets,
+      if (reps != null) 'reps': reps,
+      if (duration != null) 'duration': duration,
+      if (isCompleted != null) 'is_completed': isCompleted,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (damageDealt != null) 'damage_dealt': damageDealt,
+    });
+  }
+
+  RoutineExercisesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? bountyId,
+    Value<int>? exerciseDbId,
+    Value<int>? sets,
+    Value<int?>? reps,
+    Value<int?>? duration,
+    Value<bool>? isCompleted,
+    Value<DateTime?>? completedAt,
+    Value<int>? damageDealt,
+  }) {
+    return RoutineExercisesCompanion(
+      id: id ?? this.id,
+      bountyId: bountyId ?? this.bountyId,
+      exerciseDbId: exerciseDbId ?? this.exerciseDbId,
+      sets: sets ?? this.sets,
+      reps: reps ?? this.reps,
+      duration: duration ?? this.duration,
+      isCompleted: isCompleted ?? this.isCompleted,
+      completedAt: completedAt ?? this.completedAt,
+      damageDealt: damageDealt ?? this.damageDealt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (bountyId.present) {
+      map['bounty_id'] = Variable<int>(bountyId.value);
+    }
+    if (exerciseDbId.present) {
+      map['exercise_db_id'] = Variable<int>(exerciseDbId.value);
+    }
+    if (sets.present) {
+      map['sets'] = Variable<int>(sets.value);
+    }
+    if (reps.present) {
+      map['reps'] = Variable<int>(reps.value);
+    }
+    if (duration.present) {
+      map['duration'] = Variable<int>(duration.value);
+    }
+    if (isCompleted.present) {
+      map['is_completed'] = Variable<bool>(isCompleted.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (damageDealt.present) {
+      map['damage_dealt'] = Variable<int>(damageDealt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RoutineExercisesCompanion(')
+          ..write('id: $id, ')
+          ..write('bountyId: $bountyId, ')
+          ..write('exerciseDbId: $exerciseDbId, ')
+          ..write('sets: $sets, ')
+          ..write('reps: $reps, ')
+          ..write('duration: $duration, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('damageDealt: $damageDealt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$QuestFitDatabase extends GeneratedDatabase {
   _$QuestFitDatabase(QueryExecutor e) : super(e);
   $QuestFitDatabaseManager get managers => $QuestFitDatabaseManager(this);
@@ -8147,6 +10349,11 @@ abstract class _$QuestFitDatabase extends GeneratedDatabase {
   late final $StepMilestonesTable stepMilestones = $StepMilestonesTable(this);
   late final $EggsTable eggs = $EggsTable(this);
   late final $CompanionsTable companions = $CompanionsTable(this);
+  late final $EnemiesTable enemies = $EnemiesTable(this);
+  late final $BountiesTable bounties = $BountiesTable(this);
+  late final $RoutineExercisesTable routineExercises = $RoutineExercisesTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8167,6 +10374,9 @@ abstract class _$QuestFitDatabase extends GeneratedDatabase {
     stepMilestones,
     eggs,
     companions,
+    enemies,
+    bounties,
+    routineExercises,
   ];
 }
 
@@ -8403,6 +10613,25 @@ final class $$PlayersTableReferences
     ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_companionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$BountiesTable, List<Bounty>> _bountiesRefsTable(
+    _$QuestFitDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.bounties,
+    aliasName: $_aliasNameGenerator(db.players.id, db.bounties.playerId),
+  );
+
+  $$BountiesTableProcessedTableManager get bountiesRefs {
+    final manager = $$BountiesTableTableManager(
+      $_db,
+      $_db.bounties,
+    ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_bountiesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -8749,6 +10978,31 @@ class $$PlayersTableFilterComposer
           }) => $$CompanionsTableFilterComposer(
             $db: $db,
             $table: $db.companions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> bountiesRefs(
+    Expression<bool> Function($$BountiesTableFilterComposer f) f,
+  ) {
+    final $$BountiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableFilterComposer(
+            $db: $db,
+            $table: $db.bounties,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -9183,6 +11437,31 @@ class $$PlayersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> bountiesRefs<T extends Object>(
+    Expression<T> Function($$BountiesTableAnnotationComposer a) f,
+  ) {
+    final $$BountiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PlayersTableTableManager
@@ -9209,6 +11488,7 @@ class $$PlayersTableTableManager
             bool stepMilestonesRefs,
             bool eggsRefs,
             bool companionsRefs,
+            bool bountiesRefs,
           })
         > {
   $$PlayersTableTableManager(_$QuestFitDatabase db, $PlayersTable table)
@@ -9323,6 +11603,7 @@ class $$PlayersTableTableManager
             stepMilestonesRefs = false,
             eggsRefs = false,
             companionsRefs = false,
+            bountiesRefs = false,
           }) {
             return PrefetchHooks(
               db: db,
@@ -9337,6 +11618,7 @@ class $$PlayersTableTableManager
                 if (stepMilestonesRefs) db.stepMilestones,
                 if (eggsRefs) db.eggs,
                 if (companionsRefs) db.companions,
+                if (bountiesRefs) db.bounties,
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -9535,6 +11817,24 @@ class $$PlayersTableTableManager
                           ),
                       typedResults: items,
                     ),
+                  if (bountiesRefs)
+                    await $_getPrefetchedData<Player, $PlayersTable, Bounty>(
+                      currentTable: table,
+                      referencedTable: $$PlayersTableReferences
+                          ._bountiesRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PlayersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).bountiesRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.playerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
                 ];
               },
             );
@@ -9566,6 +11866,7 @@ typedef $$PlayersTableProcessedTableManager =
         bool stepMilestonesRefs,
         bool eggsRefs,
         bool companionsRefs,
+        bool bountiesRefs,
       })
     >;
 typedef $$StatsTableCreateCompanionBuilder =
@@ -13544,6 +15845,36 @@ typedef $$ExerciseDbTableUpdateCompanionBuilder =
       Value<String> images,
     });
 
+final class $$ExerciseDbTableReferences
+    extends
+        BaseReferences<_$QuestFitDatabase, $ExerciseDbTable, ExerciseDbData> {
+  $$ExerciseDbTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$RoutineExercisesTable, List<RoutineExercise>>
+  _routineExercisesRefsTable(_$QuestFitDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.routineExercises,
+        aliasName: $_aliasNameGenerator(
+          db.exerciseDb.id,
+          db.routineExercises.exerciseDbId,
+        ),
+      );
+
+  $$RoutineExercisesTableProcessedTableManager get routineExercisesRefs {
+    final manager = $$RoutineExercisesTableTableManager(
+      $_db,
+      $_db.routineExercises,
+    ).filter((f) => f.exerciseDbId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _routineExercisesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
 class $$ExerciseDbTableFilterComposer
     extends Composer<_$QuestFitDatabase, $ExerciseDbTable> {
   $$ExerciseDbTableFilterComposer({
@@ -13612,6 +15943,31 @@ class $$ExerciseDbTableFilterComposer
     column: $table.images,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> routineExercisesRefs(
+    Expression<bool> Function($$RoutineExercisesTableFilterComposer f) f,
+  ) {
+    final $$RoutineExercisesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.routineExercises,
+      getReferencedColumn: (t) => t.exerciseDbId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutineExercisesTableFilterComposer(
+            $db: $db,
+            $table: $db.routineExercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ExerciseDbTableOrderingComposer
@@ -13736,6 +16092,31 @@ class $$ExerciseDbTableAnnotationComposer
 
   GeneratedColumn<String> get images =>
       $composableBuilder(column: $table.images, builder: (column) => column);
+
+  Expression<T> routineExercisesRefs<T extends Object>(
+    Expression<T> Function($$RoutineExercisesTableAnnotationComposer a) f,
+  ) {
+    final $$RoutineExercisesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.routineExercises,
+      getReferencedColumn: (t) => t.exerciseDbId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutineExercisesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.routineExercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ExerciseDbTableTableManager
@@ -13749,16 +16130,9 @@ class $$ExerciseDbTableTableManager
           $$ExerciseDbTableAnnotationComposer,
           $$ExerciseDbTableCreateCompanionBuilder,
           $$ExerciseDbTableUpdateCompanionBuilder,
-          (
-            ExerciseDbData,
-            BaseReferences<
-              _$QuestFitDatabase,
-              $ExerciseDbTable,
-              ExerciseDbData
-            >,
-          ),
+          (ExerciseDbData, $$ExerciseDbTableReferences),
           ExerciseDbData,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool routineExercisesRefs})
         > {
   $$ExerciseDbTableTableManager(_$QuestFitDatabase db, $ExerciseDbTable table)
     : super(
@@ -13833,11 +16207,45 @@ class $$ExerciseDbTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          BaseReferences(db, table, e),
+                          $$ExerciseDbTableReferences(db, table, e),
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({routineExercisesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (routineExercisesRefs) db.routineExercises,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (routineExercisesRefs)
+                    await $_getPrefetchedData<
+                      ExerciseDbData,
+                      $ExerciseDbTable,
+                      RoutineExercise
+                    >(
+                      currentTable: table,
+                      referencedTable: $$ExerciseDbTableReferences
+                          ._routineExercisesRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$ExerciseDbTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).routineExercisesRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.exerciseDbId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -13852,12 +16260,9 @@ typedef $$ExerciseDbTableProcessedTableManager =
       $$ExerciseDbTableAnnotationComposer,
       $$ExerciseDbTableCreateCompanionBuilder,
       $$ExerciseDbTableUpdateCompanionBuilder,
-      (
-        ExerciseDbData,
-        BaseReferences<_$QuestFitDatabase, $ExerciseDbTable, ExerciseDbData>,
-      ),
+      (ExerciseDbData, $$ExerciseDbTableReferences),
       ExerciseDbData,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool routineExercisesRefs})
     >;
 typedef $$StepMilestonesTableCreateCompanionBuilder =
     StepMilestonesCompanion Function({
@@ -14956,6 +17361,1662 @@ typedef $$CompanionsTableProcessedTableManager =
       Companion,
       PrefetchHooks Function({bool playerId})
     >;
+typedef $$EnemiesTableCreateCompanionBuilder =
+    EnemiesCompanion Function({
+      Value<int> id,
+      required String key,
+      required String name,
+      required String description,
+      required String elementType,
+      required String tier,
+      required String difficulty,
+      required int hp,
+      required int lpReward,
+      required int goldReward,
+      required int lpPenalty,
+      required String weaknesses,
+      required String resistances,
+      Value<String> immunities,
+      Value<String?> requiredStat,
+      Value<int?> requiredStatValue,
+      required String imagePath,
+      Value<String> emoji,
+    });
+typedef $$EnemiesTableUpdateCompanionBuilder =
+    EnemiesCompanion Function({
+      Value<int> id,
+      Value<String> key,
+      Value<String> name,
+      Value<String> description,
+      Value<String> elementType,
+      Value<String> tier,
+      Value<String> difficulty,
+      Value<int> hp,
+      Value<int> lpReward,
+      Value<int> goldReward,
+      Value<int> lpPenalty,
+      Value<String> weaknesses,
+      Value<String> resistances,
+      Value<String> immunities,
+      Value<String?> requiredStat,
+      Value<int?> requiredStatValue,
+      Value<String> imagePath,
+      Value<String> emoji,
+    });
+
+final class $$EnemiesTableReferences
+    extends BaseReferences<_$QuestFitDatabase, $EnemiesTable, Enemy> {
+  $$EnemiesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$BountiesTable, List<Bounty>> _bountiesRefsTable(
+    _$QuestFitDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.bounties,
+    aliasName: $_aliasNameGenerator(db.enemies.id, db.bounties.enemyId),
+  );
+
+  $$BountiesTableProcessedTableManager get bountiesRefs {
+    final manager = $$BountiesTableTableManager(
+      $_db,
+      $_db.bounties,
+    ).filter((f) => f.enemyId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_bountiesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$EnemiesTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $EnemiesTable> {
+  $$EnemiesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get elementType => $composableBuilder(
+    column: $table.elementType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tier => $composableBuilder(
+    column: $table.tier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get difficulty => $composableBuilder(
+    column: $table.difficulty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get hp => $composableBuilder(
+    column: $table.hp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lpReward => $composableBuilder(
+    column: $table.lpReward,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get goldReward => $composableBuilder(
+    column: $table.goldReward,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lpPenalty => $composableBuilder(
+    column: $table.lpPenalty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get weaknesses => $composableBuilder(
+    column: $table.weaknesses,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resistances => $composableBuilder(
+    column: $table.resistances,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get immunities => $composableBuilder(
+    column: $table.immunities,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get requiredStat => $composableBuilder(
+    column: $table.requiredStat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get requiredStatValue => $composableBuilder(
+    column: $table.requiredStatValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> bountiesRefs(
+    Expression<bool> Function($$BountiesTableFilterComposer f) f,
+  ) {
+    final $$BountiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.enemyId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableFilterComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EnemiesTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $EnemiesTable> {
+  $$EnemiesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get elementType => $composableBuilder(
+    column: $table.elementType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tier => $composableBuilder(
+    column: $table.tier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get difficulty => $composableBuilder(
+    column: $table.difficulty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get hp => $composableBuilder(
+    column: $table.hp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lpReward => $composableBuilder(
+    column: $table.lpReward,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get goldReward => $composableBuilder(
+    column: $table.goldReward,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lpPenalty => $composableBuilder(
+    column: $table.lpPenalty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get weaknesses => $composableBuilder(
+    column: $table.weaknesses,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resistances => $composableBuilder(
+    column: $table.resistances,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get immunities => $composableBuilder(
+    column: $table.immunities,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get requiredStat => $composableBuilder(
+    column: $table.requiredStat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get requiredStatValue => $composableBuilder(
+    column: $table.requiredStatValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EnemiesTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $EnemiesTable> {
+  $$EnemiesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get elementType => $composableBuilder(
+    column: $table.elementType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tier =>
+      $composableBuilder(column: $table.tier, builder: (column) => column);
+
+  GeneratedColumn<String> get difficulty => $composableBuilder(
+    column: $table.difficulty,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get hp =>
+      $composableBuilder(column: $table.hp, builder: (column) => column);
+
+  GeneratedColumn<int> get lpReward =>
+      $composableBuilder(column: $table.lpReward, builder: (column) => column);
+
+  GeneratedColumn<int> get goldReward => $composableBuilder(
+    column: $table.goldReward,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lpPenalty =>
+      $composableBuilder(column: $table.lpPenalty, builder: (column) => column);
+
+  GeneratedColumn<String> get weaknesses => $composableBuilder(
+    column: $table.weaknesses,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get resistances => $composableBuilder(
+    column: $table.resistances,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get immunities => $composableBuilder(
+    column: $table.immunities,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get requiredStat => $composableBuilder(
+    column: $table.requiredStat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get requiredStatValue => $composableBuilder(
+    column: $table.requiredStatValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get imagePath =>
+      $composableBuilder(column: $table.imagePath, builder: (column) => column);
+
+  GeneratedColumn<String> get emoji =>
+      $composableBuilder(column: $table.emoji, builder: (column) => column);
+
+  Expression<T> bountiesRefs<T extends Object>(
+    Expression<T> Function($$BountiesTableAnnotationComposer a) f,
+  ) {
+    final $$BountiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.enemyId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EnemiesTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $EnemiesTable,
+          Enemy,
+          $$EnemiesTableFilterComposer,
+          $$EnemiesTableOrderingComposer,
+          $$EnemiesTableAnnotationComposer,
+          $$EnemiesTableCreateCompanionBuilder,
+          $$EnemiesTableUpdateCompanionBuilder,
+          (Enemy, $$EnemiesTableReferences),
+          Enemy,
+          PrefetchHooks Function({bool bountiesRefs})
+        > {
+  $$EnemiesTableTableManager(_$QuestFitDatabase db, $EnemiesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$EnemiesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$EnemiesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$EnemiesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> key = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String> elementType = const Value.absent(),
+                Value<String> tier = const Value.absent(),
+                Value<String> difficulty = const Value.absent(),
+                Value<int> hp = const Value.absent(),
+                Value<int> lpReward = const Value.absent(),
+                Value<int> goldReward = const Value.absent(),
+                Value<int> lpPenalty = const Value.absent(),
+                Value<String> weaknesses = const Value.absent(),
+                Value<String> resistances = const Value.absent(),
+                Value<String> immunities = const Value.absent(),
+                Value<String?> requiredStat = const Value.absent(),
+                Value<int?> requiredStatValue = const Value.absent(),
+                Value<String> imagePath = const Value.absent(),
+                Value<String> emoji = const Value.absent(),
+              }) => EnemiesCompanion(
+                id: id,
+                key: key,
+                name: name,
+                description: description,
+                elementType: elementType,
+                tier: tier,
+                difficulty: difficulty,
+                hp: hp,
+                lpReward: lpReward,
+                goldReward: goldReward,
+                lpPenalty: lpPenalty,
+                weaknesses: weaknesses,
+                resistances: resistances,
+                immunities: immunities,
+                requiredStat: requiredStat,
+                requiredStatValue: requiredStatValue,
+                imagePath: imagePath,
+                emoji: emoji,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String key,
+                required String name,
+                required String description,
+                required String elementType,
+                required String tier,
+                required String difficulty,
+                required int hp,
+                required int lpReward,
+                required int goldReward,
+                required int lpPenalty,
+                required String weaknesses,
+                required String resistances,
+                Value<String> immunities = const Value.absent(),
+                Value<String?> requiredStat = const Value.absent(),
+                Value<int?> requiredStatValue = const Value.absent(),
+                required String imagePath,
+                Value<String> emoji = const Value.absent(),
+              }) => EnemiesCompanion.insert(
+                id: id,
+                key: key,
+                name: name,
+                description: description,
+                elementType: elementType,
+                tier: tier,
+                difficulty: difficulty,
+                hp: hp,
+                lpReward: lpReward,
+                goldReward: goldReward,
+                lpPenalty: lpPenalty,
+                weaknesses: weaknesses,
+                resistances: resistances,
+                immunities: immunities,
+                requiredStat: requiredStat,
+                requiredStatValue: requiredStatValue,
+                imagePath: imagePath,
+                emoji: emoji,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$EnemiesTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({bountiesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (bountiesRefs) db.bounties],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (bountiesRefs)
+                    await $_getPrefetchedData<Enemy, $EnemiesTable, Bounty>(
+                      currentTable: table,
+                      referencedTable: $$EnemiesTableReferences
+                          ._bountiesRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$EnemiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).bountiesRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.enemyId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EnemiesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $EnemiesTable,
+      Enemy,
+      $$EnemiesTableFilterComposer,
+      $$EnemiesTableOrderingComposer,
+      $$EnemiesTableAnnotationComposer,
+      $$EnemiesTableCreateCompanionBuilder,
+      $$EnemiesTableUpdateCompanionBuilder,
+      (Enemy, $$EnemiesTableReferences),
+      Enemy,
+      PrefetchHooks Function({bool bountiesRefs})
+    >;
+typedef $$BountiesTableCreateCompanionBuilder =
+    BountiesCompanion Function({
+      Value<int> id,
+      required int playerId,
+      required String date,
+      Value<int?> enemyId,
+      Value<String> status,
+      Value<int> currentHp,
+      Value<String> draftedEnemyIds,
+      Value<DateTime?> lockedAt,
+      Value<DateTime?> resolvedAt,
+    });
+typedef $$BountiesTableUpdateCompanionBuilder =
+    BountiesCompanion Function({
+      Value<int> id,
+      Value<int> playerId,
+      Value<String> date,
+      Value<int?> enemyId,
+      Value<String> status,
+      Value<int> currentHp,
+      Value<String> draftedEnemyIds,
+      Value<DateTime?> lockedAt,
+      Value<DateTime?> resolvedAt,
+    });
+
+final class $$BountiesTableReferences
+    extends BaseReferences<_$QuestFitDatabase, $BountiesTable, Bounty> {
+  $$BountiesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $PlayersTable _playerIdTable(_$QuestFitDatabase db) => db.players
+      .createAlias($_aliasNameGenerator(db.bounties.playerId, db.players.id));
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<int>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $EnemiesTable _enemyIdTable(_$QuestFitDatabase db) => db.enemies
+      .createAlias($_aliasNameGenerator(db.bounties.enemyId, db.enemies.id));
+
+  $$EnemiesTableProcessedTableManager? get enemyId {
+    final $_column = $_itemColumn<int>('enemy_id');
+    if ($_column == null) return null;
+    final manager = $$EnemiesTableTableManager(
+      $_db,
+      $_db.enemies,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_enemyIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$RoutineExercisesTable, List<RoutineExercise>>
+  _routineExercisesRefsTable(_$QuestFitDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.routineExercises,
+        aliasName: $_aliasNameGenerator(
+          db.bounties.id,
+          db.routineExercises.bountyId,
+        ),
+      );
+
+  $$RoutineExercisesTableProcessedTableManager get routineExercisesRefs {
+    final manager = $$RoutineExercisesTableTableManager(
+      $_db,
+      $_db.routineExercises,
+    ).filter((f) => f.bountyId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _routineExercisesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$BountiesTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $BountiesTable> {
+  $$BountiesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get currentHp => $composableBuilder(
+    column: $table.currentHp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get draftedEnemyIds => $composableBuilder(
+    column: $table.draftedEnemyIds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lockedAt => $composableBuilder(
+    column: $table.lockedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$EnemiesTableFilterComposer get enemyId {
+    final $$EnemiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.enemyId,
+      referencedTable: $db.enemies,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EnemiesTableFilterComposer(
+            $db: $db,
+            $table: $db.enemies,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> routineExercisesRefs(
+    Expression<bool> Function($$RoutineExercisesTableFilterComposer f) f,
+  ) {
+    final $$RoutineExercisesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.routineExercises,
+      getReferencedColumn: (t) => t.bountyId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutineExercisesTableFilterComposer(
+            $db: $db,
+            $table: $db.routineExercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$BountiesTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $BountiesTable> {
+  $$BountiesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get currentHp => $composableBuilder(
+    column: $table.currentHp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get draftedEnemyIds => $composableBuilder(
+    column: $table.draftedEnemyIds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lockedAt => $composableBuilder(
+    column: $table.lockedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$EnemiesTableOrderingComposer get enemyId {
+    final $$EnemiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.enemyId,
+      referencedTable: $db.enemies,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EnemiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.enemies,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BountiesTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $BountiesTable> {
+  $$BountiesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get currentHp =>
+      $composableBuilder(column: $table.currentHp, builder: (column) => column);
+
+  GeneratedColumn<String> get draftedEnemyIds => $composableBuilder(
+    column: $table.draftedEnemyIds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lockedAt =>
+      $composableBuilder(column: $table.lockedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => column,
+  );
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$EnemiesTableAnnotationComposer get enemyId {
+    final $$EnemiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.enemyId,
+      referencedTable: $db.enemies,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EnemiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.enemies,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> routineExercisesRefs<T extends Object>(
+    Expression<T> Function($$RoutineExercisesTableAnnotationComposer a) f,
+  ) {
+    final $$RoutineExercisesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.routineExercises,
+      getReferencedColumn: (t) => t.bountyId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutineExercisesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.routineExercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$BountiesTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $BountiesTable,
+          Bounty,
+          $$BountiesTableFilterComposer,
+          $$BountiesTableOrderingComposer,
+          $$BountiesTableAnnotationComposer,
+          $$BountiesTableCreateCompanionBuilder,
+          $$BountiesTableUpdateCompanionBuilder,
+          (Bounty, $$BountiesTableReferences),
+          Bounty,
+          PrefetchHooks Function({
+            bool playerId,
+            bool enemyId,
+            bool routineExercisesRefs,
+          })
+        > {
+  $$BountiesTableTableManager(_$QuestFitDatabase db, $BountiesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$BountiesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$BountiesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$BountiesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playerId = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<int?> enemyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> currentHp = const Value.absent(),
+                Value<String> draftedEnemyIds = const Value.absent(),
+                Value<DateTime?> lockedAt = const Value.absent(),
+                Value<DateTime?> resolvedAt = const Value.absent(),
+              }) => BountiesCompanion(
+                id: id,
+                playerId: playerId,
+                date: date,
+                enemyId: enemyId,
+                status: status,
+                currentHp: currentHp,
+                draftedEnemyIds: draftedEnemyIds,
+                lockedAt: lockedAt,
+                resolvedAt: resolvedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playerId,
+                required String date,
+                Value<int?> enemyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> currentHp = const Value.absent(),
+                Value<String> draftedEnemyIds = const Value.absent(),
+                Value<DateTime?> lockedAt = const Value.absent(),
+                Value<DateTime?> resolvedAt = const Value.absent(),
+              }) => BountiesCompanion.insert(
+                id: id,
+                playerId: playerId,
+                date: date,
+                enemyId: enemyId,
+                status: status,
+                currentHp: currentHp,
+                draftedEnemyIds: draftedEnemyIds,
+                lockedAt: lockedAt,
+                resolvedAt: resolvedAt,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$BountiesTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({
+            playerId = false,
+            enemyId = false,
+            routineExercisesRefs = false,
+          }) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (routineExercisesRefs) db.routineExercises,
+              ],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (playerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$BountiesTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn:
+                                $$BountiesTableReferences._playerIdTable(db).id,
+                          )
+                          as T;
+                }
+                if (enemyId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.enemyId,
+                            referencedTable: $$BountiesTableReferences
+                                ._enemyIdTable(db),
+                            referencedColumn:
+                                $$BountiesTableReferences._enemyIdTable(db).id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (routineExercisesRefs)
+                    await $_getPrefetchedData<
+                      Bounty,
+                      $BountiesTable,
+                      RoutineExercise
+                    >(
+                      currentTable: table,
+                      referencedTable: $$BountiesTableReferences
+                          ._routineExercisesRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$BountiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).routineExercisesRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.bountyId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$BountiesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $BountiesTable,
+      Bounty,
+      $$BountiesTableFilterComposer,
+      $$BountiesTableOrderingComposer,
+      $$BountiesTableAnnotationComposer,
+      $$BountiesTableCreateCompanionBuilder,
+      $$BountiesTableUpdateCompanionBuilder,
+      (Bounty, $$BountiesTableReferences),
+      Bounty,
+      PrefetchHooks Function({
+        bool playerId,
+        bool enemyId,
+        bool routineExercisesRefs,
+      })
+    >;
+typedef $$RoutineExercisesTableCreateCompanionBuilder =
+    RoutineExercisesCompanion Function({
+      Value<int> id,
+      required int bountyId,
+      required int exerciseDbId,
+      required int sets,
+      Value<int?> reps,
+      Value<int?> duration,
+      Value<bool> isCompleted,
+      Value<DateTime?> completedAt,
+      Value<int> damageDealt,
+    });
+typedef $$RoutineExercisesTableUpdateCompanionBuilder =
+    RoutineExercisesCompanion Function({
+      Value<int> id,
+      Value<int> bountyId,
+      Value<int> exerciseDbId,
+      Value<int> sets,
+      Value<int?> reps,
+      Value<int?> duration,
+      Value<bool> isCompleted,
+      Value<DateTime?> completedAt,
+      Value<int> damageDealt,
+    });
+
+final class $$RoutineExercisesTableReferences
+    extends
+        BaseReferences<
+          _$QuestFitDatabase,
+          $RoutineExercisesTable,
+          RoutineExercise
+        > {
+  $$RoutineExercisesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $BountiesTable _bountyIdTable(_$QuestFitDatabase db) =>
+      db.bounties.createAlias(
+        $_aliasNameGenerator(db.routineExercises.bountyId, db.bounties.id),
+      );
+
+  $$BountiesTableProcessedTableManager get bountyId {
+    final $_column = $_itemColumn<int>('bounty_id')!;
+
+    final manager = $$BountiesTableTableManager(
+      $_db,
+      $_db.bounties,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_bountyIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ExerciseDbTable _exerciseDbIdTable(_$QuestFitDatabase db) =>
+      db.exerciseDb.createAlias(
+        $_aliasNameGenerator(
+          db.routineExercises.exerciseDbId,
+          db.exerciseDb.id,
+        ),
+      );
+
+  $$ExerciseDbTableProcessedTableManager get exerciseDbId {
+    final $_column = $_itemColumn<int>('exercise_db_id')!;
+
+    final manager = $$ExerciseDbTableTableManager(
+      $_db,
+      $_db.exerciseDb,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_exerciseDbIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RoutineExercisesTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $RoutineExercisesTable> {
+  $$RoutineExercisesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sets => $composableBuilder(
+    column: $table.sets,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reps => $composableBuilder(
+    column: $table.reps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get duration => $composableBuilder(
+    column: $table.duration,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get damageDealt => $composableBuilder(
+    column: $table.damageDealt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$BountiesTableFilterComposer get bountyId {
+    final $$BountiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bountyId,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableFilterComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ExerciseDbTableFilterComposer get exerciseDbId {
+    final $$ExerciseDbTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.exerciseDbId,
+      referencedTable: $db.exerciseDb,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExerciseDbTableFilterComposer(
+            $db: $db,
+            $table: $db.exerciseDb,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineExercisesTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $RoutineExercisesTable> {
+  $$RoutineExercisesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sets => $composableBuilder(
+    column: $table.sets,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reps => $composableBuilder(
+    column: $table.reps,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get duration => $composableBuilder(
+    column: $table.duration,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get damageDealt => $composableBuilder(
+    column: $table.damageDealt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$BountiesTableOrderingComposer get bountyId {
+    final $$BountiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bountyId,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ExerciseDbTableOrderingComposer get exerciseDbId {
+    final $$ExerciseDbTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.exerciseDbId,
+      referencedTable: $db.exerciseDb,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExerciseDbTableOrderingComposer(
+            $db: $db,
+            $table: $db.exerciseDb,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineExercisesTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $RoutineExercisesTable> {
+  $$RoutineExercisesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get sets =>
+      $composableBuilder(column: $table.sets, builder: (column) => column);
+
+  GeneratedColumn<int> get reps =>
+      $composableBuilder(column: $table.reps, builder: (column) => column);
+
+  GeneratedColumn<int> get duration =>
+      $composableBuilder(column: $table.duration, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get damageDealt => $composableBuilder(
+    column: $table.damageDealt,
+    builder: (column) => column,
+  );
+
+  $$BountiesTableAnnotationComposer get bountyId {
+    final $$BountiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bountyId,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ExerciseDbTableAnnotationComposer get exerciseDbId {
+    final $$ExerciseDbTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.exerciseDbId,
+      referencedTable: $db.exerciseDb,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExerciseDbTableAnnotationComposer(
+            $db: $db,
+            $table: $db.exerciseDb,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineExercisesTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $RoutineExercisesTable,
+          RoutineExercise,
+          $$RoutineExercisesTableFilterComposer,
+          $$RoutineExercisesTableOrderingComposer,
+          $$RoutineExercisesTableAnnotationComposer,
+          $$RoutineExercisesTableCreateCompanionBuilder,
+          $$RoutineExercisesTableUpdateCompanionBuilder,
+          (RoutineExercise, $$RoutineExercisesTableReferences),
+          RoutineExercise,
+          PrefetchHooks Function({bool bountyId, bool exerciseDbId})
+        > {
+  $$RoutineExercisesTableTableManager(
+    _$QuestFitDatabase db,
+    $RoutineExercisesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () =>
+                  $$RoutineExercisesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$RoutineExercisesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer:
+              () => $$RoutineExercisesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> bountyId = const Value.absent(),
+                Value<int> exerciseDbId = const Value.absent(),
+                Value<int> sets = const Value.absent(),
+                Value<int?> reps = const Value.absent(),
+                Value<int?> duration = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<int> damageDealt = const Value.absent(),
+              }) => RoutineExercisesCompanion(
+                id: id,
+                bountyId: bountyId,
+                exerciseDbId: exerciseDbId,
+                sets: sets,
+                reps: reps,
+                duration: duration,
+                isCompleted: isCompleted,
+                completedAt: completedAt,
+                damageDealt: damageDealt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int bountyId,
+                required int exerciseDbId,
+                required int sets,
+                Value<int?> reps = const Value.absent(),
+                Value<int?> duration = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<int> damageDealt = const Value.absent(),
+              }) => RoutineExercisesCompanion.insert(
+                id: id,
+                bountyId: bountyId,
+                exerciseDbId: exerciseDbId,
+                sets: sets,
+                reps: reps,
+                duration: duration,
+                isCompleted: isCompleted,
+                completedAt: completedAt,
+                damageDealt: damageDealt,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$RoutineExercisesTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({bountyId = false, exerciseDbId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (bountyId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.bountyId,
+                            referencedTable: $$RoutineExercisesTableReferences
+                                ._bountyIdTable(db),
+                            referencedColumn:
+                                $$RoutineExercisesTableReferences
+                                    ._bountyIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+                if (exerciseDbId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.exerciseDbId,
+                            referencedTable: $$RoutineExercisesTableReferences
+                                ._exerciseDbIdTable(db),
+                            referencedColumn:
+                                $$RoutineExercisesTableReferences
+                                    ._exerciseDbIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RoutineExercisesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $RoutineExercisesTable,
+      RoutineExercise,
+      $$RoutineExercisesTableFilterComposer,
+      $$RoutineExercisesTableOrderingComposer,
+      $$RoutineExercisesTableAnnotationComposer,
+      $$RoutineExercisesTableCreateCompanionBuilder,
+      $$RoutineExercisesTableUpdateCompanionBuilder,
+      (RoutineExercise, $$RoutineExercisesTableReferences),
+      RoutineExercise,
+      PrefetchHooks Function({bool bountyId, bool exerciseDbId})
+    >;
 
 class $QuestFitDatabaseManager {
   final _$QuestFitDatabase _db;
@@ -14989,4 +19050,10 @@ class $QuestFitDatabaseManager {
   $$EggsTableTableManager get eggs => $$EggsTableTableManager(_db, _db.eggs);
   $$CompanionsTableTableManager get companions =>
       $$CompanionsTableTableManager(_db, _db.companions);
+  $$EnemiesTableTableManager get enemies =>
+      $$EnemiesTableTableManager(_db, _db.enemies);
+  $$BountiesTableTableManager get bounties =>
+      $$BountiesTableTableManager(_db, _db.bounties);
+  $$RoutineExercisesTableTableManager get routineExercises =>
+      $$RoutineExercisesTableTableManager(_db, _db.routineExercises);
 }

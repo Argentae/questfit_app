@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'tables.dart';
 import '../data/weapon_catalog.dart';
+import '../data/enemy_catalog.dart';
 
 part 'database.g.dart';
 
@@ -16,6 +17,8 @@ part 'database.g.dart';
   Equipment, EquipmentExercises, EquippedSlots, Inventory, RankTrials,
   // v2.2 tables
   ExerciseDb, StepMilestones, Eggs, Companions,
+  // v2.3 tables
+  Enemies, Bounties, RoutineExercises,
 ])
 class QuestFitDatabase extends _$QuestFitDatabase {
   QuestFitDatabase._() : super(_openConnection());
@@ -29,7 +32,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
   }
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -41,45 +44,101 @@ class QuestFitDatabase extends _$QuestFitDatabase {
           await _seedWeaponCatalog();
           // v2.2: Seed exercise database
           await _seedExerciseDatabase();
+          // v2.3: Seed enemy catalog
+          await _seedEnemyCatalog();
         },
         onUpgrade: (m, from, to) async {
+          Future<void> safeAddCol(TableInfo t, GeneratedColumn c) async {
+            try { await m.addColumn(t, c); } catch (e) {
+              if (!e.toString().contains('duplicate column')) rethrow;
+            }
+          }
+          Future<void> safeCreateTab(TableInfo t) async {
+            try { await m.createTable(t); } catch (e) {
+              if (!e.toString().contains('already exists')) rethrow;
+            }
+          }
+
           if (from < 2) {
             // v1 → v2 migration: add new columns and tables
-            await m.addColumn(players, players.gold);
-            await m.addColumn(players, players.awakeningComplete);
-            await m.addColumn(quests, quests.goldReward);
-            await m.createTable(equipment);
-            await m.createTable(equipmentExercises);
-            await m.createTable(equippedSlots);
-            await m.createTable(inventory);
-            await m.createTable(rankTrials);
+            await safeAddCol(players, players.gold);
+            await safeAddCol(players, players.awakeningComplete);
+            await safeAddCol(quests, quests.goldReward);
+            await safeCreateTab(equipment);
+            await safeCreateTab(equipmentExercises);
+            await safeCreateTab(equippedSlots);
+            await safeCreateTab(inventory);
+            await safeCreateTab(rankTrials);
             // Seed weapon catalog for existing users
             await _seedWeaponCatalog();
           }
           if (from < 3) {
             // v2 → v3 migration: LP/Tier system
-            await m.addColumn(players, players.tier);
-            await m.addColumn(players, players.division);
-            await m.addColumn(players, players.lp);
-            await m.addColumn(players, players.totalQuestsCompleted);
-            await m.addColumn(players, players.lastActivityAt);
-            await m.addColumn(players, players.pendingPromotion);
-            await m.addColumn(quests, quests.lpReward);
+            await safeAddCol(players, players.tier);
+            await safeAddCol(players, players.division);
+            await safeAddCol(players, players.lp);
+            await safeAddCol(players, players.totalQuestsCompleted);
+            await safeAddCol(players, players.lastActivityAt);
+            await safeAddCol(players, players.pendingPromotion);
+            await safeAddCol(quests, quests.lpReward);
 
             // Migrate existing player rank data to new tier/division columns
             await _migrateRankToTier();
           }
           if (from < 4) {
             // v3 → v4 migration: Exercise DB, Step mechanics, Companions
-            await m.createTable(exerciseDb);
-            await m.createTable(stepMilestones);
-            await m.createTable(eggs);
-            await m.createTable(companions);
-            await m.addColumn(players, players.dailyStepGoal);
-            await m.addColumn(players, players.momentumBuffActive);
+            await safeCreateTab(exerciseDb);
+            await safeCreateTab(stepMilestones);
+            await safeCreateTab(eggs);
+            await safeCreateTab(companions);
+            await safeAddCol(players, players.dailyStepGoal);
+            await safeAddCol(players, players.momentumBuffActive);
             // Seed the exercise database for existing users
             await _seedExerciseDatabase();
           }
+          if (from < 5) {
+            // v4 → v5 migration: Bounty Hunt combat system
+            await safeCreateTab(enemies);
+            await safeCreateTab(bounties);
+            await safeCreateTab(routineExercises);
+            // Seed enemy catalog for existing users
+            await _seedEnemyCatalog();
+          }
+        },
+        beforeOpen: (details) async {
+          // Fix potentially null columns from legacy migrations.
+          // Use single quotes for SQL string literals.
+          // Wrap in try-catch so a missing table/column doesn't crash the app.
+          try {
+            await customStatement("UPDATE players SET gold = 0 WHERE gold IS NULL");
+            await customStatement("UPDATE players SET awakening_complete = 0 WHERE awakening_complete IS NULL");
+            await customStatement("UPDATE players SET tier = 'iron' WHERE tier IS NULL");
+            await customStatement("UPDATE players SET division = 4 WHERE division IS NULL");
+            await customStatement("UPDATE players SET lp = 0 WHERE lp IS NULL");
+            await customStatement("UPDATE players SET total_quests_completed = 0 WHERE total_quests_completed IS NULL");
+            await customStatement("UPDATE players SET pending_promotion = 0 WHERE pending_promotion IS NULL");
+            await customStatement("UPDATE players SET daily_step_goal = 8000 WHERE daily_step_goal IS NULL");
+            await customStatement("UPDATE players SET momentum_buff_active = 0 WHERE momentum_buff_active IS NULL");
+          } catch (_) {}
+          try {
+            await customStatement("UPDATE quests SET gold_reward = 0 WHERE gold_reward IS NULL");
+            await customStatement("UPDATE quests SET lp_reward = 0 WHERE lp_reward IS NULL");
+          } catch (_) {}
+
+          // Safety: re-seed reference data if tables are empty
+          // (handles case where DB was already at v5 but seeding failed)
+          try {
+            final enemyCount = await select(enemies).get();
+            if (enemyCount.isEmpty) {
+              await _seedEnemyCatalog();
+            }
+          } catch (_) {}
+          try {
+            final exerciseCount = await select(exerciseDb).get();
+            if (exerciseCount.isEmpty) {
+              await _seedExerciseDatabase();
+            }
+          } catch (_) {}
         },
       );
 
@@ -225,8 +284,43 @@ class QuestFitDatabase extends _$QuestFitDatabase {
     });
   }
 
+  /// v2.3: Seeds the enemy catalog from the enemy_catalog.dart definitions.
+  Future<void> _seedEnemyCatalog() async {
+    // Check if already seeded
+    final count = await (selectOnly(enemies)..addColumns([enemies.id.count()]))
+        .map((r) => r.read(enemies.id.count()) ?? 0)
+        .getSingle();
+    if (count > 0) return;
+
+    await batch((b) {
+      for (final def in enemyCatalog) {
+        b.insert(enemies, EnemiesCompanion(
+          key: Value(def.key),
+          name: Value(def.name),
+          description: Value(def.description),
+          elementType: Value(def.elementType),
+          tier: Value(def.tier),
+          difficulty: Value(def.difficulty),
+          hp: Value(def.hp),
+          lpReward: Value(def.lpReward),
+          goldReward: Value(def.goldReward),
+          lpPenalty: Value(def.lpPenalty),
+          weaknesses: Value(jsonEncode(def.weaknesses)),
+          resistances: Value(jsonEncode(def.resistances)),
+          immunities: Value(jsonEncode(def.immunities)),
+          requiredStat: Value(def.requiredStat),
+          requiredStatValue: Value(def.requiredStatValue),
+          imagePath: Value(def.imagePath),
+          emoji: Value(def.emoji),
+        ));
+      }
+    });
+  }
+
   /// Resets the database to its initial state.
   Future<void> resetAllProgress() async {
+    await delete(routineExercises).go();
+    await delete(bounties).go();
     await delete(companions).go();
     await delete(eggs).go();
     await delete(stepMilestones).go();
@@ -243,7 +337,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
     await delete(players).go();
     await _seedInitialData();
     await _seedWeaponCatalog();
-    // Exercise DB is not reset — it's reference data
+    // Exercise DB and Enemy catalog are not reset — they're reference data
   }
 }
 
