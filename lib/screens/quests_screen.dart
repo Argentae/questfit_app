@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../app/theme.dart';
 import '../db/database.dart';
@@ -42,14 +43,28 @@ class _QuestsScreenState extends ConsumerState<QuestsScreen> {
               Text('Quest Board',
                   style: GoogleFonts.cinzel(
                       fontWeight: FontWeight.w700, fontSize: 16)),
-              TextButton(
-                onPressed: () {
-                  ref.read(questNotifierProvider.notifier).regenerateDaily();
-                },
-                child: const Text('🔄 Refresh',
-                    style: TextStyle(
-                        color: QuestFitColors.emerald,
-                        fontWeight: FontWeight.w600)),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // v2.2: Grimoire shortcut
+                  TextButton(
+                    onPressed: () => context.go('/grimoire'),
+                    child: const Text('📖 Grimoire',
+                        style: TextStyle(
+                            color: QuestFitColors.purple,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12)),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      ref.read(questNotifierProvider.notifier).regenerateDaily();
+                    },
+                    child: const Text('🔄 Refresh',
+                        style: TextStyle(
+                            color: QuestFitColors.emerald,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                ],
               ),
             ],
           ),

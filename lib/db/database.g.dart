@@ -192,6 +192,32 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _dailyStepGoalMeta = const VerificationMeta(
+    'dailyStepGoal',
+  );
+  @override
+  late final GeneratedColumn<int> dailyStepGoal = GeneratedColumn<int>(
+    'daily_step_goal',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(8000),
+  );
+  static const VerificationMeta _momentumBuffActiveMeta =
+      const VerificationMeta('momentumBuffActive');
+  @override
+  late final GeneratedColumn<bool> momentumBuffActive = GeneratedColumn<bool>(
+    'momentum_buff_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("momentum_buff_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -210,6 +236,8 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     gold,
     awakeningComplete,
     createdAt,
+    dailyStepGoal,
+    momentumBuffActive,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -322,6 +350,24 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('daily_step_goal')) {
+      context.handle(
+        _dailyStepGoalMeta,
+        dailyStepGoal.isAcceptableOrUnknown(
+          data['daily_step_goal']!,
+          _dailyStepGoalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('momentum_buff_active')) {
+      context.handle(
+        _momentumBuffActiveMeta,
+        momentumBuffActive.isAcceptableOrUnknown(
+          data['momentum_buff_active']!,
+          _momentumBuffActiveMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -410,6 +456,16 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
             DriftSqlType.dateTime,
             data['${effectivePrefix}created_at'],
           )!,
+      dailyStepGoal:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}daily_step_goal'],
+          )!,
+      momentumBuffActive:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}momentum_buff_active'],
+          )!,
     );
   }
 
@@ -452,6 +508,12 @@ class Player extends DataClass implements Insertable<Player> {
   /// v2.0: Awakening flag — true once the player clears the Proving Grounds
   final bool awakeningComplete;
   final DateTime createdAt;
+
+  /// v2.2: Daily step goal for Momentum Buff (default 8000)
+  final int dailyStepGoal;
+
+  /// v2.2: Whether the Momentum Buff is active today
+  final bool momentumBuffActive;
   const Player({
     required this.id,
     required this.name,
@@ -469,6 +531,8 @@ class Player extends DataClass implements Insertable<Player> {
     required this.gold,
     required this.awakeningComplete,
     required this.createdAt,
+    required this.dailyStepGoal,
+    required this.momentumBuffActive,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -491,6 +555,8 @@ class Player extends DataClass implements Insertable<Player> {
     map['gold'] = Variable<int>(gold);
     map['awakening_complete'] = Variable<bool>(awakeningComplete);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['daily_step_goal'] = Variable<int>(dailyStepGoal);
+    map['momentum_buff_active'] = Variable<bool>(momentumBuffActive);
     return map;
   }
 
@@ -515,6 +581,8 @@ class Player extends DataClass implements Insertable<Player> {
       gold: Value(gold),
       awakeningComplete: Value(awakeningComplete),
       createdAt: Value(createdAt),
+      dailyStepGoal: Value(dailyStepGoal),
+      momentumBuffActive: Value(momentumBuffActive),
     );
   }
 
@@ -542,6 +610,8 @@ class Player extends DataClass implements Insertable<Player> {
       gold: serializer.fromJson<int>(json['gold']),
       awakeningComplete: serializer.fromJson<bool>(json['awakeningComplete']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      dailyStepGoal: serializer.fromJson<int>(json['dailyStepGoal']),
+      momentumBuffActive: serializer.fromJson<bool>(json['momentumBuffActive']),
     );
   }
   @override
@@ -564,6 +634,8 @@ class Player extends DataClass implements Insertable<Player> {
       'gold': serializer.toJson<int>(gold),
       'awakeningComplete': serializer.toJson<bool>(awakeningComplete),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'dailyStepGoal': serializer.toJson<int>(dailyStepGoal),
+      'momentumBuffActive': serializer.toJson<bool>(momentumBuffActive),
     };
   }
 
@@ -584,6 +656,8 @@ class Player extends DataClass implements Insertable<Player> {
     int? gold,
     bool? awakeningComplete,
     DateTime? createdAt,
+    int? dailyStepGoal,
+    bool? momentumBuffActive,
   }) => Player(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -602,6 +676,8 @@ class Player extends DataClass implements Insertable<Player> {
     gold: gold ?? this.gold,
     awakeningComplete: awakeningComplete ?? this.awakeningComplete,
     createdAt: createdAt ?? this.createdAt,
+    dailyStepGoal: dailyStepGoal ?? this.dailyStepGoal,
+    momentumBuffActive: momentumBuffActive ?? this.momentumBuffActive,
   );
   Player copyWithCompanion(PlayersCompanion data) {
     return Player(
@@ -633,6 +709,14 @@ class Player extends DataClass implements Insertable<Player> {
               ? data.awakeningComplete.value
               : this.awakeningComplete,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      dailyStepGoal:
+          data.dailyStepGoal.present
+              ? data.dailyStepGoal.value
+              : this.dailyStepGoal,
+      momentumBuffActive:
+          data.momentumBuffActive.present
+              ? data.momentumBuffActive.value
+              : this.momentumBuffActive,
     );
   }
 
@@ -654,7 +738,9 @@ class Player extends DataClass implements Insertable<Player> {
           ..write('classType: $classType, ')
           ..write('gold: $gold, ')
           ..write('awakeningComplete: $awakeningComplete, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('dailyStepGoal: $dailyStepGoal, ')
+          ..write('momentumBuffActive: $momentumBuffActive')
           ..write(')'))
         .toString();
   }
@@ -677,6 +763,8 @@ class Player extends DataClass implements Insertable<Player> {
     gold,
     awakeningComplete,
     createdAt,
+    dailyStepGoal,
+    momentumBuffActive,
   );
   @override
   bool operator ==(Object other) =>
@@ -697,7 +785,9 @@ class Player extends DataClass implements Insertable<Player> {
           other.classType == this.classType &&
           other.gold == this.gold &&
           other.awakeningComplete == this.awakeningComplete &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.dailyStepGoal == this.dailyStepGoal &&
+          other.momentumBuffActive == this.momentumBuffActive);
 }
 
 class PlayersCompanion extends UpdateCompanion<Player> {
@@ -717,6 +807,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
   final Value<int> gold;
   final Value<bool> awakeningComplete;
   final Value<DateTime> createdAt;
+  final Value<int> dailyStepGoal;
+  final Value<bool> momentumBuffActive;
   const PlayersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -734,6 +826,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.gold = const Value.absent(),
     this.awakeningComplete = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.dailyStepGoal = const Value.absent(),
+    this.momentumBuffActive = const Value.absent(),
   });
   PlayersCompanion.insert({
     this.id = const Value.absent(),
@@ -752,6 +846,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.gold = const Value.absent(),
     this.awakeningComplete = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.dailyStepGoal = const Value.absent(),
+    this.momentumBuffActive = const Value.absent(),
   });
   static Insertable<Player> custom({
     Expression<int>? id,
@@ -770,6 +866,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Expression<int>? gold,
     Expression<bool>? awakeningComplete,
     Expression<DateTime>? createdAt,
+    Expression<int>? dailyStepGoal,
+    Expression<bool>? momentumBuffActive,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -789,6 +887,9 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       if (gold != null) 'gold': gold,
       if (awakeningComplete != null) 'awakening_complete': awakeningComplete,
       if (createdAt != null) 'created_at': createdAt,
+      if (dailyStepGoal != null) 'daily_step_goal': dailyStepGoal,
+      if (momentumBuffActive != null)
+        'momentum_buff_active': momentumBuffActive,
     });
   }
 
@@ -809,6 +910,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Value<int>? gold,
     Value<bool>? awakeningComplete,
     Value<DateTime>? createdAt,
+    Value<int>? dailyStepGoal,
+    Value<bool>? momentumBuffActive,
   }) {
     return PlayersCompanion(
       id: id ?? this.id,
@@ -827,6 +930,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       gold: gold ?? this.gold,
       awakeningComplete: awakeningComplete ?? this.awakeningComplete,
       createdAt: createdAt ?? this.createdAt,
+      dailyStepGoal: dailyStepGoal ?? this.dailyStepGoal,
+      momentumBuffActive: momentumBuffActive ?? this.momentumBuffActive,
     );
   }
 
@@ -881,6 +986,12 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (dailyStepGoal.present) {
+      map['daily_step_goal'] = Variable<int>(dailyStepGoal.value);
+    }
+    if (momentumBuffActive.present) {
+      map['momentum_buff_active'] = Variable<bool>(momentumBuffActive.value);
+    }
     return map;
   }
 
@@ -902,7 +1013,9 @@ class PlayersCompanion extends UpdateCompanion<Player> {
           ..write('classType: $classType, ')
           ..write('gold: $gold, ')
           ..write('awakeningComplete: $awakeningComplete, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('dailyStepGoal: $dailyStepGoal, ')
+          ..write('momentumBuffActive: $momentumBuffActive')
           ..write(')'))
         .toString();
   }
@@ -5815,6 +5928,4408 @@ class RankTrialsCompanion extends UpdateCompanion<RankTrial> {
   }
 }
 
+class $ExerciseDbTable extends ExerciseDb
+    with TableInfo<$ExerciseDbTable, ExerciseDbData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ExerciseDbTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _externalIdMeta = const VerificationMeta(
+    'externalId',
+  );
+  @override
+  late final GeneratedColumn<String> externalId = GeneratedColumn<String>(
+    'external_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _forceMeta = const VerificationMeta('force');
+  @override
+  late final GeneratedColumn<String> force = GeneratedColumn<String>(
+    'force',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<String> level = GeneratedColumn<String>(
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mechanicMeta = const VerificationMeta(
+    'mechanic',
+  );
+  @override
+  late final GeneratedColumn<String> mechanic = GeneratedColumn<String>(
+    'mechanic',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _equipmentMeta = const VerificationMeta(
+    'equipment',
+  );
+  @override
+  late final GeneratedColumn<String> equipment = GeneratedColumn<String>(
+    'equipment',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _instructionsMeta = const VerificationMeta(
+    'instructions',
+  );
+  @override
+  late final GeneratedColumn<String> instructions = GeneratedColumn<String>(
+    'instructions',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _primaryMusclesMeta = const VerificationMeta(
+    'primaryMuscles',
+  );
+  @override
+  late final GeneratedColumn<String> primaryMuscles = GeneratedColumn<String>(
+    'primary_muscles',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _secondaryMusclesMeta = const VerificationMeta(
+    'secondaryMuscles',
+  );
+  @override
+  late final GeneratedColumn<String> secondaryMuscles = GeneratedColumn<String>(
+    'secondary_muscles',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _imagesMeta = const VerificationMeta('images');
+  @override
+  late final GeneratedColumn<String> images = GeneratedColumn<String>(
+    'images',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    externalId,
+    name,
+    force,
+    level,
+    mechanic,
+    equipment,
+    category,
+    instructions,
+    primaryMuscles,
+    secondaryMuscles,
+    images,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'exercise_db';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ExerciseDbData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('external_id')) {
+      context.handle(
+        _externalIdMeta,
+        externalId.isAcceptableOrUnknown(data['external_id']!, _externalIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_externalIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('force')) {
+      context.handle(
+        _forceMeta,
+        force.isAcceptableOrUnknown(data['force']!, _forceMeta),
+      );
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_levelMeta);
+    }
+    if (data.containsKey('mechanic')) {
+      context.handle(
+        _mechanicMeta,
+        mechanic.isAcceptableOrUnknown(data['mechanic']!, _mechanicMeta),
+      );
+    }
+    if (data.containsKey('equipment')) {
+      context.handle(
+        _equipmentMeta,
+        equipment.isAcceptableOrUnknown(data['equipment']!, _equipmentMeta),
+      );
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('instructions')) {
+      context.handle(
+        _instructionsMeta,
+        instructions.isAcceptableOrUnknown(
+          data['instructions']!,
+          _instructionsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_instructionsMeta);
+    }
+    if (data.containsKey('primary_muscles')) {
+      context.handle(
+        _primaryMusclesMeta,
+        primaryMuscles.isAcceptableOrUnknown(
+          data['primary_muscles']!,
+          _primaryMusclesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_primaryMusclesMeta);
+    }
+    if (data.containsKey('secondary_muscles')) {
+      context.handle(
+        _secondaryMusclesMeta,
+        secondaryMuscles.isAcceptableOrUnknown(
+          data['secondary_muscles']!,
+          _secondaryMusclesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('images')) {
+      context.handle(
+        _imagesMeta,
+        images.isAcceptableOrUnknown(data['images']!, _imagesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ExerciseDbData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ExerciseDbData(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      externalId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}external_id'],
+          )!,
+      name:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}name'],
+          )!,
+      force: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}force'],
+      ),
+      level:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}level'],
+          )!,
+      mechanic: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mechanic'],
+      ),
+      equipment: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}equipment'],
+      ),
+      category:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}category'],
+          )!,
+      instructions:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}instructions'],
+          )!,
+      primaryMuscles:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}primary_muscles'],
+          )!,
+      secondaryMuscles:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}secondary_muscles'],
+          )!,
+      images:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}images'],
+          )!,
+    );
+  }
+
+  @override
+  $ExerciseDbTable createAlias(String alias) {
+    return $ExerciseDbTable(attachedDatabase, alias);
+  }
+}
+
+class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
+  final int id;
+
+  /// Original ID from Free Exercise DB (e.g. 'Barbell_Full_Squat')
+  final String externalId;
+  final String name;
+
+  /// Force type: 'push', 'pull', 'static', or null
+  final String? force;
+
+  /// Difficulty: 'beginner', 'intermediate', 'expert'
+  final String level;
+
+  /// Mechanic: 'compound', 'isolation', or null
+  final String? mechanic;
+
+  /// Equipment: 'barbell', 'dumbbell', 'body only', etc. or null
+  final String? equipment;
+
+  /// Category: 'strength', 'stretching', 'plyometrics', 'cardio', etc.
+  final String category;
+
+  /// Step-by-step instructions stored as JSON array string
+  final String instructions;
+
+  /// Comma-separated primary muscle names
+  final String primaryMuscles;
+
+  /// Comma-separated secondary muscle names (can be empty)
+  final String secondaryMuscles;
+
+  /// Relative image paths stored as JSON array string
+  final String images;
+  const ExerciseDbData({
+    required this.id,
+    required this.externalId,
+    required this.name,
+    this.force,
+    required this.level,
+    this.mechanic,
+    this.equipment,
+    required this.category,
+    required this.instructions,
+    required this.primaryMuscles,
+    required this.secondaryMuscles,
+    required this.images,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['external_id'] = Variable<String>(externalId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || force != null) {
+      map['force'] = Variable<String>(force);
+    }
+    map['level'] = Variable<String>(level);
+    if (!nullToAbsent || mechanic != null) {
+      map['mechanic'] = Variable<String>(mechanic);
+    }
+    if (!nullToAbsent || equipment != null) {
+      map['equipment'] = Variable<String>(equipment);
+    }
+    map['category'] = Variable<String>(category);
+    map['instructions'] = Variable<String>(instructions);
+    map['primary_muscles'] = Variable<String>(primaryMuscles);
+    map['secondary_muscles'] = Variable<String>(secondaryMuscles);
+    map['images'] = Variable<String>(images);
+    return map;
+  }
+
+  ExerciseDbCompanion toCompanion(bool nullToAbsent) {
+    return ExerciseDbCompanion(
+      id: Value(id),
+      externalId: Value(externalId),
+      name: Value(name),
+      force:
+          force == null && nullToAbsent ? const Value.absent() : Value(force),
+      level: Value(level),
+      mechanic:
+          mechanic == null && nullToAbsent
+              ? const Value.absent()
+              : Value(mechanic),
+      equipment:
+          equipment == null && nullToAbsent
+              ? const Value.absent()
+              : Value(equipment),
+      category: Value(category),
+      instructions: Value(instructions),
+      primaryMuscles: Value(primaryMuscles),
+      secondaryMuscles: Value(secondaryMuscles),
+      images: Value(images),
+    );
+  }
+
+  factory ExerciseDbData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ExerciseDbData(
+      id: serializer.fromJson<int>(json['id']),
+      externalId: serializer.fromJson<String>(json['externalId']),
+      name: serializer.fromJson<String>(json['name']),
+      force: serializer.fromJson<String?>(json['force']),
+      level: serializer.fromJson<String>(json['level']),
+      mechanic: serializer.fromJson<String?>(json['mechanic']),
+      equipment: serializer.fromJson<String?>(json['equipment']),
+      category: serializer.fromJson<String>(json['category']),
+      instructions: serializer.fromJson<String>(json['instructions']),
+      primaryMuscles: serializer.fromJson<String>(json['primaryMuscles']),
+      secondaryMuscles: serializer.fromJson<String>(json['secondaryMuscles']),
+      images: serializer.fromJson<String>(json['images']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'externalId': serializer.toJson<String>(externalId),
+      'name': serializer.toJson<String>(name),
+      'force': serializer.toJson<String?>(force),
+      'level': serializer.toJson<String>(level),
+      'mechanic': serializer.toJson<String?>(mechanic),
+      'equipment': serializer.toJson<String?>(equipment),
+      'category': serializer.toJson<String>(category),
+      'instructions': serializer.toJson<String>(instructions),
+      'primaryMuscles': serializer.toJson<String>(primaryMuscles),
+      'secondaryMuscles': serializer.toJson<String>(secondaryMuscles),
+      'images': serializer.toJson<String>(images),
+    };
+  }
+
+  ExerciseDbData copyWith({
+    int? id,
+    String? externalId,
+    String? name,
+    Value<String?> force = const Value.absent(),
+    String? level,
+    Value<String?> mechanic = const Value.absent(),
+    Value<String?> equipment = const Value.absent(),
+    String? category,
+    String? instructions,
+    String? primaryMuscles,
+    String? secondaryMuscles,
+    String? images,
+  }) => ExerciseDbData(
+    id: id ?? this.id,
+    externalId: externalId ?? this.externalId,
+    name: name ?? this.name,
+    force: force.present ? force.value : this.force,
+    level: level ?? this.level,
+    mechanic: mechanic.present ? mechanic.value : this.mechanic,
+    equipment: equipment.present ? equipment.value : this.equipment,
+    category: category ?? this.category,
+    instructions: instructions ?? this.instructions,
+    primaryMuscles: primaryMuscles ?? this.primaryMuscles,
+    secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
+    images: images ?? this.images,
+  );
+  ExerciseDbData copyWithCompanion(ExerciseDbCompanion data) {
+    return ExerciseDbData(
+      id: data.id.present ? data.id.value : this.id,
+      externalId:
+          data.externalId.present ? data.externalId.value : this.externalId,
+      name: data.name.present ? data.name.value : this.name,
+      force: data.force.present ? data.force.value : this.force,
+      level: data.level.present ? data.level.value : this.level,
+      mechanic: data.mechanic.present ? data.mechanic.value : this.mechanic,
+      equipment: data.equipment.present ? data.equipment.value : this.equipment,
+      category: data.category.present ? data.category.value : this.category,
+      instructions:
+          data.instructions.present
+              ? data.instructions.value
+              : this.instructions,
+      primaryMuscles:
+          data.primaryMuscles.present
+              ? data.primaryMuscles.value
+              : this.primaryMuscles,
+      secondaryMuscles:
+          data.secondaryMuscles.present
+              ? data.secondaryMuscles.value
+              : this.secondaryMuscles,
+      images: data.images.present ? data.images.value : this.images,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExerciseDbData(')
+          ..write('id: $id, ')
+          ..write('externalId: $externalId, ')
+          ..write('name: $name, ')
+          ..write('force: $force, ')
+          ..write('level: $level, ')
+          ..write('mechanic: $mechanic, ')
+          ..write('equipment: $equipment, ')
+          ..write('category: $category, ')
+          ..write('instructions: $instructions, ')
+          ..write('primaryMuscles: $primaryMuscles, ')
+          ..write('secondaryMuscles: $secondaryMuscles, ')
+          ..write('images: $images')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    externalId,
+    name,
+    force,
+    level,
+    mechanic,
+    equipment,
+    category,
+    instructions,
+    primaryMuscles,
+    secondaryMuscles,
+    images,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ExerciseDbData &&
+          other.id == this.id &&
+          other.externalId == this.externalId &&
+          other.name == this.name &&
+          other.force == this.force &&
+          other.level == this.level &&
+          other.mechanic == this.mechanic &&
+          other.equipment == this.equipment &&
+          other.category == this.category &&
+          other.instructions == this.instructions &&
+          other.primaryMuscles == this.primaryMuscles &&
+          other.secondaryMuscles == this.secondaryMuscles &&
+          other.images == this.images);
+}
+
+class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
+  final Value<int> id;
+  final Value<String> externalId;
+  final Value<String> name;
+  final Value<String?> force;
+  final Value<String> level;
+  final Value<String?> mechanic;
+  final Value<String?> equipment;
+  final Value<String> category;
+  final Value<String> instructions;
+  final Value<String> primaryMuscles;
+  final Value<String> secondaryMuscles;
+  final Value<String> images;
+  const ExerciseDbCompanion({
+    this.id = const Value.absent(),
+    this.externalId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.force = const Value.absent(),
+    this.level = const Value.absent(),
+    this.mechanic = const Value.absent(),
+    this.equipment = const Value.absent(),
+    this.category = const Value.absent(),
+    this.instructions = const Value.absent(),
+    this.primaryMuscles = const Value.absent(),
+    this.secondaryMuscles = const Value.absent(),
+    this.images = const Value.absent(),
+  });
+  ExerciseDbCompanion.insert({
+    this.id = const Value.absent(),
+    required String externalId,
+    required String name,
+    this.force = const Value.absent(),
+    required String level,
+    this.mechanic = const Value.absent(),
+    this.equipment = const Value.absent(),
+    required String category,
+    required String instructions,
+    required String primaryMuscles,
+    this.secondaryMuscles = const Value.absent(),
+    this.images = const Value.absent(),
+  }) : externalId = Value(externalId),
+       name = Value(name),
+       level = Value(level),
+       category = Value(category),
+       instructions = Value(instructions),
+       primaryMuscles = Value(primaryMuscles);
+  static Insertable<ExerciseDbData> custom({
+    Expression<int>? id,
+    Expression<String>? externalId,
+    Expression<String>? name,
+    Expression<String>? force,
+    Expression<String>? level,
+    Expression<String>? mechanic,
+    Expression<String>? equipment,
+    Expression<String>? category,
+    Expression<String>? instructions,
+    Expression<String>? primaryMuscles,
+    Expression<String>? secondaryMuscles,
+    Expression<String>? images,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (externalId != null) 'external_id': externalId,
+      if (name != null) 'name': name,
+      if (force != null) 'force': force,
+      if (level != null) 'level': level,
+      if (mechanic != null) 'mechanic': mechanic,
+      if (equipment != null) 'equipment': equipment,
+      if (category != null) 'category': category,
+      if (instructions != null) 'instructions': instructions,
+      if (primaryMuscles != null) 'primary_muscles': primaryMuscles,
+      if (secondaryMuscles != null) 'secondary_muscles': secondaryMuscles,
+      if (images != null) 'images': images,
+    });
+  }
+
+  ExerciseDbCompanion copyWith({
+    Value<int>? id,
+    Value<String>? externalId,
+    Value<String>? name,
+    Value<String?>? force,
+    Value<String>? level,
+    Value<String?>? mechanic,
+    Value<String?>? equipment,
+    Value<String>? category,
+    Value<String>? instructions,
+    Value<String>? primaryMuscles,
+    Value<String>? secondaryMuscles,
+    Value<String>? images,
+  }) {
+    return ExerciseDbCompanion(
+      id: id ?? this.id,
+      externalId: externalId ?? this.externalId,
+      name: name ?? this.name,
+      force: force ?? this.force,
+      level: level ?? this.level,
+      mechanic: mechanic ?? this.mechanic,
+      equipment: equipment ?? this.equipment,
+      category: category ?? this.category,
+      instructions: instructions ?? this.instructions,
+      primaryMuscles: primaryMuscles ?? this.primaryMuscles,
+      secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
+      images: images ?? this.images,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (externalId.present) {
+      map['external_id'] = Variable<String>(externalId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (force.present) {
+      map['force'] = Variable<String>(force.value);
+    }
+    if (level.present) {
+      map['level'] = Variable<String>(level.value);
+    }
+    if (mechanic.present) {
+      map['mechanic'] = Variable<String>(mechanic.value);
+    }
+    if (equipment.present) {
+      map['equipment'] = Variable<String>(equipment.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (instructions.present) {
+      map['instructions'] = Variable<String>(instructions.value);
+    }
+    if (primaryMuscles.present) {
+      map['primary_muscles'] = Variable<String>(primaryMuscles.value);
+    }
+    if (secondaryMuscles.present) {
+      map['secondary_muscles'] = Variable<String>(secondaryMuscles.value);
+    }
+    if (images.present) {
+      map['images'] = Variable<String>(images.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExerciseDbCompanion(')
+          ..write('id: $id, ')
+          ..write('externalId: $externalId, ')
+          ..write('name: $name, ')
+          ..write('force: $force, ')
+          ..write('level: $level, ')
+          ..write('mechanic: $mechanic, ')
+          ..write('equipment: $equipment, ')
+          ..write('category: $category, ')
+          ..write('instructions: $instructions, ')
+          ..write('primaryMuscles: $primaryMuscles, ')
+          ..write('secondaryMuscles: $secondaryMuscles, ')
+          ..write('images: $images')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StepMilestonesTable extends StepMilestones
+    with TableInfo<$StepMilestonesTable, StepMilestone> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StepMilestonesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (id)',
+    ),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _milestonesClaimedMeta = const VerificationMeta(
+    'milestonesClaimed',
+  );
+  @override
+  late final GeneratedColumn<int> milestonesClaimed = GeneratedColumn<int>(
+    'milestones_claimed',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _stepsAtLastClaimMeta = const VerificationMeta(
+    'stepsAtLastClaim',
+  );
+  @override
+  late final GeneratedColumn<int> stepsAtLastClaim = GeneratedColumn<int>(
+    'steps_at_last_claim',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    playerId,
+    date,
+    milestonesClaimed,
+    stepsAtLastClaim,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'step_milestones';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StepMilestone> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('milestones_claimed')) {
+      context.handle(
+        _milestonesClaimedMeta,
+        milestonesClaimed.isAcceptableOrUnknown(
+          data['milestones_claimed']!,
+          _milestonesClaimedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('steps_at_last_claim')) {
+      context.handle(
+        _stepsAtLastClaimMeta,
+        stepsAtLastClaim.isAcceptableOrUnknown(
+          data['steps_at_last_claim']!,
+          _stepsAtLastClaimMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StepMilestone map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StepMilestone(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      playerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}player_id'],
+          )!,
+      date:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}date'],
+          )!,
+      milestonesClaimed:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}milestones_claimed'],
+          )!,
+      stepsAtLastClaim:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}steps_at_last_claim'],
+          )!,
+    );
+  }
+
+  @override
+  $StepMilestonesTable createAlias(String alias) {
+    return $StepMilestonesTable(attachedDatabase, alias);
+  }
+}
+
+class StepMilestone extends DataClass implements Insertable<StepMilestone> {
+  final int id;
+  final int playerId;
+
+  /// Date string 'YYYY-MM-DD' for daily tracking
+  final String date;
+
+  /// Number of milestones claimed today
+  final int milestonesClaimed;
+
+  /// Steps at last milestone claim
+  final int stepsAtLastClaim;
+  const StepMilestone({
+    required this.id,
+    required this.playerId,
+    required this.date,
+    required this.milestonesClaimed,
+    required this.stepsAtLastClaim,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['date'] = Variable<String>(date);
+    map['milestones_claimed'] = Variable<int>(milestonesClaimed);
+    map['steps_at_last_claim'] = Variable<int>(stepsAtLastClaim);
+    return map;
+  }
+
+  StepMilestonesCompanion toCompanion(bool nullToAbsent) {
+    return StepMilestonesCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      date: Value(date),
+      milestonesClaimed: Value(milestonesClaimed),
+      stepsAtLastClaim: Value(stepsAtLastClaim),
+    );
+  }
+
+  factory StepMilestone.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StepMilestone(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      date: serializer.fromJson<String>(json['date']),
+      milestonesClaimed: serializer.fromJson<int>(json['milestonesClaimed']),
+      stepsAtLastClaim: serializer.fromJson<int>(json['stepsAtLastClaim']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'date': serializer.toJson<String>(date),
+      'milestonesClaimed': serializer.toJson<int>(milestonesClaimed),
+      'stepsAtLastClaim': serializer.toJson<int>(stepsAtLastClaim),
+    };
+  }
+
+  StepMilestone copyWith({
+    int? id,
+    int? playerId,
+    String? date,
+    int? milestonesClaimed,
+    int? stepsAtLastClaim,
+  }) => StepMilestone(
+    id: id ?? this.id,
+    playerId: playerId ?? this.playerId,
+    date: date ?? this.date,
+    milestonesClaimed: milestonesClaimed ?? this.milestonesClaimed,
+    stepsAtLastClaim: stepsAtLastClaim ?? this.stepsAtLastClaim,
+  );
+  StepMilestone copyWithCompanion(StepMilestonesCompanion data) {
+    return StepMilestone(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      date: data.date.present ? data.date.value : this.date,
+      milestonesClaimed:
+          data.milestonesClaimed.present
+              ? data.milestonesClaimed.value
+              : this.milestonesClaimed,
+      stepsAtLastClaim:
+          data.stepsAtLastClaim.present
+              ? data.stepsAtLastClaim.value
+              : this.stepsAtLastClaim,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StepMilestone(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('date: $date, ')
+          ..write('milestonesClaimed: $milestonesClaimed, ')
+          ..write('stepsAtLastClaim: $stepsAtLastClaim')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, playerId, date, milestonesClaimed, stepsAtLastClaim);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StepMilestone &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.date == this.date &&
+          other.milestonesClaimed == this.milestonesClaimed &&
+          other.stepsAtLastClaim == this.stepsAtLastClaim);
+}
+
+class StepMilestonesCompanion extends UpdateCompanion<StepMilestone> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> date;
+  final Value<int> milestonesClaimed;
+  final Value<int> stepsAtLastClaim;
+  const StepMilestonesCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.milestonesClaimed = const Value.absent(),
+    this.stepsAtLastClaim = const Value.absent(),
+  });
+  StepMilestonesCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String date,
+    this.milestonesClaimed = const Value.absent(),
+    this.stepsAtLastClaim = const Value.absent(),
+  }) : playerId = Value(playerId),
+       date = Value(date);
+  static Insertable<StepMilestone> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? date,
+    Expression<int>? milestonesClaimed,
+    Expression<int>? stepsAtLastClaim,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (date != null) 'date': date,
+      if (milestonesClaimed != null) 'milestones_claimed': milestonesClaimed,
+      if (stepsAtLastClaim != null) 'steps_at_last_claim': stepsAtLastClaim,
+    });
+  }
+
+  StepMilestonesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playerId,
+    Value<String>? date,
+    Value<int>? milestonesClaimed,
+    Value<int>? stepsAtLastClaim,
+  }) {
+    return StepMilestonesCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      date: date ?? this.date,
+      milestonesClaimed: milestonesClaimed ?? this.milestonesClaimed,
+      stepsAtLastClaim: stepsAtLastClaim ?? this.stepsAtLastClaim,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (milestonesClaimed.present) {
+      map['milestones_claimed'] = Variable<int>(milestonesClaimed.value);
+    }
+    if (stepsAtLastClaim.present) {
+      map['steps_at_last_claim'] = Variable<int>(stepsAtLastClaim.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StepMilestonesCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('date: $date, ')
+          ..write('milestonesClaimed: $milestonesClaimed, ')
+          ..write('stepsAtLastClaim: $stepsAtLastClaim')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $EggsTable extends Eggs with TableInfo<$EggsTable, Egg> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EggsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (id)',
+    ),
+  );
+  static const VerificationMeta _companionTypeMeta = const VerificationMeta(
+    'companionType',
+  );
+  @override
+  late final GeneratedColumn<String> companionType = GeneratedColumn<String>(
+    'companion_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rarityMeta = const VerificationMeta('rarity');
+  @override
+  late final GeneratedColumn<String> rarity = GeneratedColumn<String>(
+    'rarity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stepsRequiredMeta = const VerificationMeta(
+    'stepsRequired',
+  );
+  @override
+  late final GeneratedColumn<int> stepsRequired = GeneratedColumn<int>(
+    'steps_required',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stepsAccumulatedMeta = const VerificationMeta(
+    'stepsAccumulated',
+  );
+  @override
+  late final GeneratedColumn<int> stepsAccumulated = GeneratedColumn<int>(
+    'steps_accumulated',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _foundAtMeta = const VerificationMeta(
+    'foundAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> foundAt = GeneratedColumn<DateTime>(
+    'found_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _hatchedAtMeta = const VerificationMeta(
+    'hatchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> hatchedAt = GeneratedColumn<DateTime>(
+    'hatched_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    playerId,
+    companionType,
+    rarity,
+    stepsRequired,
+    stepsAccumulated,
+    foundAt,
+    hatchedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'eggs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Egg> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('companion_type')) {
+      context.handle(
+        _companionTypeMeta,
+        companionType.isAcceptableOrUnknown(
+          data['companion_type']!,
+          _companionTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_companionTypeMeta);
+    }
+    if (data.containsKey('rarity')) {
+      context.handle(
+        _rarityMeta,
+        rarity.isAcceptableOrUnknown(data['rarity']!, _rarityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rarityMeta);
+    }
+    if (data.containsKey('steps_required')) {
+      context.handle(
+        _stepsRequiredMeta,
+        stepsRequired.isAcceptableOrUnknown(
+          data['steps_required']!,
+          _stepsRequiredMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_stepsRequiredMeta);
+    }
+    if (data.containsKey('steps_accumulated')) {
+      context.handle(
+        _stepsAccumulatedMeta,
+        stepsAccumulated.isAcceptableOrUnknown(
+          data['steps_accumulated']!,
+          _stepsAccumulatedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('found_at')) {
+      context.handle(
+        _foundAtMeta,
+        foundAt.isAcceptableOrUnknown(data['found_at']!, _foundAtMeta),
+      );
+    }
+    if (data.containsKey('hatched_at')) {
+      context.handle(
+        _hatchedAtMeta,
+        hatchedAt.isAcceptableOrUnknown(data['hatched_at']!, _hatchedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Egg map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Egg(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      playerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}player_id'],
+          )!,
+      companionType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}companion_type'],
+          )!,
+      rarity:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}rarity'],
+          )!,
+      stepsRequired:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}steps_required'],
+          )!,
+      stepsAccumulated:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}steps_accumulated'],
+          )!,
+      foundAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}found_at'],
+          )!,
+      hatchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}hatched_at'],
+      ),
+    );
+  }
+
+  @override
+  $EggsTable createAlias(String alias) {
+    return $EggsTable(attachedDatabase, alias);
+  }
+}
+
+class Egg extends DataClass implements Insertable<Egg> {
+  final int id;
+  final int playerId;
+
+  /// Companion type that will hatch (matches CompanionDef.type)
+  final String companionType;
+
+  /// Rarity: common, rare, epic, legendary
+  final String rarity;
+
+  /// Total steps required to hatch
+  final int stepsRequired;
+
+  /// Steps accumulated so far
+  final int stepsAccumulated;
+  final DateTime foundAt;
+  final DateTime? hatchedAt;
+  const Egg({
+    required this.id,
+    required this.playerId,
+    required this.companionType,
+    required this.rarity,
+    required this.stepsRequired,
+    required this.stepsAccumulated,
+    required this.foundAt,
+    this.hatchedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['companion_type'] = Variable<String>(companionType);
+    map['rarity'] = Variable<String>(rarity);
+    map['steps_required'] = Variable<int>(stepsRequired);
+    map['steps_accumulated'] = Variable<int>(stepsAccumulated);
+    map['found_at'] = Variable<DateTime>(foundAt);
+    if (!nullToAbsent || hatchedAt != null) {
+      map['hatched_at'] = Variable<DateTime>(hatchedAt);
+    }
+    return map;
+  }
+
+  EggsCompanion toCompanion(bool nullToAbsent) {
+    return EggsCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      companionType: Value(companionType),
+      rarity: Value(rarity),
+      stepsRequired: Value(stepsRequired),
+      stepsAccumulated: Value(stepsAccumulated),
+      foundAt: Value(foundAt),
+      hatchedAt:
+          hatchedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(hatchedAt),
+    );
+  }
+
+  factory Egg.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Egg(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      companionType: serializer.fromJson<String>(json['companionType']),
+      rarity: serializer.fromJson<String>(json['rarity']),
+      stepsRequired: serializer.fromJson<int>(json['stepsRequired']),
+      stepsAccumulated: serializer.fromJson<int>(json['stepsAccumulated']),
+      foundAt: serializer.fromJson<DateTime>(json['foundAt']),
+      hatchedAt: serializer.fromJson<DateTime?>(json['hatchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'companionType': serializer.toJson<String>(companionType),
+      'rarity': serializer.toJson<String>(rarity),
+      'stepsRequired': serializer.toJson<int>(stepsRequired),
+      'stepsAccumulated': serializer.toJson<int>(stepsAccumulated),
+      'foundAt': serializer.toJson<DateTime>(foundAt),
+      'hatchedAt': serializer.toJson<DateTime?>(hatchedAt),
+    };
+  }
+
+  Egg copyWith({
+    int? id,
+    int? playerId,
+    String? companionType,
+    String? rarity,
+    int? stepsRequired,
+    int? stepsAccumulated,
+    DateTime? foundAt,
+    Value<DateTime?> hatchedAt = const Value.absent(),
+  }) => Egg(
+    id: id ?? this.id,
+    playerId: playerId ?? this.playerId,
+    companionType: companionType ?? this.companionType,
+    rarity: rarity ?? this.rarity,
+    stepsRequired: stepsRequired ?? this.stepsRequired,
+    stepsAccumulated: stepsAccumulated ?? this.stepsAccumulated,
+    foundAt: foundAt ?? this.foundAt,
+    hatchedAt: hatchedAt.present ? hatchedAt.value : this.hatchedAt,
+  );
+  Egg copyWithCompanion(EggsCompanion data) {
+    return Egg(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      companionType:
+          data.companionType.present
+              ? data.companionType.value
+              : this.companionType,
+      rarity: data.rarity.present ? data.rarity.value : this.rarity,
+      stepsRequired:
+          data.stepsRequired.present
+              ? data.stepsRequired.value
+              : this.stepsRequired,
+      stepsAccumulated:
+          data.stepsAccumulated.present
+              ? data.stepsAccumulated.value
+              : this.stepsAccumulated,
+      foundAt: data.foundAt.present ? data.foundAt.value : this.foundAt,
+      hatchedAt: data.hatchedAt.present ? data.hatchedAt.value : this.hatchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Egg(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('companionType: $companionType, ')
+          ..write('rarity: $rarity, ')
+          ..write('stepsRequired: $stepsRequired, ')
+          ..write('stepsAccumulated: $stepsAccumulated, ')
+          ..write('foundAt: $foundAt, ')
+          ..write('hatchedAt: $hatchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    playerId,
+    companionType,
+    rarity,
+    stepsRequired,
+    stepsAccumulated,
+    foundAt,
+    hatchedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Egg &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.companionType == this.companionType &&
+          other.rarity == this.rarity &&
+          other.stepsRequired == this.stepsRequired &&
+          other.stepsAccumulated == this.stepsAccumulated &&
+          other.foundAt == this.foundAt &&
+          other.hatchedAt == this.hatchedAt);
+}
+
+class EggsCompanion extends UpdateCompanion<Egg> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> companionType;
+  final Value<String> rarity;
+  final Value<int> stepsRequired;
+  final Value<int> stepsAccumulated;
+  final Value<DateTime> foundAt;
+  final Value<DateTime?> hatchedAt;
+  const EggsCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.companionType = const Value.absent(),
+    this.rarity = const Value.absent(),
+    this.stepsRequired = const Value.absent(),
+    this.stepsAccumulated = const Value.absent(),
+    this.foundAt = const Value.absent(),
+    this.hatchedAt = const Value.absent(),
+  });
+  EggsCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String companionType,
+    required String rarity,
+    required int stepsRequired,
+    this.stepsAccumulated = const Value.absent(),
+    this.foundAt = const Value.absent(),
+    this.hatchedAt = const Value.absent(),
+  }) : playerId = Value(playerId),
+       companionType = Value(companionType),
+       rarity = Value(rarity),
+       stepsRequired = Value(stepsRequired);
+  static Insertable<Egg> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? companionType,
+    Expression<String>? rarity,
+    Expression<int>? stepsRequired,
+    Expression<int>? stepsAccumulated,
+    Expression<DateTime>? foundAt,
+    Expression<DateTime>? hatchedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (companionType != null) 'companion_type': companionType,
+      if (rarity != null) 'rarity': rarity,
+      if (stepsRequired != null) 'steps_required': stepsRequired,
+      if (stepsAccumulated != null) 'steps_accumulated': stepsAccumulated,
+      if (foundAt != null) 'found_at': foundAt,
+      if (hatchedAt != null) 'hatched_at': hatchedAt,
+    });
+  }
+
+  EggsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playerId,
+    Value<String>? companionType,
+    Value<String>? rarity,
+    Value<int>? stepsRequired,
+    Value<int>? stepsAccumulated,
+    Value<DateTime>? foundAt,
+    Value<DateTime?>? hatchedAt,
+  }) {
+    return EggsCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      companionType: companionType ?? this.companionType,
+      rarity: rarity ?? this.rarity,
+      stepsRequired: stepsRequired ?? this.stepsRequired,
+      stepsAccumulated: stepsAccumulated ?? this.stepsAccumulated,
+      foundAt: foundAt ?? this.foundAt,
+      hatchedAt: hatchedAt ?? this.hatchedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (companionType.present) {
+      map['companion_type'] = Variable<String>(companionType.value);
+    }
+    if (rarity.present) {
+      map['rarity'] = Variable<String>(rarity.value);
+    }
+    if (stepsRequired.present) {
+      map['steps_required'] = Variable<int>(stepsRequired.value);
+    }
+    if (stepsAccumulated.present) {
+      map['steps_accumulated'] = Variable<int>(stepsAccumulated.value);
+    }
+    if (foundAt.present) {
+      map['found_at'] = Variable<DateTime>(foundAt.value);
+    }
+    if (hatchedAt.present) {
+      map['hatched_at'] = Variable<DateTime>(hatchedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EggsCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('companionType: $companionType, ')
+          ..write('rarity: $rarity, ')
+          ..write('stepsRequired: $stepsRequired, ')
+          ..write('stepsAccumulated: $stepsAccumulated, ')
+          ..write('foundAt: $foundAt, ')
+          ..write('hatchedAt: $hatchedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CompanionsTable extends Companions
+    with TableInfo<$CompanionsTable, Companion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CompanionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (id)',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rarityMeta = const VerificationMeta('rarity');
+  @override
+  late final GeneratedColumn<String> rarity = GeneratedColumn<String>(
+    'rarity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _buffTypeMeta = const VerificationMeta(
+    'buffType',
+  );
+  @override
+  late final GeneratedColumn<String> buffType = GeneratedColumn<String>(
+    'buff_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _buffValueMeta = const VerificationMeta(
+    'buffValue',
+  );
+  @override
+  late final GeneratedColumn<int> buffValue = GeneratedColumn<int>(
+    'buff_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _hatchedAtMeta = const VerificationMeta(
+    'hatchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> hatchedAt = GeneratedColumn<DateTime>(
+    'hatched_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    playerId,
+    name,
+    type,
+    rarity,
+    buffType,
+    buffValue,
+    isActive,
+    hatchedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'companions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Companion> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('rarity')) {
+      context.handle(
+        _rarityMeta,
+        rarity.isAcceptableOrUnknown(data['rarity']!, _rarityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rarityMeta);
+    }
+    if (data.containsKey('buff_type')) {
+      context.handle(
+        _buffTypeMeta,
+        buffType.isAcceptableOrUnknown(data['buff_type']!, _buffTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_buffTypeMeta);
+    }
+    if (data.containsKey('buff_value')) {
+      context.handle(
+        _buffValueMeta,
+        buffValue.isAcceptableOrUnknown(data['buff_value']!, _buffValueMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('hatched_at')) {
+      context.handle(
+        _hatchedAtMeta,
+        hatchedAt.isAcceptableOrUnknown(data['hatched_at']!, _hatchedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Companion map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Companion(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      playerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}player_id'],
+          )!,
+      name:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}name'],
+          )!,
+      type:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}type'],
+          )!,
+      rarity:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}rarity'],
+          )!,
+      buffType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}buff_type'],
+          )!,
+      buffValue:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}buff_value'],
+          )!,
+      isActive:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_active'],
+          )!,
+      hatchedAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}hatched_at'],
+          )!,
+    );
+  }
+
+  @override
+  $CompanionsTable createAlias(String alias) {
+    return $CompanionsTable(attachedDatabase, alias);
+  }
+}
+
+class Companion extends DataClass implements Insertable<Companion> {
+  final int id;
+  final int playerId;
+  final String name;
+  final String type;
+  final String rarity;
+
+  /// Passive buff type (e.g. 'gold_bonus', 'lp_bonus')
+  final String buffType;
+
+  /// Buff value (e.g. 5 for +5%)
+  final int buffValue;
+
+  /// Whether this companion is active (only 1 active at a time)
+  final bool isActive;
+  final DateTime hatchedAt;
+  const Companion({
+    required this.id,
+    required this.playerId,
+    required this.name,
+    required this.type,
+    required this.rarity,
+    required this.buffType,
+    required this.buffValue,
+    required this.isActive,
+    required this.hatchedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['name'] = Variable<String>(name);
+    map['type'] = Variable<String>(type);
+    map['rarity'] = Variable<String>(rarity);
+    map['buff_type'] = Variable<String>(buffType);
+    map['buff_value'] = Variable<int>(buffValue);
+    map['is_active'] = Variable<bool>(isActive);
+    map['hatched_at'] = Variable<DateTime>(hatchedAt);
+    return map;
+  }
+
+  CompanionsCompanion toCompanion(bool nullToAbsent) {
+    return CompanionsCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      name: Value(name),
+      type: Value(type),
+      rarity: Value(rarity),
+      buffType: Value(buffType),
+      buffValue: Value(buffValue),
+      isActive: Value(isActive),
+      hatchedAt: Value(hatchedAt),
+    );
+  }
+
+  factory Companion.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Companion(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      name: serializer.fromJson<String>(json['name']),
+      type: serializer.fromJson<String>(json['type']),
+      rarity: serializer.fromJson<String>(json['rarity']),
+      buffType: serializer.fromJson<String>(json['buffType']),
+      buffValue: serializer.fromJson<int>(json['buffValue']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      hatchedAt: serializer.fromJson<DateTime>(json['hatchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'name': serializer.toJson<String>(name),
+      'type': serializer.toJson<String>(type),
+      'rarity': serializer.toJson<String>(rarity),
+      'buffType': serializer.toJson<String>(buffType),
+      'buffValue': serializer.toJson<int>(buffValue),
+      'isActive': serializer.toJson<bool>(isActive),
+      'hatchedAt': serializer.toJson<DateTime>(hatchedAt),
+    };
+  }
+
+  Companion copyWith({
+    int? id,
+    int? playerId,
+    String? name,
+    String? type,
+    String? rarity,
+    String? buffType,
+    int? buffValue,
+    bool? isActive,
+    DateTime? hatchedAt,
+  }) => Companion(
+    id: id ?? this.id,
+    playerId: playerId ?? this.playerId,
+    name: name ?? this.name,
+    type: type ?? this.type,
+    rarity: rarity ?? this.rarity,
+    buffType: buffType ?? this.buffType,
+    buffValue: buffValue ?? this.buffValue,
+    isActive: isActive ?? this.isActive,
+    hatchedAt: hatchedAt ?? this.hatchedAt,
+  );
+  Companion copyWithCompanion(CompanionsCompanion data) {
+    return Companion(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      name: data.name.present ? data.name.value : this.name,
+      type: data.type.present ? data.type.value : this.type,
+      rarity: data.rarity.present ? data.rarity.value : this.rarity,
+      buffType: data.buffType.present ? data.buffType.value : this.buffType,
+      buffValue: data.buffValue.present ? data.buffValue.value : this.buffValue,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      hatchedAt: data.hatchedAt.present ? data.hatchedAt.value : this.hatchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Companion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('rarity: $rarity, ')
+          ..write('buffType: $buffType, ')
+          ..write('buffValue: $buffValue, ')
+          ..write('isActive: $isActive, ')
+          ..write('hatchedAt: $hatchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    playerId,
+    name,
+    type,
+    rarity,
+    buffType,
+    buffValue,
+    isActive,
+    hatchedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Companion &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.name == this.name &&
+          other.type == this.type &&
+          other.rarity == this.rarity &&
+          other.buffType == this.buffType &&
+          other.buffValue == this.buffValue &&
+          other.isActive == this.isActive &&
+          other.hatchedAt == this.hatchedAt);
+}
+
+class CompanionsCompanion extends UpdateCompanion<Companion> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> name;
+  final Value<String> type;
+  final Value<String> rarity;
+  final Value<String> buffType;
+  final Value<int> buffValue;
+  final Value<bool> isActive;
+  final Value<DateTime> hatchedAt;
+  const CompanionsCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.type = const Value.absent(),
+    this.rarity = const Value.absent(),
+    this.buffType = const Value.absent(),
+    this.buffValue = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.hatchedAt = const Value.absent(),
+  });
+  CompanionsCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String name,
+    required String type,
+    required String rarity,
+    required String buffType,
+    this.buffValue = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.hatchedAt = const Value.absent(),
+  }) : playerId = Value(playerId),
+       name = Value(name),
+       type = Value(type),
+       rarity = Value(rarity),
+       buffType = Value(buffType);
+  static Insertable<Companion> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? name,
+    Expression<String>? type,
+    Expression<String>? rarity,
+    Expression<String>? buffType,
+    Expression<int>? buffValue,
+    Expression<bool>? isActive,
+    Expression<DateTime>? hatchedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (name != null) 'name': name,
+      if (type != null) 'type': type,
+      if (rarity != null) 'rarity': rarity,
+      if (buffType != null) 'buff_type': buffType,
+      if (buffValue != null) 'buff_value': buffValue,
+      if (isActive != null) 'is_active': isActive,
+      if (hatchedAt != null) 'hatched_at': hatchedAt,
+    });
+  }
+
+  CompanionsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playerId,
+    Value<String>? name,
+    Value<String>? type,
+    Value<String>? rarity,
+    Value<String>? buffType,
+    Value<int>? buffValue,
+    Value<bool>? isActive,
+    Value<DateTime>? hatchedAt,
+  }) {
+    return CompanionsCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      rarity: rarity ?? this.rarity,
+      buffType: buffType ?? this.buffType,
+      buffValue: buffValue ?? this.buffValue,
+      isActive: isActive ?? this.isActive,
+      hatchedAt: hatchedAt ?? this.hatchedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (rarity.present) {
+      map['rarity'] = Variable<String>(rarity.value);
+    }
+    if (buffType.present) {
+      map['buff_type'] = Variable<String>(buffType.value);
+    }
+    if (buffValue.present) {
+      map['buff_value'] = Variable<int>(buffValue.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (hatchedAt.present) {
+      map['hatched_at'] = Variable<DateTime>(hatchedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionsCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('rarity: $rarity, ')
+          ..write('buffType: $buffType, ')
+          ..write('buffValue: $buffValue, ')
+          ..write('isActive: $isActive, ')
+          ..write('hatchedAt: $hatchedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $EnemiesTable extends Enemies with TableInfo<$EnemiesTable, Enemy> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EnemiesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _elementTypeMeta = const VerificationMeta(
+    'elementType',
+  );
+  @override
+  late final GeneratedColumn<String> elementType = GeneratedColumn<String>(
+    'element_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tierMeta = const VerificationMeta('tier');
+  @override
+  late final GeneratedColumn<String> tier = GeneratedColumn<String>(
+    'tier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _difficultyMeta = const VerificationMeta(
+    'difficulty',
+  );
+  @override
+  late final GeneratedColumn<String> difficulty = GeneratedColumn<String>(
+    'difficulty',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hpMeta = const VerificationMeta('hp');
+  @override
+  late final GeneratedColumn<int> hp = GeneratedColumn<int>(
+    'hp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lpRewardMeta = const VerificationMeta(
+    'lpReward',
+  );
+  @override
+  late final GeneratedColumn<int> lpReward = GeneratedColumn<int>(
+    'lp_reward',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _goldRewardMeta = const VerificationMeta(
+    'goldReward',
+  );
+  @override
+  late final GeneratedColumn<int> goldReward = GeneratedColumn<int>(
+    'gold_reward',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lpPenaltyMeta = const VerificationMeta(
+    'lpPenalty',
+  );
+  @override
+  late final GeneratedColumn<int> lpPenalty = GeneratedColumn<int>(
+    'lp_penalty',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _weaknessesMeta = const VerificationMeta(
+    'weaknesses',
+  );
+  @override
+  late final GeneratedColumn<String> weaknesses = GeneratedColumn<String>(
+    'weaknesses',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _resistancesMeta = const VerificationMeta(
+    'resistances',
+  );
+  @override
+  late final GeneratedColumn<String> resistances = GeneratedColumn<String>(
+    'resistances',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _immunitiesMeta = const VerificationMeta(
+    'immunities',
+  );
+  @override
+  late final GeneratedColumn<String> immunities = GeneratedColumn<String>(
+    'immunities',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _requiredStatMeta = const VerificationMeta(
+    'requiredStat',
+  );
+  @override
+  late final GeneratedColumn<String> requiredStat = GeneratedColumn<String>(
+    'required_stat',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _requiredStatValueMeta = const VerificationMeta(
+    'requiredStatValue',
+  );
+  @override
+  late final GeneratedColumn<int> requiredStatValue = GeneratedColumn<int>(
+    'required_stat_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imagePathMeta = const VerificationMeta(
+    'imagePath',
+  );
+  @override
+  late final GeneratedColumn<String> imagePath = GeneratedColumn<String>(
+    'image_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
+  @override
+  late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
+    'emoji',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('👹'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    key,
+    name,
+    description,
+    elementType,
+    tier,
+    difficulty,
+    hp,
+    lpReward,
+    goldReward,
+    lpPenalty,
+    weaknesses,
+    resistances,
+    immunities,
+    requiredStat,
+    requiredStatValue,
+    imagePath,
+    emoji,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'enemies';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Enemy> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('element_type')) {
+      context.handle(
+        _elementTypeMeta,
+        elementType.isAcceptableOrUnknown(
+          data['element_type']!,
+          _elementTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_elementTypeMeta);
+    }
+    if (data.containsKey('tier')) {
+      context.handle(
+        _tierMeta,
+        tier.isAcceptableOrUnknown(data['tier']!, _tierMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tierMeta);
+    }
+    if (data.containsKey('difficulty')) {
+      context.handle(
+        _difficultyMeta,
+        difficulty.isAcceptableOrUnknown(data['difficulty']!, _difficultyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_difficultyMeta);
+    }
+    if (data.containsKey('hp')) {
+      context.handle(_hpMeta, hp.isAcceptableOrUnknown(data['hp']!, _hpMeta));
+    } else if (isInserting) {
+      context.missing(_hpMeta);
+    }
+    if (data.containsKey('lp_reward')) {
+      context.handle(
+        _lpRewardMeta,
+        lpReward.isAcceptableOrUnknown(data['lp_reward']!, _lpRewardMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lpRewardMeta);
+    }
+    if (data.containsKey('gold_reward')) {
+      context.handle(
+        _goldRewardMeta,
+        goldReward.isAcceptableOrUnknown(data['gold_reward']!, _goldRewardMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_goldRewardMeta);
+    }
+    if (data.containsKey('lp_penalty')) {
+      context.handle(
+        _lpPenaltyMeta,
+        lpPenalty.isAcceptableOrUnknown(data['lp_penalty']!, _lpPenaltyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lpPenaltyMeta);
+    }
+    if (data.containsKey('weaknesses')) {
+      context.handle(
+        _weaknessesMeta,
+        weaknesses.isAcceptableOrUnknown(data['weaknesses']!, _weaknessesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_weaknessesMeta);
+    }
+    if (data.containsKey('resistances')) {
+      context.handle(
+        _resistancesMeta,
+        resistances.isAcceptableOrUnknown(
+          data['resistances']!,
+          _resistancesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_resistancesMeta);
+    }
+    if (data.containsKey('immunities')) {
+      context.handle(
+        _immunitiesMeta,
+        immunities.isAcceptableOrUnknown(data['immunities']!, _immunitiesMeta),
+      );
+    }
+    if (data.containsKey('required_stat')) {
+      context.handle(
+        _requiredStatMeta,
+        requiredStat.isAcceptableOrUnknown(
+          data['required_stat']!,
+          _requiredStatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('required_stat_value')) {
+      context.handle(
+        _requiredStatValueMeta,
+        requiredStatValue.isAcceptableOrUnknown(
+          data['required_stat_value']!,
+          _requiredStatValueMeta,
+        ),
+      );
+    }
+    if (data.containsKey('image_path')) {
+      context.handle(
+        _imagePathMeta,
+        imagePath.isAcceptableOrUnknown(data['image_path']!, _imagePathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_imagePathMeta);
+    }
+    if (data.containsKey('emoji')) {
+      context.handle(
+        _emojiMeta,
+        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Enemy map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Enemy(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      key:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}key'],
+          )!,
+      name:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}name'],
+          )!,
+      description:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}description'],
+          )!,
+      elementType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}element_type'],
+          )!,
+      tier:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}tier'],
+          )!,
+      difficulty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}difficulty'],
+          )!,
+      hp:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}hp'],
+          )!,
+      lpReward:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}lp_reward'],
+          )!,
+      goldReward:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}gold_reward'],
+          )!,
+      lpPenalty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}lp_penalty'],
+          )!,
+      weaknesses:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}weaknesses'],
+          )!,
+      resistances:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}resistances'],
+          )!,
+      immunities:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}immunities'],
+          )!,
+      requiredStat: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}required_stat'],
+      ),
+      requiredStatValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}required_stat_value'],
+      ),
+      imagePath:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}image_path'],
+          )!,
+      emoji:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}emoji'],
+          )!,
+    );
+  }
+
+  @override
+  $EnemiesTable createAlias(String alias) {
+    return $EnemiesTable(attachedDatabase, alias);
+  }
+}
+
+class Enemy extends DataClass implements Insertable<Enemy> {
+  final int id;
+
+  /// Unique slug key (e.g. 'iron_flame_goblin')
+  final String key;
+  final String name;
+  final String description;
+
+  /// Element: 'fire', 'water', 'wind', 'earth', 'shadow'
+  final String elementType;
+
+  /// Player rank tier this enemy is designed for
+  final String tier;
+
+  /// Difficulty: 'easy', 'medium', 'hard'
+  final String difficulty;
+
+  /// Total HP (volume required to defeat)
+  final int hp;
+
+  /// LP awarded on victory
+  final int lpReward;
+
+  /// Gold awarded on victory
+  final int goldReward;
+
+  /// LP lost on defeat
+  final int lpPenalty;
+
+  /// JSON array of exercise categories that deal 2× damage
+  final String weaknesses;
+
+  /// JSON array of exercise categories that deal 0.5× damage
+  final String resistances;
+
+  /// JSON array of exercise categories that deal 0× damage
+  final String immunities;
+
+  /// Stat prerequisite key (e.g. 'str') or null
+  final String? requiredStat;
+
+  /// Minimum stat value required, or null
+  final int? requiredStatValue;
+
+  /// Asset path for enemy art
+  final String imagePath;
+
+  /// Display emoji
+  final String emoji;
+  const Enemy({
+    required this.id,
+    required this.key,
+    required this.name,
+    required this.description,
+    required this.elementType,
+    required this.tier,
+    required this.difficulty,
+    required this.hp,
+    required this.lpReward,
+    required this.goldReward,
+    required this.lpPenalty,
+    required this.weaknesses,
+    required this.resistances,
+    required this.immunities,
+    this.requiredStat,
+    this.requiredStatValue,
+    required this.imagePath,
+    required this.emoji,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['key'] = Variable<String>(key);
+    map['name'] = Variable<String>(name);
+    map['description'] = Variable<String>(description);
+    map['element_type'] = Variable<String>(elementType);
+    map['tier'] = Variable<String>(tier);
+    map['difficulty'] = Variable<String>(difficulty);
+    map['hp'] = Variable<int>(hp);
+    map['lp_reward'] = Variable<int>(lpReward);
+    map['gold_reward'] = Variable<int>(goldReward);
+    map['lp_penalty'] = Variable<int>(lpPenalty);
+    map['weaknesses'] = Variable<String>(weaknesses);
+    map['resistances'] = Variable<String>(resistances);
+    map['immunities'] = Variable<String>(immunities);
+    if (!nullToAbsent || requiredStat != null) {
+      map['required_stat'] = Variable<String>(requiredStat);
+    }
+    if (!nullToAbsent || requiredStatValue != null) {
+      map['required_stat_value'] = Variable<int>(requiredStatValue);
+    }
+    map['image_path'] = Variable<String>(imagePath);
+    map['emoji'] = Variable<String>(emoji);
+    return map;
+  }
+
+  EnemiesCompanion toCompanion(bool nullToAbsent) {
+    return EnemiesCompanion(
+      id: Value(id),
+      key: Value(key),
+      name: Value(name),
+      description: Value(description),
+      elementType: Value(elementType),
+      tier: Value(tier),
+      difficulty: Value(difficulty),
+      hp: Value(hp),
+      lpReward: Value(lpReward),
+      goldReward: Value(goldReward),
+      lpPenalty: Value(lpPenalty),
+      weaknesses: Value(weaknesses),
+      resistances: Value(resistances),
+      immunities: Value(immunities),
+      requiredStat:
+          requiredStat == null && nullToAbsent
+              ? const Value.absent()
+              : Value(requiredStat),
+      requiredStatValue:
+          requiredStatValue == null && nullToAbsent
+              ? const Value.absent()
+              : Value(requiredStatValue),
+      imagePath: Value(imagePath),
+      emoji: Value(emoji),
+    );
+  }
+
+  factory Enemy.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Enemy(
+      id: serializer.fromJson<int>(json['id']),
+      key: serializer.fromJson<String>(json['key']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String>(json['description']),
+      elementType: serializer.fromJson<String>(json['elementType']),
+      tier: serializer.fromJson<String>(json['tier']),
+      difficulty: serializer.fromJson<String>(json['difficulty']),
+      hp: serializer.fromJson<int>(json['hp']),
+      lpReward: serializer.fromJson<int>(json['lpReward']),
+      goldReward: serializer.fromJson<int>(json['goldReward']),
+      lpPenalty: serializer.fromJson<int>(json['lpPenalty']),
+      weaknesses: serializer.fromJson<String>(json['weaknesses']),
+      resistances: serializer.fromJson<String>(json['resistances']),
+      immunities: serializer.fromJson<String>(json['immunities']),
+      requiredStat: serializer.fromJson<String?>(json['requiredStat']),
+      requiredStatValue: serializer.fromJson<int?>(json['requiredStatValue']),
+      imagePath: serializer.fromJson<String>(json['imagePath']),
+      emoji: serializer.fromJson<String>(json['emoji']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'key': serializer.toJson<String>(key),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String>(description),
+      'elementType': serializer.toJson<String>(elementType),
+      'tier': serializer.toJson<String>(tier),
+      'difficulty': serializer.toJson<String>(difficulty),
+      'hp': serializer.toJson<int>(hp),
+      'lpReward': serializer.toJson<int>(lpReward),
+      'goldReward': serializer.toJson<int>(goldReward),
+      'lpPenalty': serializer.toJson<int>(lpPenalty),
+      'weaknesses': serializer.toJson<String>(weaknesses),
+      'resistances': serializer.toJson<String>(resistances),
+      'immunities': serializer.toJson<String>(immunities),
+      'requiredStat': serializer.toJson<String?>(requiredStat),
+      'requiredStatValue': serializer.toJson<int?>(requiredStatValue),
+      'imagePath': serializer.toJson<String>(imagePath),
+      'emoji': serializer.toJson<String>(emoji),
+    };
+  }
+
+  Enemy copyWith({
+    int? id,
+    String? key,
+    String? name,
+    String? description,
+    String? elementType,
+    String? tier,
+    String? difficulty,
+    int? hp,
+    int? lpReward,
+    int? goldReward,
+    int? lpPenalty,
+    String? weaknesses,
+    String? resistances,
+    String? immunities,
+    Value<String?> requiredStat = const Value.absent(),
+    Value<int?> requiredStatValue = const Value.absent(),
+    String? imagePath,
+    String? emoji,
+  }) => Enemy(
+    id: id ?? this.id,
+    key: key ?? this.key,
+    name: name ?? this.name,
+    description: description ?? this.description,
+    elementType: elementType ?? this.elementType,
+    tier: tier ?? this.tier,
+    difficulty: difficulty ?? this.difficulty,
+    hp: hp ?? this.hp,
+    lpReward: lpReward ?? this.lpReward,
+    goldReward: goldReward ?? this.goldReward,
+    lpPenalty: lpPenalty ?? this.lpPenalty,
+    weaknesses: weaknesses ?? this.weaknesses,
+    resistances: resistances ?? this.resistances,
+    immunities: immunities ?? this.immunities,
+    requiredStat: requiredStat.present ? requiredStat.value : this.requiredStat,
+    requiredStatValue:
+        requiredStatValue.present
+            ? requiredStatValue.value
+            : this.requiredStatValue,
+    imagePath: imagePath ?? this.imagePath,
+    emoji: emoji ?? this.emoji,
+  );
+  Enemy copyWithCompanion(EnemiesCompanion data) {
+    return Enemy(
+      id: data.id.present ? data.id.value : this.id,
+      key: data.key.present ? data.key.value : this.key,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      elementType:
+          data.elementType.present ? data.elementType.value : this.elementType,
+      tier: data.tier.present ? data.tier.value : this.tier,
+      difficulty:
+          data.difficulty.present ? data.difficulty.value : this.difficulty,
+      hp: data.hp.present ? data.hp.value : this.hp,
+      lpReward: data.lpReward.present ? data.lpReward.value : this.lpReward,
+      goldReward:
+          data.goldReward.present ? data.goldReward.value : this.goldReward,
+      lpPenalty: data.lpPenalty.present ? data.lpPenalty.value : this.lpPenalty,
+      weaknesses:
+          data.weaknesses.present ? data.weaknesses.value : this.weaknesses,
+      resistances:
+          data.resistances.present ? data.resistances.value : this.resistances,
+      immunities:
+          data.immunities.present ? data.immunities.value : this.immunities,
+      requiredStat:
+          data.requiredStat.present
+              ? data.requiredStat.value
+              : this.requiredStat,
+      requiredStatValue:
+          data.requiredStatValue.present
+              ? data.requiredStatValue.value
+              : this.requiredStatValue,
+      imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
+      emoji: data.emoji.present ? data.emoji.value : this.emoji,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Enemy(')
+          ..write('id: $id, ')
+          ..write('key: $key, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('elementType: $elementType, ')
+          ..write('tier: $tier, ')
+          ..write('difficulty: $difficulty, ')
+          ..write('hp: $hp, ')
+          ..write('lpReward: $lpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('lpPenalty: $lpPenalty, ')
+          ..write('weaknesses: $weaknesses, ')
+          ..write('resistances: $resistances, ')
+          ..write('immunities: $immunities, ')
+          ..write('requiredStat: $requiredStat, ')
+          ..write('requiredStatValue: $requiredStatValue, ')
+          ..write('imagePath: $imagePath, ')
+          ..write('emoji: $emoji')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    key,
+    name,
+    description,
+    elementType,
+    tier,
+    difficulty,
+    hp,
+    lpReward,
+    goldReward,
+    lpPenalty,
+    weaknesses,
+    resistances,
+    immunities,
+    requiredStat,
+    requiredStatValue,
+    imagePath,
+    emoji,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Enemy &&
+          other.id == this.id &&
+          other.key == this.key &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.elementType == this.elementType &&
+          other.tier == this.tier &&
+          other.difficulty == this.difficulty &&
+          other.hp == this.hp &&
+          other.lpReward == this.lpReward &&
+          other.goldReward == this.goldReward &&
+          other.lpPenalty == this.lpPenalty &&
+          other.weaknesses == this.weaknesses &&
+          other.resistances == this.resistances &&
+          other.immunities == this.immunities &&
+          other.requiredStat == this.requiredStat &&
+          other.requiredStatValue == this.requiredStatValue &&
+          other.imagePath == this.imagePath &&
+          other.emoji == this.emoji);
+}
+
+class EnemiesCompanion extends UpdateCompanion<Enemy> {
+  final Value<int> id;
+  final Value<String> key;
+  final Value<String> name;
+  final Value<String> description;
+  final Value<String> elementType;
+  final Value<String> tier;
+  final Value<String> difficulty;
+  final Value<int> hp;
+  final Value<int> lpReward;
+  final Value<int> goldReward;
+  final Value<int> lpPenalty;
+  final Value<String> weaknesses;
+  final Value<String> resistances;
+  final Value<String> immunities;
+  final Value<String?> requiredStat;
+  final Value<int?> requiredStatValue;
+  final Value<String> imagePath;
+  final Value<String> emoji;
+  const EnemiesCompanion({
+    this.id = const Value.absent(),
+    this.key = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.elementType = const Value.absent(),
+    this.tier = const Value.absent(),
+    this.difficulty = const Value.absent(),
+    this.hp = const Value.absent(),
+    this.lpReward = const Value.absent(),
+    this.goldReward = const Value.absent(),
+    this.lpPenalty = const Value.absent(),
+    this.weaknesses = const Value.absent(),
+    this.resistances = const Value.absent(),
+    this.immunities = const Value.absent(),
+    this.requiredStat = const Value.absent(),
+    this.requiredStatValue = const Value.absent(),
+    this.imagePath = const Value.absent(),
+    this.emoji = const Value.absent(),
+  });
+  EnemiesCompanion.insert({
+    this.id = const Value.absent(),
+    required String key,
+    required String name,
+    required String description,
+    required String elementType,
+    required String tier,
+    required String difficulty,
+    required int hp,
+    required int lpReward,
+    required int goldReward,
+    required int lpPenalty,
+    required String weaknesses,
+    required String resistances,
+    this.immunities = const Value.absent(),
+    this.requiredStat = const Value.absent(),
+    this.requiredStatValue = const Value.absent(),
+    required String imagePath,
+    this.emoji = const Value.absent(),
+  }) : key = Value(key),
+       name = Value(name),
+       description = Value(description),
+       elementType = Value(elementType),
+       tier = Value(tier),
+       difficulty = Value(difficulty),
+       hp = Value(hp),
+       lpReward = Value(lpReward),
+       goldReward = Value(goldReward),
+       lpPenalty = Value(lpPenalty),
+       weaknesses = Value(weaknesses),
+       resistances = Value(resistances),
+       imagePath = Value(imagePath);
+  static Insertable<Enemy> custom({
+    Expression<int>? id,
+    Expression<String>? key,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<String>? elementType,
+    Expression<String>? tier,
+    Expression<String>? difficulty,
+    Expression<int>? hp,
+    Expression<int>? lpReward,
+    Expression<int>? goldReward,
+    Expression<int>? lpPenalty,
+    Expression<String>? weaknesses,
+    Expression<String>? resistances,
+    Expression<String>? immunities,
+    Expression<String>? requiredStat,
+    Expression<int>? requiredStatValue,
+    Expression<String>? imagePath,
+    Expression<String>? emoji,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (key != null) 'key': key,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (elementType != null) 'element_type': elementType,
+      if (tier != null) 'tier': tier,
+      if (difficulty != null) 'difficulty': difficulty,
+      if (hp != null) 'hp': hp,
+      if (lpReward != null) 'lp_reward': lpReward,
+      if (goldReward != null) 'gold_reward': goldReward,
+      if (lpPenalty != null) 'lp_penalty': lpPenalty,
+      if (weaknesses != null) 'weaknesses': weaknesses,
+      if (resistances != null) 'resistances': resistances,
+      if (immunities != null) 'immunities': immunities,
+      if (requiredStat != null) 'required_stat': requiredStat,
+      if (requiredStatValue != null) 'required_stat_value': requiredStatValue,
+      if (imagePath != null) 'image_path': imagePath,
+      if (emoji != null) 'emoji': emoji,
+    });
+  }
+
+  EnemiesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? key,
+    Value<String>? name,
+    Value<String>? description,
+    Value<String>? elementType,
+    Value<String>? tier,
+    Value<String>? difficulty,
+    Value<int>? hp,
+    Value<int>? lpReward,
+    Value<int>? goldReward,
+    Value<int>? lpPenalty,
+    Value<String>? weaknesses,
+    Value<String>? resistances,
+    Value<String>? immunities,
+    Value<String?>? requiredStat,
+    Value<int?>? requiredStatValue,
+    Value<String>? imagePath,
+    Value<String>? emoji,
+  }) {
+    return EnemiesCompanion(
+      id: id ?? this.id,
+      key: key ?? this.key,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      elementType: elementType ?? this.elementType,
+      tier: tier ?? this.tier,
+      difficulty: difficulty ?? this.difficulty,
+      hp: hp ?? this.hp,
+      lpReward: lpReward ?? this.lpReward,
+      goldReward: goldReward ?? this.goldReward,
+      lpPenalty: lpPenalty ?? this.lpPenalty,
+      weaknesses: weaknesses ?? this.weaknesses,
+      resistances: resistances ?? this.resistances,
+      immunities: immunities ?? this.immunities,
+      requiredStat: requiredStat ?? this.requiredStat,
+      requiredStatValue: requiredStatValue ?? this.requiredStatValue,
+      imagePath: imagePath ?? this.imagePath,
+      emoji: emoji ?? this.emoji,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (elementType.present) {
+      map['element_type'] = Variable<String>(elementType.value);
+    }
+    if (tier.present) {
+      map['tier'] = Variable<String>(tier.value);
+    }
+    if (difficulty.present) {
+      map['difficulty'] = Variable<String>(difficulty.value);
+    }
+    if (hp.present) {
+      map['hp'] = Variable<int>(hp.value);
+    }
+    if (lpReward.present) {
+      map['lp_reward'] = Variable<int>(lpReward.value);
+    }
+    if (goldReward.present) {
+      map['gold_reward'] = Variable<int>(goldReward.value);
+    }
+    if (lpPenalty.present) {
+      map['lp_penalty'] = Variable<int>(lpPenalty.value);
+    }
+    if (weaknesses.present) {
+      map['weaknesses'] = Variable<String>(weaknesses.value);
+    }
+    if (resistances.present) {
+      map['resistances'] = Variable<String>(resistances.value);
+    }
+    if (immunities.present) {
+      map['immunities'] = Variable<String>(immunities.value);
+    }
+    if (requiredStat.present) {
+      map['required_stat'] = Variable<String>(requiredStat.value);
+    }
+    if (requiredStatValue.present) {
+      map['required_stat_value'] = Variable<int>(requiredStatValue.value);
+    }
+    if (imagePath.present) {
+      map['image_path'] = Variable<String>(imagePath.value);
+    }
+    if (emoji.present) {
+      map['emoji'] = Variable<String>(emoji.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EnemiesCompanion(')
+          ..write('id: $id, ')
+          ..write('key: $key, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('elementType: $elementType, ')
+          ..write('tier: $tier, ')
+          ..write('difficulty: $difficulty, ')
+          ..write('hp: $hp, ')
+          ..write('lpReward: $lpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('lpPenalty: $lpPenalty, ')
+          ..write('weaknesses: $weaknesses, ')
+          ..write('resistances: $resistances, ')
+          ..write('immunities: $immunities, ')
+          ..write('requiredStat: $requiredStat, ')
+          ..write('requiredStatValue: $requiredStatValue, ')
+          ..write('imagePath: $imagePath, ')
+          ..write('emoji: $emoji')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $BountiesTable extends Bounties with TableInfo<$BountiesTable, Bounty> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BountiesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (id)',
+    ),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _enemyIdMeta = const VerificationMeta(
+    'enemyId',
+  );
+  @override
+  late final GeneratedColumn<int> enemyId = GeneratedColumn<int>(
+    'enemy_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES enemies (id)',
+    ),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('drafting'),
+  );
+  static const VerificationMeta _currentHpMeta = const VerificationMeta(
+    'currentHp',
+  );
+  @override
+  late final GeneratedColumn<int> currentHp = GeneratedColumn<int>(
+    'current_hp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _draftedEnemyIdsMeta = const VerificationMeta(
+    'draftedEnemyIds',
+  );
+  @override
+  late final GeneratedColumn<String> draftedEnemyIds = GeneratedColumn<String>(
+    'drafted_enemy_ids',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _lockedAtMeta = const VerificationMeta(
+    'lockedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lockedAt = GeneratedColumn<DateTime>(
+    'locked_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resolvedAtMeta = const VerificationMeta(
+    'resolvedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> resolvedAt = GeneratedColumn<DateTime>(
+    'resolved_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    playerId,
+    date,
+    enemyId,
+    status,
+    currentHp,
+    draftedEnemyIds,
+    lockedAt,
+    resolvedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'bounties';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Bounty> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('enemy_id')) {
+      context.handle(
+        _enemyIdMeta,
+        enemyId.isAcceptableOrUnknown(data['enemy_id']!, _enemyIdMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('current_hp')) {
+      context.handle(
+        _currentHpMeta,
+        currentHp.isAcceptableOrUnknown(data['current_hp']!, _currentHpMeta),
+      );
+    }
+    if (data.containsKey('drafted_enemy_ids')) {
+      context.handle(
+        _draftedEnemyIdsMeta,
+        draftedEnemyIds.isAcceptableOrUnknown(
+          data['drafted_enemy_ids']!,
+          _draftedEnemyIdsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('locked_at')) {
+      context.handle(
+        _lockedAtMeta,
+        lockedAt.isAcceptableOrUnknown(data['locked_at']!, _lockedAtMeta),
+      );
+    }
+    if (data.containsKey('resolved_at')) {
+      context.handle(
+        _resolvedAtMeta,
+        resolvedAt.isAcceptableOrUnknown(data['resolved_at']!, _resolvedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Bounty map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Bounty(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      playerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}player_id'],
+          )!,
+      date:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}date'],
+          )!,
+      enemyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}enemy_id'],
+      ),
+      status:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}status'],
+          )!,
+      currentHp:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}current_hp'],
+          )!,
+      draftedEnemyIds:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}drafted_enemy_ids'],
+          )!,
+      lockedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}locked_at'],
+      ),
+      resolvedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}resolved_at'],
+      ),
+    );
+  }
+
+  @override
+  $BountiesTable createAlias(String alias) {
+    return $BountiesTable(attachedDatabase, alias);
+  }
+}
+
+class Bounty extends DataClass implements Insertable<Bounty> {
+  final int id;
+  final int playerId;
+
+  /// Date string 'YYYY-MM-DD'
+  final String date;
+
+  /// The locked-in enemy
+  final int? enemyId;
+
+  /// Status: 'drafting', 'preparing', 'combat', 'victory', 'defeat'
+  final String status;
+
+  /// Enemy's remaining HP (starts at enemy.hp)
+  final int currentHp;
+
+  /// JSON array of 3 enemy IDs offered in draft
+  final String draftedEnemyIds;
+  final DateTime? lockedAt;
+  final DateTime? resolvedAt;
+  const Bounty({
+    required this.id,
+    required this.playerId,
+    required this.date,
+    this.enemyId,
+    required this.status,
+    required this.currentHp,
+    required this.draftedEnemyIds,
+    this.lockedAt,
+    this.resolvedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['date'] = Variable<String>(date);
+    if (!nullToAbsent || enemyId != null) {
+      map['enemy_id'] = Variable<int>(enemyId);
+    }
+    map['status'] = Variable<String>(status);
+    map['current_hp'] = Variable<int>(currentHp);
+    map['drafted_enemy_ids'] = Variable<String>(draftedEnemyIds);
+    if (!nullToAbsent || lockedAt != null) {
+      map['locked_at'] = Variable<DateTime>(lockedAt);
+    }
+    if (!nullToAbsent || resolvedAt != null) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt);
+    }
+    return map;
+  }
+
+  BountiesCompanion toCompanion(bool nullToAbsent) {
+    return BountiesCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      date: Value(date),
+      enemyId:
+          enemyId == null && nullToAbsent
+              ? const Value.absent()
+              : Value(enemyId),
+      status: Value(status),
+      currentHp: Value(currentHp),
+      draftedEnemyIds: Value(draftedEnemyIds),
+      lockedAt:
+          lockedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(lockedAt),
+      resolvedAt:
+          resolvedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(resolvedAt),
+    );
+  }
+
+  factory Bounty.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Bounty(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      date: serializer.fromJson<String>(json['date']),
+      enemyId: serializer.fromJson<int?>(json['enemyId']),
+      status: serializer.fromJson<String>(json['status']),
+      currentHp: serializer.fromJson<int>(json['currentHp']),
+      draftedEnemyIds: serializer.fromJson<String>(json['draftedEnemyIds']),
+      lockedAt: serializer.fromJson<DateTime?>(json['lockedAt']),
+      resolvedAt: serializer.fromJson<DateTime?>(json['resolvedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'date': serializer.toJson<String>(date),
+      'enemyId': serializer.toJson<int?>(enemyId),
+      'status': serializer.toJson<String>(status),
+      'currentHp': serializer.toJson<int>(currentHp),
+      'draftedEnemyIds': serializer.toJson<String>(draftedEnemyIds),
+      'lockedAt': serializer.toJson<DateTime?>(lockedAt),
+      'resolvedAt': serializer.toJson<DateTime?>(resolvedAt),
+    };
+  }
+
+  Bounty copyWith({
+    int? id,
+    int? playerId,
+    String? date,
+    Value<int?> enemyId = const Value.absent(),
+    String? status,
+    int? currentHp,
+    String? draftedEnemyIds,
+    Value<DateTime?> lockedAt = const Value.absent(),
+    Value<DateTime?> resolvedAt = const Value.absent(),
+  }) => Bounty(
+    id: id ?? this.id,
+    playerId: playerId ?? this.playerId,
+    date: date ?? this.date,
+    enemyId: enemyId.present ? enemyId.value : this.enemyId,
+    status: status ?? this.status,
+    currentHp: currentHp ?? this.currentHp,
+    draftedEnemyIds: draftedEnemyIds ?? this.draftedEnemyIds,
+    lockedAt: lockedAt.present ? lockedAt.value : this.lockedAt,
+    resolvedAt: resolvedAt.present ? resolvedAt.value : this.resolvedAt,
+  );
+  Bounty copyWithCompanion(BountiesCompanion data) {
+    return Bounty(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      date: data.date.present ? data.date.value : this.date,
+      enemyId: data.enemyId.present ? data.enemyId.value : this.enemyId,
+      status: data.status.present ? data.status.value : this.status,
+      currentHp: data.currentHp.present ? data.currentHp.value : this.currentHp,
+      draftedEnemyIds:
+          data.draftedEnemyIds.present
+              ? data.draftedEnemyIds.value
+              : this.draftedEnemyIds,
+      lockedAt: data.lockedAt.present ? data.lockedAt.value : this.lockedAt,
+      resolvedAt:
+          data.resolvedAt.present ? data.resolvedAt.value : this.resolvedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Bounty(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('date: $date, ')
+          ..write('enemyId: $enemyId, ')
+          ..write('status: $status, ')
+          ..write('currentHp: $currentHp, ')
+          ..write('draftedEnemyIds: $draftedEnemyIds, ')
+          ..write('lockedAt: $lockedAt, ')
+          ..write('resolvedAt: $resolvedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    playerId,
+    date,
+    enemyId,
+    status,
+    currentHp,
+    draftedEnemyIds,
+    lockedAt,
+    resolvedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Bounty &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.date == this.date &&
+          other.enemyId == this.enemyId &&
+          other.status == this.status &&
+          other.currentHp == this.currentHp &&
+          other.draftedEnemyIds == this.draftedEnemyIds &&
+          other.lockedAt == this.lockedAt &&
+          other.resolvedAt == this.resolvedAt);
+}
+
+class BountiesCompanion extends UpdateCompanion<Bounty> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> date;
+  final Value<int?> enemyId;
+  final Value<String> status;
+  final Value<int> currentHp;
+  final Value<String> draftedEnemyIds;
+  final Value<DateTime?> lockedAt;
+  final Value<DateTime?> resolvedAt;
+  const BountiesCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.enemyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.currentHp = const Value.absent(),
+    this.draftedEnemyIds = const Value.absent(),
+    this.lockedAt = const Value.absent(),
+    this.resolvedAt = const Value.absent(),
+  });
+  BountiesCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String date,
+    this.enemyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.currentHp = const Value.absent(),
+    this.draftedEnemyIds = const Value.absent(),
+    this.lockedAt = const Value.absent(),
+    this.resolvedAt = const Value.absent(),
+  }) : playerId = Value(playerId),
+       date = Value(date);
+  static Insertable<Bounty> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? date,
+    Expression<int>? enemyId,
+    Expression<String>? status,
+    Expression<int>? currentHp,
+    Expression<String>? draftedEnemyIds,
+    Expression<DateTime>? lockedAt,
+    Expression<DateTime>? resolvedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (date != null) 'date': date,
+      if (enemyId != null) 'enemy_id': enemyId,
+      if (status != null) 'status': status,
+      if (currentHp != null) 'current_hp': currentHp,
+      if (draftedEnemyIds != null) 'drafted_enemy_ids': draftedEnemyIds,
+      if (lockedAt != null) 'locked_at': lockedAt,
+      if (resolvedAt != null) 'resolved_at': resolvedAt,
+    });
+  }
+
+  BountiesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playerId,
+    Value<String>? date,
+    Value<int?>? enemyId,
+    Value<String>? status,
+    Value<int>? currentHp,
+    Value<String>? draftedEnemyIds,
+    Value<DateTime?>? lockedAt,
+    Value<DateTime?>? resolvedAt,
+  }) {
+    return BountiesCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      date: date ?? this.date,
+      enemyId: enemyId ?? this.enemyId,
+      status: status ?? this.status,
+      currentHp: currentHp ?? this.currentHp,
+      draftedEnemyIds: draftedEnemyIds ?? this.draftedEnemyIds,
+      lockedAt: lockedAt ?? this.lockedAt,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (enemyId.present) {
+      map['enemy_id'] = Variable<int>(enemyId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (currentHp.present) {
+      map['current_hp'] = Variable<int>(currentHp.value);
+    }
+    if (draftedEnemyIds.present) {
+      map['drafted_enemy_ids'] = Variable<String>(draftedEnemyIds.value);
+    }
+    if (lockedAt.present) {
+      map['locked_at'] = Variable<DateTime>(lockedAt.value);
+    }
+    if (resolvedAt.present) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BountiesCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('date: $date, ')
+          ..write('enemyId: $enemyId, ')
+          ..write('status: $status, ')
+          ..write('currentHp: $currentHp, ')
+          ..write('draftedEnemyIds: $draftedEnemyIds, ')
+          ..write('lockedAt: $lockedAt, ')
+          ..write('resolvedAt: $resolvedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RoutineExercisesTable extends RoutineExercises
+    with TableInfo<$RoutineExercisesTable, RoutineExercise> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RoutineExercisesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _bountyIdMeta = const VerificationMeta(
+    'bountyId',
+  );
+  @override
+  late final GeneratedColumn<int> bountyId = GeneratedColumn<int>(
+    'bounty_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES bounties (id)',
+    ),
+  );
+  static const VerificationMeta _exerciseDbIdMeta = const VerificationMeta(
+    'exerciseDbId',
+  );
+  @override
+  late final GeneratedColumn<int> exerciseDbId = GeneratedColumn<int>(
+    'exercise_db_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES exercise_db (id)',
+    ),
+  );
+  static const VerificationMeta _setsMeta = const VerificationMeta('sets');
+  @override
+  late final GeneratedColumn<int> sets = GeneratedColumn<int>(
+    'sets',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _repsMeta = const VerificationMeta('reps');
+  @override
+  late final GeneratedColumn<int> reps = GeneratedColumn<int>(
+    'reps',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationMeta = const VerificationMeta(
+    'duration',
+  );
+  @override
+  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
+    'duration',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isCompletedMeta = const VerificationMeta(
+    'isCompleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isCompleted = GeneratedColumn<bool>(
+    'is_completed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_completed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _damageDealtMeta = const VerificationMeta(
+    'damageDealt',
+  );
+  @override
+  late final GeneratedColumn<int> damageDealt = GeneratedColumn<int>(
+    'damage_dealt',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    bountyId,
+    exerciseDbId,
+    sets,
+    reps,
+    duration,
+    isCompleted,
+    completedAt,
+    damageDealt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'routine_exercises';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RoutineExercise> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('bounty_id')) {
+      context.handle(
+        _bountyIdMeta,
+        bountyId.isAcceptableOrUnknown(data['bounty_id']!, _bountyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bountyIdMeta);
+    }
+    if (data.containsKey('exercise_db_id')) {
+      context.handle(
+        _exerciseDbIdMeta,
+        exerciseDbId.isAcceptableOrUnknown(
+          data['exercise_db_id']!,
+          _exerciseDbIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_exerciseDbIdMeta);
+    }
+    if (data.containsKey('sets')) {
+      context.handle(
+        _setsMeta,
+        sets.isAcceptableOrUnknown(data['sets']!, _setsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_setsMeta);
+    }
+    if (data.containsKey('reps')) {
+      context.handle(
+        _repsMeta,
+        reps.isAcceptableOrUnknown(data['reps']!, _repsMeta),
+      );
+    }
+    if (data.containsKey('duration')) {
+      context.handle(
+        _durationMeta,
+        duration.isAcceptableOrUnknown(data['duration']!, _durationMeta),
+      );
+    }
+    if (data.containsKey('is_completed')) {
+      context.handle(
+        _isCompletedMeta,
+        isCompleted.isAcceptableOrUnknown(
+          data['is_completed']!,
+          _isCompletedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('damage_dealt')) {
+      context.handle(
+        _damageDealtMeta,
+        damageDealt.isAcceptableOrUnknown(
+          data['damage_dealt']!,
+          _damageDealtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RoutineExercise map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RoutineExercise(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      bountyId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}bounty_id'],
+          )!,
+      exerciseDbId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}exercise_db_id'],
+          )!,
+      sets:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}sets'],
+          )!,
+      reps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reps'],
+      ),
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      ),
+      isCompleted:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_completed'],
+          )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      ),
+      damageDealt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}damage_dealt'],
+          )!,
+    );
+  }
+
+  @override
+  $RoutineExercisesTable createAlias(String alias) {
+    return $RoutineExercisesTable(attachedDatabase, alias);
+  }
+}
+
+class RoutineExercise extends DataClass implements Insertable<RoutineExercise> {
+  final int id;
+  final int bountyId;
+
+  /// Reference to the Grimoire exercise
+  final int exerciseDbId;
+  final int sets;
+  final int? reps;
+  final int? duration;
+  final bool isCompleted;
+  final DateTime? completedAt;
+
+  /// Calculated damage from this exercise
+  final int damageDealt;
+  const RoutineExercise({
+    required this.id,
+    required this.bountyId,
+    required this.exerciseDbId,
+    required this.sets,
+    this.reps,
+    this.duration,
+    required this.isCompleted,
+    this.completedAt,
+    required this.damageDealt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['bounty_id'] = Variable<int>(bountyId);
+    map['exercise_db_id'] = Variable<int>(exerciseDbId);
+    map['sets'] = Variable<int>(sets);
+    if (!nullToAbsent || reps != null) {
+      map['reps'] = Variable<int>(reps);
+    }
+    if (!nullToAbsent || duration != null) {
+      map['duration'] = Variable<int>(duration);
+    }
+    map['is_completed'] = Variable<bool>(isCompleted);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    map['damage_dealt'] = Variable<int>(damageDealt);
+    return map;
+  }
+
+  RoutineExercisesCompanion toCompanion(bool nullToAbsent) {
+    return RoutineExercisesCompanion(
+      id: Value(id),
+      bountyId: Value(bountyId),
+      exerciseDbId: Value(exerciseDbId),
+      sets: Value(sets),
+      reps: reps == null && nullToAbsent ? const Value.absent() : Value(reps),
+      duration:
+          duration == null && nullToAbsent
+              ? const Value.absent()
+              : Value(duration),
+      isCompleted: Value(isCompleted),
+      completedAt:
+          completedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(completedAt),
+      damageDealt: Value(damageDealt),
+    );
+  }
+
+  factory RoutineExercise.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RoutineExercise(
+      id: serializer.fromJson<int>(json['id']),
+      bountyId: serializer.fromJson<int>(json['bountyId']),
+      exerciseDbId: serializer.fromJson<int>(json['exerciseDbId']),
+      sets: serializer.fromJson<int>(json['sets']),
+      reps: serializer.fromJson<int?>(json['reps']),
+      duration: serializer.fromJson<int?>(json['duration']),
+      isCompleted: serializer.fromJson<bool>(json['isCompleted']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      damageDealt: serializer.fromJson<int>(json['damageDealt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'bountyId': serializer.toJson<int>(bountyId),
+      'exerciseDbId': serializer.toJson<int>(exerciseDbId),
+      'sets': serializer.toJson<int>(sets),
+      'reps': serializer.toJson<int?>(reps),
+      'duration': serializer.toJson<int?>(duration),
+      'isCompleted': serializer.toJson<bool>(isCompleted),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'damageDealt': serializer.toJson<int>(damageDealt),
+    };
+  }
+
+  RoutineExercise copyWith({
+    int? id,
+    int? bountyId,
+    int? exerciseDbId,
+    int? sets,
+    Value<int?> reps = const Value.absent(),
+    Value<int?> duration = const Value.absent(),
+    bool? isCompleted,
+    Value<DateTime?> completedAt = const Value.absent(),
+    int? damageDealt,
+  }) => RoutineExercise(
+    id: id ?? this.id,
+    bountyId: bountyId ?? this.bountyId,
+    exerciseDbId: exerciseDbId ?? this.exerciseDbId,
+    sets: sets ?? this.sets,
+    reps: reps.present ? reps.value : this.reps,
+    duration: duration.present ? duration.value : this.duration,
+    isCompleted: isCompleted ?? this.isCompleted,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    damageDealt: damageDealt ?? this.damageDealt,
+  );
+  RoutineExercise copyWithCompanion(RoutineExercisesCompanion data) {
+    return RoutineExercise(
+      id: data.id.present ? data.id.value : this.id,
+      bountyId: data.bountyId.present ? data.bountyId.value : this.bountyId,
+      exerciseDbId:
+          data.exerciseDbId.present
+              ? data.exerciseDbId.value
+              : this.exerciseDbId,
+      sets: data.sets.present ? data.sets.value : this.sets,
+      reps: data.reps.present ? data.reps.value : this.reps,
+      duration: data.duration.present ? data.duration.value : this.duration,
+      isCompleted:
+          data.isCompleted.present ? data.isCompleted.value : this.isCompleted,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      damageDealt:
+          data.damageDealt.present ? data.damageDealt.value : this.damageDealt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RoutineExercise(')
+          ..write('id: $id, ')
+          ..write('bountyId: $bountyId, ')
+          ..write('exerciseDbId: $exerciseDbId, ')
+          ..write('sets: $sets, ')
+          ..write('reps: $reps, ')
+          ..write('duration: $duration, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('damageDealt: $damageDealt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    bountyId,
+    exerciseDbId,
+    sets,
+    reps,
+    duration,
+    isCompleted,
+    completedAt,
+    damageDealt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RoutineExercise &&
+          other.id == this.id &&
+          other.bountyId == this.bountyId &&
+          other.exerciseDbId == this.exerciseDbId &&
+          other.sets == this.sets &&
+          other.reps == this.reps &&
+          other.duration == this.duration &&
+          other.isCompleted == this.isCompleted &&
+          other.completedAt == this.completedAt &&
+          other.damageDealt == this.damageDealt);
+}
+
+class RoutineExercisesCompanion extends UpdateCompanion<RoutineExercise> {
+  final Value<int> id;
+  final Value<int> bountyId;
+  final Value<int> exerciseDbId;
+  final Value<int> sets;
+  final Value<int?> reps;
+  final Value<int?> duration;
+  final Value<bool> isCompleted;
+  final Value<DateTime?> completedAt;
+  final Value<int> damageDealt;
+  const RoutineExercisesCompanion({
+    this.id = const Value.absent(),
+    this.bountyId = const Value.absent(),
+    this.exerciseDbId = const Value.absent(),
+    this.sets = const Value.absent(),
+    this.reps = const Value.absent(),
+    this.duration = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.damageDealt = const Value.absent(),
+  });
+  RoutineExercisesCompanion.insert({
+    this.id = const Value.absent(),
+    required int bountyId,
+    required int exerciseDbId,
+    required int sets,
+    this.reps = const Value.absent(),
+    this.duration = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.damageDealt = const Value.absent(),
+  }) : bountyId = Value(bountyId),
+       exerciseDbId = Value(exerciseDbId),
+       sets = Value(sets);
+  static Insertable<RoutineExercise> custom({
+    Expression<int>? id,
+    Expression<int>? bountyId,
+    Expression<int>? exerciseDbId,
+    Expression<int>? sets,
+    Expression<int>? reps,
+    Expression<int>? duration,
+    Expression<bool>? isCompleted,
+    Expression<DateTime>? completedAt,
+    Expression<int>? damageDealt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (bountyId != null) 'bounty_id': bountyId,
+      if (exerciseDbId != null) 'exercise_db_id': exerciseDbId,
+      if (sets != null) 'sets': sets,
+      if (reps != null) 'reps': reps,
+      if (duration != null) 'duration': duration,
+      if (isCompleted != null) 'is_completed': isCompleted,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (damageDealt != null) 'damage_dealt': damageDealt,
+    });
+  }
+
+  RoutineExercisesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? bountyId,
+    Value<int>? exerciseDbId,
+    Value<int>? sets,
+    Value<int?>? reps,
+    Value<int?>? duration,
+    Value<bool>? isCompleted,
+    Value<DateTime?>? completedAt,
+    Value<int>? damageDealt,
+  }) {
+    return RoutineExercisesCompanion(
+      id: id ?? this.id,
+      bountyId: bountyId ?? this.bountyId,
+      exerciseDbId: exerciseDbId ?? this.exerciseDbId,
+      sets: sets ?? this.sets,
+      reps: reps ?? this.reps,
+      duration: duration ?? this.duration,
+      isCompleted: isCompleted ?? this.isCompleted,
+      completedAt: completedAt ?? this.completedAt,
+      damageDealt: damageDealt ?? this.damageDealt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (bountyId.present) {
+      map['bounty_id'] = Variable<int>(bountyId.value);
+    }
+    if (exerciseDbId.present) {
+      map['exercise_db_id'] = Variable<int>(exerciseDbId.value);
+    }
+    if (sets.present) {
+      map['sets'] = Variable<int>(sets.value);
+    }
+    if (reps.present) {
+      map['reps'] = Variable<int>(reps.value);
+    }
+    if (duration.present) {
+      map['duration'] = Variable<int>(duration.value);
+    }
+    if (isCompleted.present) {
+      map['is_completed'] = Variable<bool>(isCompleted.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (damageDealt.present) {
+      map['damage_dealt'] = Variable<int>(damageDealt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RoutineExercisesCompanion(')
+          ..write('id: $id, ')
+          ..write('bountyId: $bountyId, ')
+          ..write('exerciseDbId: $exerciseDbId, ')
+          ..write('sets: $sets, ')
+          ..write('reps: $reps, ')
+          ..write('duration: $duration, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('damageDealt: $damageDealt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$QuestFitDatabase extends GeneratedDatabase {
   _$QuestFitDatabase(QueryExecutor e) : super(e);
   $QuestFitDatabaseManager get managers => $QuestFitDatabaseManager(this);
@@ -5830,6 +10345,15 @@ abstract class _$QuestFitDatabase extends GeneratedDatabase {
   late final $EquippedSlotsTable equippedSlots = $EquippedSlotsTable(this);
   late final $InventoryTable inventory = $InventoryTable(this);
   late final $RankTrialsTable rankTrials = $RankTrialsTable(this);
+  late final $ExerciseDbTable exerciseDb = $ExerciseDbTable(this);
+  late final $StepMilestonesTable stepMilestones = $StepMilestonesTable(this);
+  late final $EggsTable eggs = $EggsTable(this);
+  late final $CompanionsTable companions = $CompanionsTable(this);
+  late final $EnemiesTable enemies = $EnemiesTable(this);
+  late final $BountiesTable bounties = $BountiesTable(this);
+  late final $RoutineExercisesTable routineExercises = $RoutineExercisesTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5846,6 +10370,13 @@ abstract class _$QuestFitDatabase extends GeneratedDatabase {
     equippedSlots,
     inventory,
     rankTrials,
+    exerciseDb,
+    stepMilestones,
+    eggs,
+    companions,
+    enemies,
+    bounties,
+    routineExercises,
   ];
 }
 
@@ -5867,6 +10398,8 @@ typedef $$PlayersTableCreateCompanionBuilder =
       Value<int> gold,
       Value<bool> awakeningComplete,
       Value<DateTime> createdAt,
+      Value<int> dailyStepGoal,
+      Value<bool> momentumBuffActive,
     });
 typedef $$PlayersTableUpdateCompanionBuilder =
     PlayersCompanion Function({
@@ -5886,6 +10419,8 @@ typedef $$PlayersTableUpdateCompanionBuilder =
       Value<int> gold,
       Value<bool> awakeningComplete,
       Value<DateTime> createdAt,
+      Value<int> dailyStepGoal,
+      Value<bool> momentumBuffActive,
     });
 
 final class $$PlayersTableReferences
@@ -6023,6 +10558,84 @@ final class $$PlayersTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$StepMilestonesTable, List<StepMilestone>>
+  _stepMilestonesRefsTable(_$QuestFitDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.stepMilestones,
+        aliasName: $_aliasNameGenerator(
+          db.players.id,
+          db.stepMilestones.playerId,
+        ),
+      );
+
+  $$StepMilestonesTableProcessedTableManager get stepMilestonesRefs {
+    final manager = $$StepMilestonesTableTableManager(
+      $_db,
+      $_db.stepMilestones,
+    ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_stepMilestonesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$EggsTable, List<Egg>> _eggsRefsTable(
+    _$QuestFitDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.eggs,
+    aliasName: $_aliasNameGenerator(db.players.id, db.eggs.playerId),
+  );
+
+  $$EggsTableProcessedTableManager get eggsRefs {
+    final manager = $$EggsTableTableManager(
+      $_db,
+      $_db.eggs,
+    ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_eggsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$CompanionsTable, List<Companion>>
+  _companionsRefsTable(_$QuestFitDatabase db) => MultiTypedResultKey.fromTable(
+    db.companions,
+    aliasName: $_aliasNameGenerator(db.players.id, db.companions.playerId),
+  );
+
+  $$CompanionsTableProcessedTableManager get companionsRefs {
+    final manager = $$CompanionsTableTableManager(
+      $_db,
+      $_db.companions,
+    ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_companionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$BountiesTable, List<Bounty>> _bountiesRefsTable(
+    _$QuestFitDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.bounties,
+    aliasName: $_aliasNameGenerator(db.players.id, db.bounties.playerId),
+  );
+
+  $$BountiesTableProcessedTableManager get bountiesRefs {
+    final manager = $$BountiesTableTableManager(
+      $_db,
+      $_db.bounties,
+    ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_bountiesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$PlayersTableFilterComposer
@@ -6111,6 +10724,16 @@ class $$PlayersTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dailyStepGoal => $composableBuilder(
+    column: $table.dailyStepGoal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get momentumBuffActive => $composableBuilder(
+    column: $table.momentumBuffActive,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6288,6 +10911,106 @@ class $$PlayersTableFilterComposer
     );
     return f(composer);
   }
+
+  Expression<bool> stepMilestonesRefs(
+    Expression<bool> Function($$StepMilestonesTableFilterComposer f) f,
+  ) {
+    final $$StepMilestonesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stepMilestones,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StepMilestonesTableFilterComposer(
+            $db: $db,
+            $table: $db.stepMilestones,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> eggsRefs(
+    Expression<bool> Function($$EggsTableFilterComposer f) f,
+  ) {
+    final $$EggsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.eggs,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EggsTableFilterComposer(
+            $db: $db,
+            $table: $db.eggs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> companionsRefs(
+    Expression<bool> Function($$CompanionsTableFilterComposer f) f,
+  ) {
+    final $$CompanionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.companions,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CompanionsTableFilterComposer(
+            $db: $db,
+            $table: $db.companions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> bountiesRefs(
+    Expression<bool> Function($$BountiesTableFilterComposer f) f,
+  ) {
+    final $$BountiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableFilterComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PlayersTableOrderingComposer
@@ -6378,6 +11101,16 @@ class $$PlayersTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get dailyStepGoal => $composableBuilder(
+    column: $table.dailyStepGoal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get momentumBuffActive => $composableBuilder(
+    column: $table.momentumBuffActive,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PlayersTableAnnotationComposer
@@ -6444,6 +11177,16 @@ class $$PlayersTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get dailyStepGoal => $composableBuilder(
+    column: $table.dailyStepGoal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get momentumBuffActive => $composableBuilder(
+    column: $table.momentumBuffActive,
+    builder: (column) => column,
+  );
 
   Expression<T> statsRefs<T extends Object>(
     Expression<T> Function($$StatsTableAnnotationComposer a) f,
@@ -6619,6 +11362,106 @@ class $$PlayersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> stepMilestonesRefs<T extends Object>(
+    Expression<T> Function($$StepMilestonesTableAnnotationComposer a) f,
+  ) {
+    final $$StepMilestonesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stepMilestones,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StepMilestonesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.stepMilestones,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> eggsRefs<T extends Object>(
+    Expression<T> Function($$EggsTableAnnotationComposer a) f,
+  ) {
+    final $$EggsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.eggs,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EggsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.eggs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> companionsRefs<T extends Object>(
+    Expression<T> Function($$CompanionsTableAnnotationComposer a) f,
+  ) {
+    final $$CompanionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.companions,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CompanionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.companions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> bountiesRefs<T extends Object>(
+    Expression<T> Function($$BountiesTableAnnotationComposer a) f,
+  ) {
+    final $$BountiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PlayersTableTableManager
@@ -6642,6 +11485,10 @@ class $$PlayersTableTableManager
             bool equippedSlotsRefs,
             bool inventoryRefs,
             bool rankTrialsRefs,
+            bool stepMilestonesRefs,
+            bool eggsRefs,
+            bool companionsRefs,
+            bool bountiesRefs,
           })
         > {
   $$PlayersTableTableManager(_$QuestFitDatabase db, $PlayersTable table)
@@ -6673,6 +11520,8 @@ class $$PlayersTableTableManager
                 Value<int> gold = const Value.absent(),
                 Value<bool> awakeningComplete = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<int> dailyStepGoal = const Value.absent(),
+                Value<bool> momentumBuffActive = const Value.absent(),
               }) => PlayersCompanion(
                 id: id,
                 name: name,
@@ -6690,6 +11539,8 @@ class $$PlayersTableTableManager
                 gold: gold,
                 awakeningComplete: awakeningComplete,
                 createdAt: createdAt,
+                dailyStepGoal: dailyStepGoal,
+                momentumBuffActive: momentumBuffActive,
               ),
           createCompanionCallback:
               ({
@@ -6709,6 +11560,8 @@ class $$PlayersTableTableManager
                 Value<int> gold = const Value.absent(),
                 Value<bool> awakeningComplete = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<int> dailyStepGoal = const Value.absent(),
+                Value<bool> momentumBuffActive = const Value.absent(),
               }) => PlayersCompanion.insert(
                 id: id,
                 name: name,
@@ -6726,6 +11579,8 @@ class $$PlayersTableTableManager
                 gold: gold,
                 awakeningComplete: awakeningComplete,
                 createdAt: createdAt,
+                dailyStepGoal: dailyStepGoal,
+                momentumBuffActive: momentumBuffActive,
               ),
           withReferenceMapper:
               (p0) =>
@@ -6745,6 +11600,10 @@ class $$PlayersTableTableManager
             equippedSlotsRefs = false,
             inventoryRefs = false,
             rankTrialsRefs = false,
+            stepMilestonesRefs = false,
+            eggsRefs = false,
+            companionsRefs = false,
+            bountiesRefs = false,
           }) {
             return PrefetchHooks(
               db: db,
@@ -6756,6 +11615,10 @@ class $$PlayersTableTableManager
                 if (equippedSlotsRefs) db.equippedSlots,
                 if (inventoryRefs) db.inventory,
                 if (rankTrialsRefs) db.rankTrials,
+                if (stepMilestonesRefs) db.stepMilestones,
+                if (eggsRefs) db.eggs,
+                if (companionsRefs) db.companions,
+                if (bountiesRefs) db.bounties,
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -6899,6 +11762,79 @@ class $$PlayersTableTableManager
                           ),
                       typedResults: items,
                     ),
+                  if (stepMilestonesRefs)
+                    await $_getPrefetchedData<
+                      Player,
+                      $PlayersTable,
+                      StepMilestone
+                    >(
+                      currentTable: table,
+                      referencedTable: $$PlayersTableReferences
+                          ._stepMilestonesRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PlayersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).stepMilestonesRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.playerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                  if (eggsRefs)
+                    await $_getPrefetchedData<Player, $PlayersTable, Egg>(
+                      currentTable: table,
+                      referencedTable: $$PlayersTableReferences._eggsRefsTable(
+                        db,
+                      ),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PlayersTableReferences(db, table, p0).eggsRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.playerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                  if (companionsRefs)
+                    await $_getPrefetchedData<Player, $PlayersTable, Companion>(
+                      currentTable: table,
+                      referencedTable: $$PlayersTableReferences
+                          ._companionsRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PlayersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).companionsRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.playerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                  if (bountiesRefs)
+                    await $_getPrefetchedData<Player, $PlayersTable, Bounty>(
+                      currentTable: table,
+                      referencedTable: $$PlayersTableReferences
+                          ._bountiesRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PlayersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).bountiesRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.playerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
                 ];
               },
             );
@@ -6927,6 +11863,10 @@ typedef $$PlayersTableProcessedTableManager =
         bool equippedSlotsRefs,
         bool inventoryRefs,
         bool rankTrialsRefs,
+        bool stepMilestonesRefs,
+        bool eggsRefs,
+        bool companionsRefs,
+        bool bountiesRefs,
       })
     >;
 typedef $$StatsTableCreateCompanionBuilder =
@@ -10874,6 +15814,3209 @@ typedef $$RankTrialsTableProcessedTableManager =
       RankTrial,
       PrefetchHooks Function({bool playerId})
     >;
+typedef $$ExerciseDbTableCreateCompanionBuilder =
+    ExerciseDbCompanion Function({
+      Value<int> id,
+      required String externalId,
+      required String name,
+      Value<String?> force,
+      required String level,
+      Value<String?> mechanic,
+      Value<String?> equipment,
+      required String category,
+      required String instructions,
+      required String primaryMuscles,
+      Value<String> secondaryMuscles,
+      Value<String> images,
+    });
+typedef $$ExerciseDbTableUpdateCompanionBuilder =
+    ExerciseDbCompanion Function({
+      Value<int> id,
+      Value<String> externalId,
+      Value<String> name,
+      Value<String?> force,
+      Value<String> level,
+      Value<String?> mechanic,
+      Value<String?> equipment,
+      Value<String> category,
+      Value<String> instructions,
+      Value<String> primaryMuscles,
+      Value<String> secondaryMuscles,
+      Value<String> images,
+    });
+
+final class $$ExerciseDbTableReferences
+    extends
+        BaseReferences<_$QuestFitDatabase, $ExerciseDbTable, ExerciseDbData> {
+  $$ExerciseDbTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$RoutineExercisesTable, List<RoutineExercise>>
+  _routineExercisesRefsTable(_$QuestFitDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.routineExercises,
+        aliasName: $_aliasNameGenerator(
+          db.exerciseDb.id,
+          db.routineExercises.exerciseDbId,
+        ),
+      );
+
+  $$RoutineExercisesTableProcessedTableManager get routineExercisesRefs {
+    final manager = $$RoutineExercisesTableTableManager(
+      $_db,
+      $_db.routineExercises,
+    ).filter((f) => f.exerciseDbId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _routineExercisesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$ExerciseDbTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $ExerciseDbTable> {
+  $$ExerciseDbTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get force => $composableBuilder(
+    column: $table.force,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mechanic => $composableBuilder(
+    column: $table.mechanic,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get equipment => $composableBuilder(
+    column: $table.equipment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get instructions => $composableBuilder(
+    column: $table.instructions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get primaryMuscles => $composableBuilder(
+    column: $table.primaryMuscles,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondaryMuscles => $composableBuilder(
+    column: $table.secondaryMuscles,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get images => $composableBuilder(
+    column: $table.images,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> routineExercisesRefs(
+    Expression<bool> Function($$RoutineExercisesTableFilterComposer f) f,
+  ) {
+    final $$RoutineExercisesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.routineExercises,
+      getReferencedColumn: (t) => t.exerciseDbId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutineExercisesTableFilterComposer(
+            $db: $db,
+            $table: $db.routineExercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ExerciseDbTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $ExerciseDbTable> {
+  $$ExerciseDbTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get force => $composableBuilder(
+    column: $table.force,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mechanic => $composableBuilder(
+    column: $table.mechanic,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get equipment => $composableBuilder(
+    column: $table.equipment,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get instructions => $composableBuilder(
+    column: $table.instructions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get primaryMuscles => $composableBuilder(
+    column: $table.primaryMuscles,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondaryMuscles => $composableBuilder(
+    column: $table.secondaryMuscles,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get images => $composableBuilder(
+    column: $table.images,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ExerciseDbTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $ExerciseDbTable> {
+  $$ExerciseDbTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get force =>
+      $composableBuilder(column: $table.force, builder: (column) => column);
+
+  GeneratedColumn<String> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<String> get mechanic =>
+      $composableBuilder(column: $table.mechanic, builder: (column) => column);
+
+  GeneratedColumn<String> get equipment =>
+      $composableBuilder(column: $table.equipment, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get instructions => $composableBuilder(
+    column: $table.instructions,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get primaryMuscles => $composableBuilder(
+    column: $table.primaryMuscles,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get secondaryMuscles => $composableBuilder(
+    column: $table.secondaryMuscles,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get images =>
+      $composableBuilder(column: $table.images, builder: (column) => column);
+
+  Expression<T> routineExercisesRefs<T extends Object>(
+    Expression<T> Function($$RoutineExercisesTableAnnotationComposer a) f,
+  ) {
+    final $$RoutineExercisesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.routineExercises,
+      getReferencedColumn: (t) => t.exerciseDbId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutineExercisesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.routineExercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ExerciseDbTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $ExerciseDbTable,
+          ExerciseDbData,
+          $$ExerciseDbTableFilterComposer,
+          $$ExerciseDbTableOrderingComposer,
+          $$ExerciseDbTableAnnotationComposer,
+          $$ExerciseDbTableCreateCompanionBuilder,
+          $$ExerciseDbTableUpdateCompanionBuilder,
+          (ExerciseDbData, $$ExerciseDbTableReferences),
+          ExerciseDbData,
+          PrefetchHooks Function({bool routineExercisesRefs})
+        > {
+  $$ExerciseDbTableTableManager(_$QuestFitDatabase db, $ExerciseDbTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$ExerciseDbTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$ExerciseDbTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$ExerciseDbTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> externalId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> force = const Value.absent(),
+                Value<String> level = const Value.absent(),
+                Value<String?> mechanic = const Value.absent(),
+                Value<String?> equipment = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<String> instructions = const Value.absent(),
+                Value<String> primaryMuscles = const Value.absent(),
+                Value<String> secondaryMuscles = const Value.absent(),
+                Value<String> images = const Value.absent(),
+              }) => ExerciseDbCompanion(
+                id: id,
+                externalId: externalId,
+                name: name,
+                force: force,
+                level: level,
+                mechanic: mechanic,
+                equipment: equipment,
+                category: category,
+                instructions: instructions,
+                primaryMuscles: primaryMuscles,
+                secondaryMuscles: secondaryMuscles,
+                images: images,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String externalId,
+                required String name,
+                Value<String?> force = const Value.absent(),
+                required String level,
+                Value<String?> mechanic = const Value.absent(),
+                Value<String?> equipment = const Value.absent(),
+                required String category,
+                required String instructions,
+                required String primaryMuscles,
+                Value<String> secondaryMuscles = const Value.absent(),
+                Value<String> images = const Value.absent(),
+              }) => ExerciseDbCompanion.insert(
+                id: id,
+                externalId: externalId,
+                name: name,
+                force: force,
+                level: level,
+                mechanic: mechanic,
+                equipment: equipment,
+                category: category,
+                instructions: instructions,
+                primaryMuscles: primaryMuscles,
+                secondaryMuscles: secondaryMuscles,
+                images: images,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$ExerciseDbTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({routineExercisesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (routineExercisesRefs) db.routineExercises,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (routineExercisesRefs)
+                    await $_getPrefetchedData<
+                      ExerciseDbData,
+                      $ExerciseDbTable,
+                      RoutineExercise
+                    >(
+                      currentTable: table,
+                      referencedTable: $$ExerciseDbTableReferences
+                          ._routineExercisesRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$ExerciseDbTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).routineExercisesRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.exerciseDbId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ExerciseDbTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $ExerciseDbTable,
+      ExerciseDbData,
+      $$ExerciseDbTableFilterComposer,
+      $$ExerciseDbTableOrderingComposer,
+      $$ExerciseDbTableAnnotationComposer,
+      $$ExerciseDbTableCreateCompanionBuilder,
+      $$ExerciseDbTableUpdateCompanionBuilder,
+      (ExerciseDbData, $$ExerciseDbTableReferences),
+      ExerciseDbData,
+      PrefetchHooks Function({bool routineExercisesRefs})
+    >;
+typedef $$StepMilestonesTableCreateCompanionBuilder =
+    StepMilestonesCompanion Function({
+      Value<int> id,
+      required int playerId,
+      required String date,
+      Value<int> milestonesClaimed,
+      Value<int> stepsAtLastClaim,
+    });
+typedef $$StepMilestonesTableUpdateCompanionBuilder =
+    StepMilestonesCompanion Function({
+      Value<int> id,
+      Value<int> playerId,
+      Value<String> date,
+      Value<int> milestonesClaimed,
+      Value<int> stepsAtLastClaim,
+    });
+
+final class $$StepMilestonesTableReferences
+    extends
+        BaseReferences<
+          _$QuestFitDatabase,
+          $StepMilestonesTable,
+          StepMilestone
+        > {
+  $$StepMilestonesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $PlayersTable _playerIdTable(_$QuestFitDatabase db) =>
+      db.players.createAlias(
+        $_aliasNameGenerator(db.stepMilestones.playerId, db.players.id),
+      );
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<int>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$StepMilestonesTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $StepMilestonesTable> {
+  $$StepMilestonesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get milestonesClaimed => $composableBuilder(
+    column: $table.milestonesClaimed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepsAtLastClaim => $composableBuilder(
+    column: $table.stepsAtLastClaim,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StepMilestonesTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $StepMilestonesTable> {
+  $$StepMilestonesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get milestonesClaimed => $composableBuilder(
+    column: $table.milestonesClaimed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepsAtLastClaim => $composableBuilder(
+    column: $table.stepsAtLastClaim,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StepMilestonesTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $StepMilestonesTable> {
+  $$StepMilestonesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get milestonesClaimed => $composableBuilder(
+    column: $table.milestonesClaimed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get stepsAtLastClaim => $composableBuilder(
+    column: $table.stepsAtLastClaim,
+    builder: (column) => column,
+  );
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StepMilestonesTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $StepMilestonesTable,
+          StepMilestone,
+          $$StepMilestonesTableFilterComposer,
+          $$StepMilestonesTableOrderingComposer,
+          $$StepMilestonesTableAnnotationComposer,
+          $$StepMilestonesTableCreateCompanionBuilder,
+          $$StepMilestonesTableUpdateCompanionBuilder,
+          (StepMilestone, $$StepMilestonesTableReferences),
+          StepMilestone,
+          PrefetchHooks Function({bool playerId})
+        > {
+  $$StepMilestonesTableTableManager(
+    _$QuestFitDatabase db,
+    $StepMilestonesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$StepMilestonesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () =>
+                  $$StepMilestonesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$StepMilestonesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playerId = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<int> milestonesClaimed = const Value.absent(),
+                Value<int> stepsAtLastClaim = const Value.absent(),
+              }) => StepMilestonesCompanion(
+                id: id,
+                playerId: playerId,
+                date: date,
+                milestonesClaimed: milestonesClaimed,
+                stepsAtLastClaim: stepsAtLastClaim,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playerId,
+                required String date,
+                Value<int> milestonesClaimed = const Value.absent(),
+                Value<int> stepsAtLastClaim = const Value.absent(),
+              }) => StepMilestonesCompanion.insert(
+                id: id,
+                playerId: playerId,
+                date: date,
+                milestonesClaimed: milestonesClaimed,
+                stepsAtLastClaim: stepsAtLastClaim,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$StepMilestonesTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({playerId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (playerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$StepMilestonesTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn:
+                                $$StepMilestonesTableReferences
+                                    ._playerIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$StepMilestonesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $StepMilestonesTable,
+      StepMilestone,
+      $$StepMilestonesTableFilterComposer,
+      $$StepMilestonesTableOrderingComposer,
+      $$StepMilestonesTableAnnotationComposer,
+      $$StepMilestonesTableCreateCompanionBuilder,
+      $$StepMilestonesTableUpdateCompanionBuilder,
+      (StepMilestone, $$StepMilestonesTableReferences),
+      StepMilestone,
+      PrefetchHooks Function({bool playerId})
+    >;
+typedef $$EggsTableCreateCompanionBuilder =
+    EggsCompanion Function({
+      Value<int> id,
+      required int playerId,
+      required String companionType,
+      required String rarity,
+      required int stepsRequired,
+      Value<int> stepsAccumulated,
+      Value<DateTime> foundAt,
+      Value<DateTime?> hatchedAt,
+    });
+typedef $$EggsTableUpdateCompanionBuilder =
+    EggsCompanion Function({
+      Value<int> id,
+      Value<int> playerId,
+      Value<String> companionType,
+      Value<String> rarity,
+      Value<int> stepsRequired,
+      Value<int> stepsAccumulated,
+      Value<DateTime> foundAt,
+      Value<DateTime?> hatchedAt,
+    });
+
+final class $$EggsTableReferences
+    extends BaseReferences<_$QuestFitDatabase, $EggsTable, Egg> {
+  $$EggsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $PlayersTable _playerIdTable(_$QuestFitDatabase db) => db.players
+      .createAlias($_aliasNameGenerator(db.eggs.playerId, db.players.id));
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<int>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$EggsTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $EggsTable> {
+  $$EggsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companionType => $composableBuilder(
+    column: $table.companionType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepsRequired => $composableBuilder(
+    column: $table.stepsRequired,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepsAccumulated => $composableBuilder(
+    column: $table.stepsAccumulated,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get foundAt => $composableBuilder(
+    column: $table.foundAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get hatchedAt => $composableBuilder(
+    column: $table.hatchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EggsTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $EggsTable> {
+  $$EggsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companionType => $composableBuilder(
+    column: $table.companionType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepsRequired => $composableBuilder(
+    column: $table.stepsRequired,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepsAccumulated => $composableBuilder(
+    column: $table.stepsAccumulated,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get foundAt => $composableBuilder(
+    column: $table.foundAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get hatchedAt => $composableBuilder(
+    column: $table.hatchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EggsTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $EggsTable> {
+  $$EggsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companionType => $composableBuilder(
+    column: $table.companionType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get rarity =>
+      $composableBuilder(column: $table.rarity, builder: (column) => column);
+
+  GeneratedColumn<int> get stepsRequired => $composableBuilder(
+    column: $table.stepsRequired,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get stepsAccumulated => $composableBuilder(
+    column: $table.stepsAccumulated,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get foundAt =>
+      $composableBuilder(column: $table.foundAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get hatchedAt =>
+      $composableBuilder(column: $table.hatchedAt, builder: (column) => column);
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EggsTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $EggsTable,
+          Egg,
+          $$EggsTableFilterComposer,
+          $$EggsTableOrderingComposer,
+          $$EggsTableAnnotationComposer,
+          $$EggsTableCreateCompanionBuilder,
+          $$EggsTableUpdateCompanionBuilder,
+          (Egg, $$EggsTableReferences),
+          Egg,
+          PrefetchHooks Function({bool playerId})
+        > {
+  $$EggsTableTableManager(_$QuestFitDatabase db, $EggsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$EggsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$EggsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$EggsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playerId = const Value.absent(),
+                Value<String> companionType = const Value.absent(),
+                Value<String> rarity = const Value.absent(),
+                Value<int> stepsRequired = const Value.absent(),
+                Value<int> stepsAccumulated = const Value.absent(),
+                Value<DateTime> foundAt = const Value.absent(),
+                Value<DateTime?> hatchedAt = const Value.absent(),
+              }) => EggsCompanion(
+                id: id,
+                playerId: playerId,
+                companionType: companionType,
+                rarity: rarity,
+                stepsRequired: stepsRequired,
+                stepsAccumulated: stepsAccumulated,
+                foundAt: foundAt,
+                hatchedAt: hatchedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playerId,
+                required String companionType,
+                required String rarity,
+                required int stepsRequired,
+                Value<int> stepsAccumulated = const Value.absent(),
+                Value<DateTime> foundAt = const Value.absent(),
+                Value<DateTime?> hatchedAt = const Value.absent(),
+              }) => EggsCompanion.insert(
+                id: id,
+                playerId: playerId,
+                companionType: companionType,
+                rarity: rarity,
+                stepsRequired: stepsRequired,
+                stepsAccumulated: stepsAccumulated,
+                foundAt: foundAt,
+                hatchedAt: hatchedAt,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$EggsTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({playerId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (playerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$EggsTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn:
+                                $$EggsTableReferences._playerIdTable(db).id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EggsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $EggsTable,
+      Egg,
+      $$EggsTableFilterComposer,
+      $$EggsTableOrderingComposer,
+      $$EggsTableAnnotationComposer,
+      $$EggsTableCreateCompanionBuilder,
+      $$EggsTableUpdateCompanionBuilder,
+      (Egg, $$EggsTableReferences),
+      Egg,
+      PrefetchHooks Function({bool playerId})
+    >;
+typedef $$CompanionsTableCreateCompanionBuilder =
+    CompanionsCompanion Function({
+      Value<int> id,
+      required int playerId,
+      required String name,
+      required String type,
+      required String rarity,
+      required String buffType,
+      Value<int> buffValue,
+      Value<bool> isActive,
+      Value<DateTime> hatchedAt,
+    });
+typedef $$CompanionsTableUpdateCompanionBuilder =
+    CompanionsCompanion Function({
+      Value<int> id,
+      Value<int> playerId,
+      Value<String> name,
+      Value<String> type,
+      Value<String> rarity,
+      Value<String> buffType,
+      Value<int> buffValue,
+      Value<bool> isActive,
+      Value<DateTime> hatchedAt,
+    });
+
+final class $$CompanionsTableReferences
+    extends BaseReferences<_$QuestFitDatabase, $CompanionsTable, Companion> {
+  $$CompanionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $PlayersTable _playerIdTable(_$QuestFitDatabase db) => db.players
+      .createAlias($_aliasNameGenerator(db.companions.playerId, db.players.id));
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<int>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CompanionsTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $CompanionsTable> {
+  $$CompanionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get buffType => $composableBuilder(
+    column: $table.buffType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get buffValue => $composableBuilder(
+    column: $table.buffValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get hatchedAt => $composableBuilder(
+    column: $table.hatchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CompanionsTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $CompanionsTable> {
+  $$CompanionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get buffType => $composableBuilder(
+    column: $table.buffType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get buffValue => $composableBuilder(
+    column: $table.buffValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get hatchedAt => $composableBuilder(
+    column: $table.hatchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CompanionsTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $CompanionsTable> {
+  $$CompanionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get rarity =>
+      $composableBuilder(column: $table.rarity, builder: (column) => column);
+
+  GeneratedColumn<String> get buffType =>
+      $composableBuilder(column: $table.buffType, builder: (column) => column);
+
+  GeneratedColumn<int> get buffValue =>
+      $composableBuilder(column: $table.buffValue, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get hatchedAt =>
+      $composableBuilder(column: $table.hatchedAt, builder: (column) => column);
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CompanionsTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $CompanionsTable,
+          Companion,
+          $$CompanionsTableFilterComposer,
+          $$CompanionsTableOrderingComposer,
+          $$CompanionsTableAnnotationComposer,
+          $$CompanionsTableCreateCompanionBuilder,
+          $$CompanionsTableUpdateCompanionBuilder,
+          (Companion, $$CompanionsTableReferences),
+          Companion,
+          PrefetchHooks Function({bool playerId})
+        > {
+  $$CompanionsTableTableManager(_$QuestFitDatabase db, $CompanionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$CompanionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$CompanionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$CompanionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playerId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> rarity = const Value.absent(),
+                Value<String> buffType = const Value.absent(),
+                Value<int> buffValue = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> hatchedAt = const Value.absent(),
+              }) => CompanionsCompanion(
+                id: id,
+                playerId: playerId,
+                name: name,
+                type: type,
+                rarity: rarity,
+                buffType: buffType,
+                buffValue: buffValue,
+                isActive: isActive,
+                hatchedAt: hatchedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playerId,
+                required String name,
+                required String type,
+                required String rarity,
+                required String buffType,
+                Value<int> buffValue = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> hatchedAt = const Value.absent(),
+              }) => CompanionsCompanion.insert(
+                id: id,
+                playerId: playerId,
+                name: name,
+                type: type,
+                rarity: rarity,
+                buffType: buffType,
+                buffValue: buffValue,
+                isActive: isActive,
+                hatchedAt: hatchedAt,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$CompanionsTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({playerId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (playerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$CompanionsTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn:
+                                $$CompanionsTableReferences
+                                    ._playerIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CompanionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $CompanionsTable,
+      Companion,
+      $$CompanionsTableFilterComposer,
+      $$CompanionsTableOrderingComposer,
+      $$CompanionsTableAnnotationComposer,
+      $$CompanionsTableCreateCompanionBuilder,
+      $$CompanionsTableUpdateCompanionBuilder,
+      (Companion, $$CompanionsTableReferences),
+      Companion,
+      PrefetchHooks Function({bool playerId})
+    >;
+typedef $$EnemiesTableCreateCompanionBuilder =
+    EnemiesCompanion Function({
+      Value<int> id,
+      required String key,
+      required String name,
+      required String description,
+      required String elementType,
+      required String tier,
+      required String difficulty,
+      required int hp,
+      required int lpReward,
+      required int goldReward,
+      required int lpPenalty,
+      required String weaknesses,
+      required String resistances,
+      Value<String> immunities,
+      Value<String?> requiredStat,
+      Value<int?> requiredStatValue,
+      required String imagePath,
+      Value<String> emoji,
+    });
+typedef $$EnemiesTableUpdateCompanionBuilder =
+    EnemiesCompanion Function({
+      Value<int> id,
+      Value<String> key,
+      Value<String> name,
+      Value<String> description,
+      Value<String> elementType,
+      Value<String> tier,
+      Value<String> difficulty,
+      Value<int> hp,
+      Value<int> lpReward,
+      Value<int> goldReward,
+      Value<int> lpPenalty,
+      Value<String> weaknesses,
+      Value<String> resistances,
+      Value<String> immunities,
+      Value<String?> requiredStat,
+      Value<int?> requiredStatValue,
+      Value<String> imagePath,
+      Value<String> emoji,
+    });
+
+final class $$EnemiesTableReferences
+    extends BaseReferences<_$QuestFitDatabase, $EnemiesTable, Enemy> {
+  $$EnemiesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$BountiesTable, List<Bounty>> _bountiesRefsTable(
+    _$QuestFitDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.bounties,
+    aliasName: $_aliasNameGenerator(db.enemies.id, db.bounties.enemyId),
+  );
+
+  $$BountiesTableProcessedTableManager get bountiesRefs {
+    final manager = $$BountiesTableTableManager(
+      $_db,
+      $_db.bounties,
+    ).filter((f) => f.enemyId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_bountiesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$EnemiesTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $EnemiesTable> {
+  $$EnemiesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get elementType => $composableBuilder(
+    column: $table.elementType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tier => $composableBuilder(
+    column: $table.tier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get difficulty => $composableBuilder(
+    column: $table.difficulty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get hp => $composableBuilder(
+    column: $table.hp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lpReward => $composableBuilder(
+    column: $table.lpReward,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get goldReward => $composableBuilder(
+    column: $table.goldReward,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lpPenalty => $composableBuilder(
+    column: $table.lpPenalty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get weaknesses => $composableBuilder(
+    column: $table.weaknesses,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resistances => $composableBuilder(
+    column: $table.resistances,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get immunities => $composableBuilder(
+    column: $table.immunities,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get requiredStat => $composableBuilder(
+    column: $table.requiredStat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get requiredStatValue => $composableBuilder(
+    column: $table.requiredStatValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> bountiesRefs(
+    Expression<bool> Function($$BountiesTableFilterComposer f) f,
+  ) {
+    final $$BountiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.enemyId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableFilterComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EnemiesTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $EnemiesTable> {
+  $$EnemiesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get elementType => $composableBuilder(
+    column: $table.elementType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tier => $composableBuilder(
+    column: $table.tier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get difficulty => $composableBuilder(
+    column: $table.difficulty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get hp => $composableBuilder(
+    column: $table.hp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lpReward => $composableBuilder(
+    column: $table.lpReward,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get goldReward => $composableBuilder(
+    column: $table.goldReward,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lpPenalty => $composableBuilder(
+    column: $table.lpPenalty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get weaknesses => $composableBuilder(
+    column: $table.weaknesses,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resistances => $composableBuilder(
+    column: $table.resistances,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get immunities => $composableBuilder(
+    column: $table.immunities,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get requiredStat => $composableBuilder(
+    column: $table.requiredStat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get requiredStatValue => $composableBuilder(
+    column: $table.requiredStatValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EnemiesTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $EnemiesTable> {
+  $$EnemiesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get elementType => $composableBuilder(
+    column: $table.elementType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tier =>
+      $composableBuilder(column: $table.tier, builder: (column) => column);
+
+  GeneratedColumn<String> get difficulty => $composableBuilder(
+    column: $table.difficulty,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get hp =>
+      $composableBuilder(column: $table.hp, builder: (column) => column);
+
+  GeneratedColumn<int> get lpReward =>
+      $composableBuilder(column: $table.lpReward, builder: (column) => column);
+
+  GeneratedColumn<int> get goldReward => $composableBuilder(
+    column: $table.goldReward,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lpPenalty =>
+      $composableBuilder(column: $table.lpPenalty, builder: (column) => column);
+
+  GeneratedColumn<String> get weaknesses => $composableBuilder(
+    column: $table.weaknesses,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get resistances => $composableBuilder(
+    column: $table.resistances,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get immunities => $composableBuilder(
+    column: $table.immunities,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get requiredStat => $composableBuilder(
+    column: $table.requiredStat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get requiredStatValue => $composableBuilder(
+    column: $table.requiredStatValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get imagePath =>
+      $composableBuilder(column: $table.imagePath, builder: (column) => column);
+
+  GeneratedColumn<String> get emoji =>
+      $composableBuilder(column: $table.emoji, builder: (column) => column);
+
+  Expression<T> bountiesRefs<T extends Object>(
+    Expression<T> Function($$BountiesTableAnnotationComposer a) f,
+  ) {
+    final $$BountiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.enemyId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EnemiesTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $EnemiesTable,
+          Enemy,
+          $$EnemiesTableFilterComposer,
+          $$EnemiesTableOrderingComposer,
+          $$EnemiesTableAnnotationComposer,
+          $$EnemiesTableCreateCompanionBuilder,
+          $$EnemiesTableUpdateCompanionBuilder,
+          (Enemy, $$EnemiesTableReferences),
+          Enemy,
+          PrefetchHooks Function({bool bountiesRefs})
+        > {
+  $$EnemiesTableTableManager(_$QuestFitDatabase db, $EnemiesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$EnemiesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$EnemiesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$EnemiesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> key = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String> elementType = const Value.absent(),
+                Value<String> tier = const Value.absent(),
+                Value<String> difficulty = const Value.absent(),
+                Value<int> hp = const Value.absent(),
+                Value<int> lpReward = const Value.absent(),
+                Value<int> goldReward = const Value.absent(),
+                Value<int> lpPenalty = const Value.absent(),
+                Value<String> weaknesses = const Value.absent(),
+                Value<String> resistances = const Value.absent(),
+                Value<String> immunities = const Value.absent(),
+                Value<String?> requiredStat = const Value.absent(),
+                Value<int?> requiredStatValue = const Value.absent(),
+                Value<String> imagePath = const Value.absent(),
+                Value<String> emoji = const Value.absent(),
+              }) => EnemiesCompanion(
+                id: id,
+                key: key,
+                name: name,
+                description: description,
+                elementType: elementType,
+                tier: tier,
+                difficulty: difficulty,
+                hp: hp,
+                lpReward: lpReward,
+                goldReward: goldReward,
+                lpPenalty: lpPenalty,
+                weaknesses: weaknesses,
+                resistances: resistances,
+                immunities: immunities,
+                requiredStat: requiredStat,
+                requiredStatValue: requiredStatValue,
+                imagePath: imagePath,
+                emoji: emoji,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String key,
+                required String name,
+                required String description,
+                required String elementType,
+                required String tier,
+                required String difficulty,
+                required int hp,
+                required int lpReward,
+                required int goldReward,
+                required int lpPenalty,
+                required String weaknesses,
+                required String resistances,
+                Value<String> immunities = const Value.absent(),
+                Value<String?> requiredStat = const Value.absent(),
+                Value<int?> requiredStatValue = const Value.absent(),
+                required String imagePath,
+                Value<String> emoji = const Value.absent(),
+              }) => EnemiesCompanion.insert(
+                id: id,
+                key: key,
+                name: name,
+                description: description,
+                elementType: elementType,
+                tier: tier,
+                difficulty: difficulty,
+                hp: hp,
+                lpReward: lpReward,
+                goldReward: goldReward,
+                lpPenalty: lpPenalty,
+                weaknesses: weaknesses,
+                resistances: resistances,
+                immunities: immunities,
+                requiredStat: requiredStat,
+                requiredStatValue: requiredStatValue,
+                imagePath: imagePath,
+                emoji: emoji,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$EnemiesTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({bountiesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (bountiesRefs) db.bounties],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (bountiesRefs)
+                    await $_getPrefetchedData<Enemy, $EnemiesTable, Bounty>(
+                      currentTable: table,
+                      referencedTable: $$EnemiesTableReferences
+                          ._bountiesRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$EnemiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).bountiesRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.enemyId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EnemiesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $EnemiesTable,
+      Enemy,
+      $$EnemiesTableFilterComposer,
+      $$EnemiesTableOrderingComposer,
+      $$EnemiesTableAnnotationComposer,
+      $$EnemiesTableCreateCompanionBuilder,
+      $$EnemiesTableUpdateCompanionBuilder,
+      (Enemy, $$EnemiesTableReferences),
+      Enemy,
+      PrefetchHooks Function({bool bountiesRefs})
+    >;
+typedef $$BountiesTableCreateCompanionBuilder =
+    BountiesCompanion Function({
+      Value<int> id,
+      required int playerId,
+      required String date,
+      Value<int?> enemyId,
+      Value<String> status,
+      Value<int> currentHp,
+      Value<String> draftedEnemyIds,
+      Value<DateTime?> lockedAt,
+      Value<DateTime?> resolvedAt,
+    });
+typedef $$BountiesTableUpdateCompanionBuilder =
+    BountiesCompanion Function({
+      Value<int> id,
+      Value<int> playerId,
+      Value<String> date,
+      Value<int?> enemyId,
+      Value<String> status,
+      Value<int> currentHp,
+      Value<String> draftedEnemyIds,
+      Value<DateTime?> lockedAt,
+      Value<DateTime?> resolvedAt,
+    });
+
+final class $$BountiesTableReferences
+    extends BaseReferences<_$QuestFitDatabase, $BountiesTable, Bounty> {
+  $$BountiesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $PlayersTable _playerIdTable(_$QuestFitDatabase db) => db.players
+      .createAlias($_aliasNameGenerator(db.bounties.playerId, db.players.id));
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<int>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $EnemiesTable _enemyIdTable(_$QuestFitDatabase db) => db.enemies
+      .createAlias($_aliasNameGenerator(db.bounties.enemyId, db.enemies.id));
+
+  $$EnemiesTableProcessedTableManager? get enemyId {
+    final $_column = $_itemColumn<int>('enemy_id');
+    if ($_column == null) return null;
+    final manager = $$EnemiesTableTableManager(
+      $_db,
+      $_db.enemies,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_enemyIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$RoutineExercisesTable, List<RoutineExercise>>
+  _routineExercisesRefsTable(_$QuestFitDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.routineExercises,
+        aliasName: $_aliasNameGenerator(
+          db.bounties.id,
+          db.routineExercises.bountyId,
+        ),
+      );
+
+  $$RoutineExercisesTableProcessedTableManager get routineExercisesRefs {
+    final manager = $$RoutineExercisesTableTableManager(
+      $_db,
+      $_db.routineExercises,
+    ).filter((f) => f.bountyId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _routineExercisesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$BountiesTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $BountiesTable> {
+  $$BountiesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get currentHp => $composableBuilder(
+    column: $table.currentHp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get draftedEnemyIds => $composableBuilder(
+    column: $table.draftedEnemyIds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lockedAt => $composableBuilder(
+    column: $table.lockedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$EnemiesTableFilterComposer get enemyId {
+    final $$EnemiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.enemyId,
+      referencedTable: $db.enemies,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EnemiesTableFilterComposer(
+            $db: $db,
+            $table: $db.enemies,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> routineExercisesRefs(
+    Expression<bool> Function($$RoutineExercisesTableFilterComposer f) f,
+  ) {
+    final $$RoutineExercisesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.routineExercises,
+      getReferencedColumn: (t) => t.bountyId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutineExercisesTableFilterComposer(
+            $db: $db,
+            $table: $db.routineExercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$BountiesTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $BountiesTable> {
+  $$BountiesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get currentHp => $composableBuilder(
+    column: $table.currentHp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get draftedEnemyIds => $composableBuilder(
+    column: $table.draftedEnemyIds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lockedAt => $composableBuilder(
+    column: $table.lockedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$EnemiesTableOrderingComposer get enemyId {
+    final $$EnemiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.enemyId,
+      referencedTable: $db.enemies,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EnemiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.enemies,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BountiesTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $BountiesTable> {
+  $$BountiesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get currentHp =>
+      $composableBuilder(column: $table.currentHp, builder: (column) => column);
+
+  GeneratedColumn<String> get draftedEnemyIds => $composableBuilder(
+    column: $table.draftedEnemyIds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lockedAt =>
+      $composableBuilder(column: $table.lockedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => column,
+  );
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$EnemiesTableAnnotationComposer get enemyId {
+    final $$EnemiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.enemyId,
+      referencedTable: $db.enemies,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EnemiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.enemies,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> routineExercisesRefs<T extends Object>(
+    Expression<T> Function($$RoutineExercisesTableAnnotationComposer a) f,
+  ) {
+    final $$RoutineExercisesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.routineExercises,
+      getReferencedColumn: (t) => t.bountyId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutineExercisesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.routineExercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$BountiesTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $BountiesTable,
+          Bounty,
+          $$BountiesTableFilterComposer,
+          $$BountiesTableOrderingComposer,
+          $$BountiesTableAnnotationComposer,
+          $$BountiesTableCreateCompanionBuilder,
+          $$BountiesTableUpdateCompanionBuilder,
+          (Bounty, $$BountiesTableReferences),
+          Bounty,
+          PrefetchHooks Function({
+            bool playerId,
+            bool enemyId,
+            bool routineExercisesRefs,
+          })
+        > {
+  $$BountiesTableTableManager(_$QuestFitDatabase db, $BountiesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$BountiesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$BountiesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$BountiesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playerId = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<int?> enemyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> currentHp = const Value.absent(),
+                Value<String> draftedEnemyIds = const Value.absent(),
+                Value<DateTime?> lockedAt = const Value.absent(),
+                Value<DateTime?> resolvedAt = const Value.absent(),
+              }) => BountiesCompanion(
+                id: id,
+                playerId: playerId,
+                date: date,
+                enemyId: enemyId,
+                status: status,
+                currentHp: currentHp,
+                draftedEnemyIds: draftedEnemyIds,
+                lockedAt: lockedAt,
+                resolvedAt: resolvedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playerId,
+                required String date,
+                Value<int?> enemyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> currentHp = const Value.absent(),
+                Value<String> draftedEnemyIds = const Value.absent(),
+                Value<DateTime?> lockedAt = const Value.absent(),
+                Value<DateTime?> resolvedAt = const Value.absent(),
+              }) => BountiesCompanion.insert(
+                id: id,
+                playerId: playerId,
+                date: date,
+                enemyId: enemyId,
+                status: status,
+                currentHp: currentHp,
+                draftedEnemyIds: draftedEnemyIds,
+                lockedAt: lockedAt,
+                resolvedAt: resolvedAt,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$BountiesTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({
+            playerId = false,
+            enemyId = false,
+            routineExercisesRefs = false,
+          }) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (routineExercisesRefs) db.routineExercises,
+              ],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (playerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$BountiesTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn:
+                                $$BountiesTableReferences._playerIdTable(db).id,
+                          )
+                          as T;
+                }
+                if (enemyId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.enemyId,
+                            referencedTable: $$BountiesTableReferences
+                                ._enemyIdTable(db),
+                            referencedColumn:
+                                $$BountiesTableReferences._enemyIdTable(db).id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (routineExercisesRefs)
+                    await $_getPrefetchedData<
+                      Bounty,
+                      $BountiesTable,
+                      RoutineExercise
+                    >(
+                      currentTable: table,
+                      referencedTable: $$BountiesTableReferences
+                          ._routineExercisesRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$BountiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).routineExercisesRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.bountyId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$BountiesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $BountiesTable,
+      Bounty,
+      $$BountiesTableFilterComposer,
+      $$BountiesTableOrderingComposer,
+      $$BountiesTableAnnotationComposer,
+      $$BountiesTableCreateCompanionBuilder,
+      $$BountiesTableUpdateCompanionBuilder,
+      (Bounty, $$BountiesTableReferences),
+      Bounty,
+      PrefetchHooks Function({
+        bool playerId,
+        bool enemyId,
+        bool routineExercisesRefs,
+      })
+    >;
+typedef $$RoutineExercisesTableCreateCompanionBuilder =
+    RoutineExercisesCompanion Function({
+      Value<int> id,
+      required int bountyId,
+      required int exerciseDbId,
+      required int sets,
+      Value<int?> reps,
+      Value<int?> duration,
+      Value<bool> isCompleted,
+      Value<DateTime?> completedAt,
+      Value<int> damageDealt,
+    });
+typedef $$RoutineExercisesTableUpdateCompanionBuilder =
+    RoutineExercisesCompanion Function({
+      Value<int> id,
+      Value<int> bountyId,
+      Value<int> exerciseDbId,
+      Value<int> sets,
+      Value<int?> reps,
+      Value<int?> duration,
+      Value<bool> isCompleted,
+      Value<DateTime?> completedAt,
+      Value<int> damageDealt,
+    });
+
+final class $$RoutineExercisesTableReferences
+    extends
+        BaseReferences<
+          _$QuestFitDatabase,
+          $RoutineExercisesTable,
+          RoutineExercise
+        > {
+  $$RoutineExercisesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $BountiesTable _bountyIdTable(_$QuestFitDatabase db) =>
+      db.bounties.createAlias(
+        $_aliasNameGenerator(db.routineExercises.bountyId, db.bounties.id),
+      );
+
+  $$BountiesTableProcessedTableManager get bountyId {
+    final $_column = $_itemColumn<int>('bounty_id')!;
+
+    final manager = $$BountiesTableTableManager(
+      $_db,
+      $_db.bounties,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_bountyIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ExerciseDbTable _exerciseDbIdTable(_$QuestFitDatabase db) =>
+      db.exerciseDb.createAlias(
+        $_aliasNameGenerator(
+          db.routineExercises.exerciseDbId,
+          db.exerciseDb.id,
+        ),
+      );
+
+  $$ExerciseDbTableProcessedTableManager get exerciseDbId {
+    final $_column = $_itemColumn<int>('exercise_db_id')!;
+
+    final manager = $$ExerciseDbTableTableManager(
+      $_db,
+      $_db.exerciseDb,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_exerciseDbIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RoutineExercisesTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $RoutineExercisesTable> {
+  $$RoutineExercisesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sets => $composableBuilder(
+    column: $table.sets,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reps => $composableBuilder(
+    column: $table.reps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get duration => $composableBuilder(
+    column: $table.duration,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get damageDealt => $composableBuilder(
+    column: $table.damageDealt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$BountiesTableFilterComposer get bountyId {
+    final $$BountiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bountyId,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableFilterComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ExerciseDbTableFilterComposer get exerciseDbId {
+    final $$ExerciseDbTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.exerciseDbId,
+      referencedTable: $db.exerciseDb,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExerciseDbTableFilterComposer(
+            $db: $db,
+            $table: $db.exerciseDb,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineExercisesTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $RoutineExercisesTable> {
+  $$RoutineExercisesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sets => $composableBuilder(
+    column: $table.sets,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reps => $composableBuilder(
+    column: $table.reps,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get duration => $composableBuilder(
+    column: $table.duration,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get damageDealt => $composableBuilder(
+    column: $table.damageDealt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$BountiesTableOrderingComposer get bountyId {
+    final $$BountiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bountyId,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ExerciseDbTableOrderingComposer get exerciseDbId {
+    final $$ExerciseDbTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.exerciseDbId,
+      referencedTable: $db.exerciseDb,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExerciseDbTableOrderingComposer(
+            $db: $db,
+            $table: $db.exerciseDb,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineExercisesTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $RoutineExercisesTable> {
+  $$RoutineExercisesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get sets =>
+      $composableBuilder(column: $table.sets, builder: (column) => column);
+
+  GeneratedColumn<int> get reps =>
+      $composableBuilder(column: $table.reps, builder: (column) => column);
+
+  GeneratedColumn<int> get duration =>
+      $composableBuilder(column: $table.duration, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get damageDealt => $composableBuilder(
+    column: $table.damageDealt,
+    builder: (column) => column,
+  );
+
+  $$BountiesTableAnnotationComposer get bountyId {
+    final $$BountiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bountyId,
+      referencedTable: $db.bounties,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BountiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bounties,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ExerciseDbTableAnnotationComposer get exerciseDbId {
+    final $$ExerciseDbTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.exerciseDbId,
+      referencedTable: $db.exerciseDb,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExerciseDbTableAnnotationComposer(
+            $db: $db,
+            $table: $db.exerciseDb,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineExercisesTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $RoutineExercisesTable,
+          RoutineExercise,
+          $$RoutineExercisesTableFilterComposer,
+          $$RoutineExercisesTableOrderingComposer,
+          $$RoutineExercisesTableAnnotationComposer,
+          $$RoutineExercisesTableCreateCompanionBuilder,
+          $$RoutineExercisesTableUpdateCompanionBuilder,
+          (RoutineExercise, $$RoutineExercisesTableReferences),
+          RoutineExercise,
+          PrefetchHooks Function({bool bountyId, bool exerciseDbId})
+        > {
+  $$RoutineExercisesTableTableManager(
+    _$QuestFitDatabase db,
+    $RoutineExercisesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () =>
+                  $$RoutineExercisesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$RoutineExercisesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer:
+              () => $$RoutineExercisesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> bountyId = const Value.absent(),
+                Value<int> exerciseDbId = const Value.absent(),
+                Value<int> sets = const Value.absent(),
+                Value<int?> reps = const Value.absent(),
+                Value<int?> duration = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<int> damageDealt = const Value.absent(),
+              }) => RoutineExercisesCompanion(
+                id: id,
+                bountyId: bountyId,
+                exerciseDbId: exerciseDbId,
+                sets: sets,
+                reps: reps,
+                duration: duration,
+                isCompleted: isCompleted,
+                completedAt: completedAt,
+                damageDealt: damageDealt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int bountyId,
+                required int exerciseDbId,
+                required int sets,
+                Value<int?> reps = const Value.absent(),
+                Value<int?> duration = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<int> damageDealt = const Value.absent(),
+              }) => RoutineExercisesCompanion.insert(
+                id: id,
+                bountyId: bountyId,
+                exerciseDbId: exerciseDbId,
+                sets: sets,
+                reps: reps,
+                duration: duration,
+                isCompleted: isCompleted,
+                completedAt: completedAt,
+                damageDealt: damageDealt,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$RoutineExercisesTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({bountyId = false, exerciseDbId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (bountyId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.bountyId,
+                            referencedTable: $$RoutineExercisesTableReferences
+                                ._bountyIdTable(db),
+                            referencedColumn:
+                                $$RoutineExercisesTableReferences
+                                    ._bountyIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+                if (exerciseDbId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.exerciseDbId,
+                            referencedTable: $$RoutineExercisesTableReferences
+                                ._exerciseDbIdTable(db),
+                            referencedColumn:
+                                $$RoutineExercisesTableReferences
+                                    ._exerciseDbIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RoutineExercisesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $RoutineExercisesTable,
+      RoutineExercise,
+      $$RoutineExercisesTableFilterComposer,
+      $$RoutineExercisesTableOrderingComposer,
+      $$RoutineExercisesTableAnnotationComposer,
+      $$RoutineExercisesTableCreateCompanionBuilder,
+      $$RoutineExercisesTableUpdateCompanionBuilder,
+      (RoutineExercise, $$RoutineExercisesTableReferences),
+      RoutineExercise,
+      PrefetchHooks Function({bool bountyId, bool exerciseDbId})
+    >;
 
 class $QuestFitDatabaseManager {
   final _$QuestFitDatabase _db;
@@ -10900,4 +19043,17 @@ class $QuestFitDatabaseManager {
       $$InventoryTableTableManager(_db, _db.inventory);
   $$RankTrialsTableTableManager get rankTrials =>
       $$RankTrialsTableTableManager(_db, _db.rankTrials);
+  $$ExerciseDbTableTableManager get exerciseDb =>
+      $$ExerciseDbTableTableManager(_db, _db.exerciseDb);
+  $$StepMilestonesTableTableManager get stepMilestones =>
+      $$StepMilestonesTableTableManager(_db, _db.stepMilestones);
+  $$EggsTableTableManager get eggs => $$EggsTableTableManager(_db, _db.eggs);
+  $$CompanionsTableTableManager get companions =>
+      $$CompanionsTableTableManager(_db, _db.companions);
+  $$EnemiesTableTableManager get enemies =>
+      $$EnemiesTableTableManager(_db, _db.enemies);
+  $$BountiesTableTableManager get bounties =>
+      $$BountiesTableTableManager(_db, _db.bounties);
+  $$RoutineExercisesTableTableManager get routineExercises =>
+      $$RoutineExercisesTableTableManager(_db, _db.routineExercises);
 }

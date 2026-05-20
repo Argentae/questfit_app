@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../db/database.dart';
 import 'database_provider.dart';
+import 'bounty_provider.dart';
 import 'shop_provider.dart';
+import 'step_provider.dart';
 import 'user_provider.dart';
 
 /// App initialization state.
@@ -31,17 +33,27 @@ class AppInitNotifier extends AsyncNotifier<AppInitState> {
   @override
   Future<AppInitState> build() async {
     try {
+      debugPrint('QF_INIT: Starting app init...');
       final db = ref.read(databaseProvider);
       final players = await db.select(db.players).get();
+      debugPrint('QF_INIT: Found ${players.length} players');
 
       if (players.isEmpty) {
         return AppInitState.needsSetup;
       }
 
       final player = players.first;
+      debugPrint('QF_INIT: Player "${player.name}" tier=${player.tier} div=${player.division}');
+
+      // Check enemy count
+      final enemyCount = await db.select(db.enemies).get();
+      debugPrint('QF_INIT: Enemies in DB: ${enemyCount.length}');
+      final exCount = await db.select(db.exerciseDb).get();
+      debugPrint('QF_INIT: Exercises in DB: ${exCount.length}');
 
       // Run streak verification (with streak insurance check)
       await _verifyStreak(db);
+      debugPrint('QF_INIT: Streak verified');
 
       // v3.0: Process pending promotion (LP reached 100 yesterday)
       if (player.pendingPromotion) {
@@ -61,15 +73,49 @@ class AppInitNotifier extends AsyncNotifier<AppInitState> {
         debugPrint('LP Decay: Lost ${decayResult.lpLost} LP'
             '${decayResult.shouldDemote ? " (DEMOTED!)" : ""}');
       }
+      debugPrint('QF_INIT: LP decay checked');
 
-      // v2.0: Check if Awakening is complete
-      if (!player.awakeningComplete) {
-        return AppInitState.awakening;
+      // v2.2: Check and apply Momentum Buff from yesterday's steps
+      await ref
+          .read(stepNotifierProvider.notifier)
+          .checkMomentumBuff();
+      debugPrint('QF_INIT: Momentum buff checked');
+
+      // v2.3: Resolve any unresolved bounties from previous days
+      final bountyResolution = await ref
+          .read(bountyNotifierProvider.notifier)
+          .resolveYesterdaysBounty();
+      if (bountyResolution != null) {
+        debugPrint('Bounty Resolution: '
+            '${bountyResolution.isVictory ? "VICTORY" : "DEFEAT"} '
+            'LP: ${bountyResolution.lpChange}');
+      }
+      debugPrint('QF_INIT: Yesterday bounty resolved');
+
+      // v2.3: Generate today's bounty draft if needed
+      await ref
+          .read(bountyNotifierProvider.notifier)
+          .generateDailyDraft();
+      debugPrint('QF_INIT: Daily draft generated');
+
+      // Check bounty count
+      final bountyCount = await db.select(db.bounties).get();
+      debugPrint('QF_INIT: Bounties in DB: ${bountyCount.length}');
+      for (final b in bountyCount) {
+        debugPrint('QF_INIT: Bounty id=${b.id} date=${b.date} status=${b.status} enemyId=${b.enemyId}');
       }
 
+      // v2.0: Check if Awakening is complete
+      // [Bypassed for beta testing]
+      // if (!player.awakeningComplete) {
+      //   return AppInitState.awakening;
+      // }
+
+      debugPrint('QF_INIT: App init complete — READY');
       return AppInitState.ready;
-    } catch (e) {
+    } catch (e, s) {
       debugPrint('App init error: $e');
+      debugPrint('Stack: $s');
       // On first ever launch, the DB seeds data via migration.
       // If we get here, something unexpected happened.
       // Default to ready and let the seed data handle it.

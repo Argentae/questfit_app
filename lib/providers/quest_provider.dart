@@ -6,8 +6,10 @@ import '../engine/lp_engine.dart';
 import '../engine/quest_engine.dart';
 import '../engine/rank_engine.dart';
 import '../engine/streak_engine.dart';
+import 'companion_provider.dart';
 import 'database_provider.dart';
 import 'equipment_provider.dart';
+import 'step_provider.dart';
 import 'user_provider.dart';
 
 // ─── Result type ─────────────────────────────────────────────────────
@@ -87,18 +89,27 @@ class QuestNotifier extends AsyncNotifier<void> {
         .read(userNotifierProvider.notifier)
         .getMasteryPoints(statKey);
 
-    // Calculate LP reward with mastery and streak bonuses
+    // v2.2: Check momentum buff and companion bonuses
+    final hasMomentum = ref.read(momentumBuffProvider);
+    final companionLpBonus = ref.read(companionLpBonusProvider);
+    final companionGoldBonus = ref.read(companionGoldBonusProvider);
+
+    // Calculate LP reward with mastery, streak, and v2.2 bonuses
     final baseLp = quest.lpReward > 0 ? quest.lpReward : LpEngine.baseQuestLp;
     final totalLp = LpEngine.calculateQuestLp(
       baseLp: baseLp,
       masteryPoints: masteryPoints,
       currentStreak: streak.currentStreak,
+      momentumBuff: hasMomentum,
+      companionBonusPct: companionLpBonus,
     );
 
-    // v2.0: Calculate gold reward with streak multiplier
+    // v2.0: Calculate gold reward with streak multiplier + v2.2 bonuses
     final goldReward = GoldEngine.calculateReward(
       baseGold: quest.goldReward > 0 ? quest.goldReward : GoldEngine.baseQuestGold,
       currentStreak: streak.currentStreak,
+      momentumBuff: hasMomentum,
+      companionBonusPct: companionGoldBonus,
     );
 
     // Mark quest completed

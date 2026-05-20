@@ -38,10 +38,14 @@ class LpEngine {
   /// [baseLp] — The quest's base LP reward.
   /// [masteryPoints] — Stat points in the quest's category (STR/Cardio/FLX).
   /// [currentStreak] — Player's current streak length.
+  /// [momentumBuff] — v2.2: Whether the Momentum Buff is active (+10%).
+  /// [companionBonusPct] — v2.2: Active companion LP bonus percentage.
   static int calculateQuestLp({
     required int baseLp,
     required int masteryPoints,
     required int currentStreak,
+    bool momentumBuff = false,
+    int companionBonusPct = 0,
   }) {
     // Mastery bonus: +1 LP per 25 stat points in the relevant category
     final masteryBonus = masteryPoints ~/ 25;
@@ -56,7 +60,19 @@ class LpEngine {
       streakBonus = 1;
     }
 
-    return baseLp + masteryBonus + streakBonus;
+    var total = baseLp + masteryBonus + streakBonus;
+
+    // v2.2: Momentum Buff (+10%)
+    if (momentumBuff) {
+      total = (total * 1.10).round();
+    }
+
+    // v2.2: Companion bonus
+    if (companionBonusPct > 0) {
+      total = (total * (1 + companionBonusPct / 100.0)).round();
+    }
+
+    return total;
   }
 
   // ─── LP Loss / Decay ──────────────────────────────────────────────

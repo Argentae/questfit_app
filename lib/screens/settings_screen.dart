@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../app/theme.dart';
 import '../providers/health_provider.dart';
+import '../providers/step_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/database_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,6 +61,8 @@ class SettingsScreen extends ConsumerWidget {
 
           // ── Preferences ──
           _SectionTitle('Preferences'),
+          // v2.2: Daily Step Goal slider
+          _buildStepGoalSlider(ref),
           _SettingsRow(label: 'Units', value: 'Metric (kg)'),
           _ToggleRow(label: 'Daily Reminder', initialValue: true),
           _ToggleRow(label: 'Haptic Feedback', initialValue: true),
@@ -115,7 +118,7 @@ class SettingsScreen extends ConsumerWidget {
 
           // ── About ──
           _SectionTitle('About'),
-          _SettingsRow(label: 'Version', value: '2.0.0'),
+          _SettingsRow(label: 'Version', value: '2.2.0'),
           _SettingsRow(label: 'Made with', value: '⚔️ & 💪'),
         ],
       ),
@@ -314,6 +317,62 @@ class SettingsScreen extends ConsumerWidget {
 
   static String _capitalize(String s) =>
       s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
+
+  /// v2.2: Step goal slider.
+  Widget _buildStepGoalSlider(WidgetRef ref) {
+    final goal = ref.watch(dailyStepGoalProvider).toDouble();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: QuestFitColors.glassBorder))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Daily Step Goal',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+              Text('${goal.toInt()} steps',
+                  style: const TextStyle(
+                      fontSize: 13, color: QuestFitColors.emerald,
+                      fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: QuestFitColors.emerald,
+              inactiveTrackColor: QuestFitColors.glassBorder,
+              thumbColor: QuestFitColors.emerald,
+              overlayColor: QuestFitColors.emerald.withOpacity(0.1),
+              trackHeight: 4,
+            ),
+            child: Slider(
+              value: goal,
+              min: 4000,
+              max: 15000,
+              divisions: 22,
+              onChanged: (v) {
+                ref.read(userNotifierProvider.notifier)
+                    .updateStepGoal(v.toInt());
+              },
+            ),
+          ),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('4,000', style: TextStyle(
+                  fontSize: 10, color: QuestFitColors.textMuted)),
+              Text('15,000', style: TextStyle(
+                  fontSize: 10, color: QuestFitColors.textMuted)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SectionTitle extends StatelessWidget {

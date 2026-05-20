@@ -5,7 +5,9 @@ import '../db/database.dart';
 import '../engine/quest_engine.dart';
 import '../services/haptic_service.dart';
 import '../services/health_sync_service.dart';
+import 'companion_provider.dart';
 import 'database_provider.dart';
+import 'step_provider.dart';
 import 'user_provider.dart';
 
 // ─── Service singleton provider ──────────────────────────────────────
@@ -153,6 +155,18 @@ class HealthSyncNotifier extends Notifier<HealthSyncState> {
         isSyncing: false,
         lastResult: result,
       );
+
+      // v2.2: Process step milestones for expedition rewards
+      if (result.totalStepsToday > 0) {
+        await ref
+            .read(stepNotifierProvider.notifier)
+            .processSteps(result.totalStepsToday);
+        // Update egg incubation progress
+        await ref
+            .read(companionNotifierProvider.notifier)
+            .updateEggProgress(result.totalStepsToday);
+      }
+
       return result;
     } catch (e) {
       debugPrint('Health sync failed: $e');

@@ -8,13 +8,13 @@ class QuestFitBottomNav extends StatelessWidget {
 
   static const _items = [
     BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-    BottomNavigationBarItem(icon: Icon(Icons.assignment_rounded), label: 'Quests'),
+    BottomNavigationBarItem(icon: Icon(Icons.gps_fixed_rounded), label: 'Bounty'),
     BottomNavigationBarItem(icon: Icon(Icons.shield_rounded), label: 'Loadout'),
     BottomNavigationBarItem(icon: Icon(Icons.storefront_rounded), label: 'Shop'),
     BottomNavigationBarItem(icon: Icon(Icons.settings_rounded), label: 'Settings'),
   ];
 
-  static const _routes = ['/', '/quests', '/loadout', '/shop', '/settings'];
+  static const _routes = ['/', '/bounty', '/loadout', '/shop', '/settings'];
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
