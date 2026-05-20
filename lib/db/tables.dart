@@ -30,6 +30,10 @@ class Players extends Table {
   /// v2.0: Awakening flag — true once the player clears the Proving Grounds
   BoolColumn get awakeningComplete => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  /// v2.2: Daily step goal for Momentum Buff (default 8000)
+  IntColumn get dailyStepGoal => integer().withDefault(const Constant(8000))();
+  /// v2.2: Whether the Momentum Buff is active today
+  BoolColumn get momentumBuffActive => boolean().withDefault(const Constant(false))();
 }
 
 /// Player stats derived from workout categories.
@@ -171,3 +175,76 @@ class RankTrials extends Table {
   IntColumn get caloriesAchieved => integer().withDefault(const Constant(0))();
   IntColumn get stepsAchieved => integer().withDefault(const Constant(0))();
 }
+
+// ─── v2.2 NEW TABLES ─────────────────────────────────────────────────
+
+/// Expanded exercise library (800+ exercises from Free Exercise DB).
+class ExerciseDb extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  /// Original ID from Free Exercise DB (e.g. 'Barbell_Full_Squat')
+  TextColumn get externalId => text().unique()();
+  TextColumn get name => text()();
+  /// Force type: 'push', 'pull', 'static', or null
+  TextColumn get force => text().nullable()();
+  /// Difficulty: 'beginner', 'intermediate', 'expert'
+  TextColumn get level => text()();
+  /// Mechanic: 'compound', 'isolation', or null
+  TextColumn get mechanic => text().nullable()();
+  /// Equipment: 'barbell', 'dumbbell', 'body only', etc. or null
+  TextColumn get equipment => text().nullable()();
+  /// Category: 'strength', 'stretching', 'plyometrics', 'cardio', etc.
+  TextColumn get category => text()();
+  /// Step-by-step instructions stored as JSON array string
+  TextColumn get instructions => text()();
+  /// Comma-separated primary muscle names
+  TextColumn get primaryMuscles => text()();
+  /// Comma-separated secondary muscle names (can be empty)
+  TextColumn get secondaryMuscles => text().withDefault(const Constant(''))();
+  /// Relative image paths stored as JSON array string
+  TextColumn get images => text().withDefault(const Constant('[]'))();
+}
+
+/// Step milestone tracking for expedition rewards.
+class StepMilestones extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get playerId => integer().references(Players, #id)();
+  /// Date string 'YYYY-MM-DD' for daily tracking
+  TextColumn get date => text()();
+  /// Number of milestones claimed today
+  IntColumn get milestonesClaimed => integer().withDefault(const Constant(0))();
+  /// Steps at last milestone claim
+  IntColumn get stepsAtLastClaim => integer().withDefault(const Constant(0))();
+}
+
+/// Companion eggs being incubated by walking.
+class Eggs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get playerId => integer().references(Players, #id)();
+  /// Companion type that will hatch (matches CompanionDef.type)
+  TextColumn get companionType => text()();
+  /// Rarity: common, rare, epic, legendary
+  TextColumn get rarity => text()();
+  /// Total steps required to hatch
+  IntColumn get stepsRequired => integer()();
+  /// Steps accumulated so far
+  IntColumn get stepsAccumulated => integer().withDefault(const Constant(0))();
+  DateTimeColumn get foundAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get hatchedAt => dateTime().nullable()();
+}
+
+/// Hatched companion collection.
+class Companions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get playerId => integer().references(Players, #id)();
+  TextColumn get name => text()();
+  TextColumn get type => text()();
+  TextColumn get rarity => text()();
+  /// Passive buff type (e.g. 'gold_bonus', 'lp_bonus')
+  TextColumn get buffType => text()();
+  /// Buff value (e.g. 5 for +5%)
+  IntColumn get buffValue => integer().withDefault(const Constant(0))();
+  /// Whether this companion is active (only 1 active at a time)
+  BoolColumn get isActive => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get hatchedAt => dateTime().withDefault(currentDateAndTime)();
+}
+

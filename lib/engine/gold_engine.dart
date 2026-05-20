@@ -74,12 +74,26 @@ class GoldEngine {
   /// - 7+ days  → 1.5×
   /// - 14+ days → 2.0×
   /// - 30+ days → 3.0×
+  ///
+  /// v2.2: [momentumBuff] adds +10%, [companionBonusPct] adds companion bonus.
   static GoldReward calculateReward({
     required int baseGold,
     required int currentStreak,
+    bool momentumBuff = false,
+    int companionBonusPct = 0,
   }) {
     final multiplier = getStreakMultiplier(currentStreak);
-    final total = (baseGold * multiplier).round();
+    var total = (baseGold * multiplier).round();
+
+    // v2.2: Momentum Buff (+10%)
+    if (momentumBuff) {
+      total = (total * 1.10).round();
+    }
+
+    // v2.2: Companion bonus
+    if (companionBonusPct > 0) {
+      total = (total * (1 + companionBonusPct / 100.0)).round();
+    }
 
     return GoldReward(
       baseGold: baseGold,

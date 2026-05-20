@@ -192,6 +192,32 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _dailyStepGoalMeta = const VerificationMeta(
+    'dailyStepGoal',
+  );
+  @override
+  late final GeneratedColumn<int> dailyStepGoal = GeneratedColumn<int>(
+    'daily_step_goal',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(8000),
+  );
+  static const VerificationMeta _momentumBuffActiveMeta =
+      const VerificationMeta('momentumBuffActive');
+  @override
+  late final GeneratedColumn<bool> momentumBuffActive = GeneratedColumn<bool>(
+    'momentum_buff_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("momentum_buff_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -210,6 +236,8 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     gold,
     awakeningComplete,
     createdAt,
+    dailyStepGoal,
+    momentumBuffActive,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -322,6 +350,24 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('daily_step_goal')) {
+      context.handle(
+        _dailyStepGoalMeta,
+        dailyStepGoal.isAcceptableOrUnknown(
+          data['daily_step_goal']!,
+          _dailyStepGoalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('momentum_buff_active')) {
+      context.handle(
+        _momentumBuffActiveMeta,
+        momentumBuffActive.isAcceptableOrUnknown(
+          data['momentum_buff_active']!,
+          _momentumBuffActiveMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -410,6 +456,16 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
             DriftSqlType.dateTime,
             data['${effectivePrefix}created_at'],
           )!,
+      dailyStepGoal:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}daily_step_goal'],
+          )!,
+      momentumBuffActive:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}momentum_buff_active'],
+          )!,
     );
   }
 
@@ -452,6 +508,12 @@ class Player extends DataClass implements Insertable<Player> {
   /// v2.0: Awakening flag — true once the player clears the Proving Grounds
   final bool awakeningComplete;
   final DateTime createdAt;
+
+  /// v2.2: Daily step goal for Momentum Buff (default 8000)
+  final int dailyStepGoal;
+
+  /// v2.2: Whether the Momentum Buff is active today
+  final bool momentumBuffActive;
   const Player({
     required this.id,
     required this.name,
@@ -469,6 +531,8 @@ class Player extends DataClass implements Insertable<Player> {
     required this.gold,
     required this.awakeningComplete,
     required this.createdAt,
+    required this.dailyStepGoal,
+    required this.momentumBuffActive,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -491,6 +555,8 @@ class Player extends DataClass implements Insertable<Player> {
     map['gold'] = Variable<int>(gold);
     map['awakening_complete'] = Variable<bool>(awakeningComplete);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['daily_step_goal'] = Variable<int>(dailyStepGoal);
+    map['momentum_buff_active'] = Variable<bool>(momentumBuffActive);
     return map;
   }
 
@@ -515,6 +581,8 @@ class Player extends DataClass implements Insertable<Player> {
       gold: Value(gold),
       awakeningComplete: Value(awakeningComplete),
       createdAt: Value(createdAt),
+      dailyStepGoal: Value(dailyStepGoal),
+      momentumBuffActive: Value(momentumBuffActive),
     );
   }
 
@@ -542,6 +610,8 @@ class Player extends DataClass implements Insertable<Player> {
       gold: serializer.fromJson<int>(json['gold']),
       awakeningComplete: serializer.fromJson<bool>(json['awakeningComplete']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      dailyStepGoal: serializer.fromJson<int>(json['dailyStepGoal']),
+      momentumBuffActive: serializer.fromJson<bool>(json['momentumBuffActive']),
     );
   }
   @override
@@ -564,6 +634,8 @@ class Player extends DataClass implements Insertable<Player> {
       'gold': serializer.toJson<int>(gold),
       'awakeningComplete': serializer.toJson<bool>(awakeningComplete),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'dailyStepGoal': serializer.toJson<int>(dailyStepGoal),
+      'momentumBuffActive': serializer.toJson<bool>(momentumBuffActive),
     };
   }
 
@@ -584,6 +656,8 @@ class Player extends DataClass implements Insertable<Player> {
     int? gold,
     bool? awakeningComplete,
     DateTime? createdAt,
+    int? dailyStepGoal,
+    bool? momentumBuffActive,
   }) => Player(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -602,6 +676,8 @@ class Player extends DataClass implements Insertable<Player> {
     gold: gold ?? this.gold,
     awakeningComplete: awakeningComplete ?? this.awakeningComplete,
     createdAt: createdAt ?? this.createdAt,
+    dailyStepGoal: dailyStepGoal ?? this.dailyStepGoal,
+    momentumBuffActive: momentumBuffActive ?? this.momentumBuffActive,
   );
   Player copyWithCompanion(PlayersCompanion data) {
     return Player(
@@ -633,6 +709,14 @@ class Player extends DataClass implements Insertable<Player> {
               ? data.awakeningComplete.value
               : this.awakeningComplete,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      dailyStepGoal:
+          data.dailyStepGoal.present
+              ? data.dailyStepGoal.value
+              : this.dailyStepGoal,
+      momentumBuffActive:
+          data.momentumBuffActive.present
+              ? data.momentumBuffActive.value
+              : this.momentumBuffActive,
     );
   }
 
@@ -654,7 +738,9 @@ class Player extends DataClass implements Insertable<Player> {
           ..write('classType: $classType, ')
           ..write('gold: $gold, ')
           ..write('awakeningComplete: $awakeningComplete, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('dailyStepGoal: $dailyStepGoal, ')
+          ..write('momentumBuffActive: $momentumBuffActive')
           ..write(')'))
         .toString();
   }
@@ -677,6 +763,8 @@ class Player extends DataClass implements Insertable<Player> {
     gold,
     awakeningComplete,
     createdAt,
+    dailyStepGoal,
+    momentumBuffActive,
   );
   @override
   bool operator ==(Object other) =>
@@ -697,7 +785,9 @@ class Player extends DataClass implements Insertable<Player> {
           other.classType == this.classType &&
           other.gold == this.gold &&
           other.awakeningComplete == this.awakeningComplete &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.dailyStepGoal == this.dailyStepGoal &&
+          other.momentumBuffActive == this.momentumBuffActive);
 }
 
 class PlayersCompanion extends UpdateCompanion<Player> {
@@ -717,6 +807,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
   final Value<int> gold;
   final Value<bool> awakeningComplete;
   final Value<DateTime> createdAt;
+  final Value<int> dailyStepGoal;
+  final Value<bool> momentumBuffActive;
   const PlayersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -734,6 +826,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.gold = const Value.absent(),
     this.awakeningComplete = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.dailyStepGoal = const Value.absent(),
+    this.momentumBuffActive = const Value.absent(),
   });
   PlayersCompanion.insert({
     this.id = const Value.absent(),
@@ -752,6 +846,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.gold = const Value.absent(),
     this.awakeningComplete = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.dailyStepGoal = const Value.absent(),
+    this.momentumBuffActive = const Value.absent(),
   });
   static Insertable<Player> custom({
     Expression<int>? id,
@@ -770,6 +866,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Expression<int>? gold,
     Expression<bool>? awakeningComplete,
     Expression<DateTime>? createdAt,
+    Expression<int>? dailyStepGoal,
+    Expression<bool>? momentumBuffActive,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -789,6 +887,9 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       if (gold != null) 'gold': gold,
       if (awakeningComplete != null) 'awakening_complete': awakeningComplete,
       if (createdAt != null) 'created_at': createdAt,
+      if (dailyStepGoal != null) 'daily_step_goal': dailyStepGoal,
+      if (momentumBuffActive != null)
+        'momentum_buff_active': momentumBuffActive,
     });
   }
 
@@ -809,6 +910,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Value<int>? gold,
     Value<bool>? awakeningComplete,
     Value<DateTime>? createdAt,
+    Value<int>? dailyStepGoal,
+    Value<bool>? momentumBuffActive,
   }) {
     return PlayersCompanion(
       id: id ?? this.id,
@@ -827,6 +930,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       gold: gold ?? this.gold,
       awakeningComplete: awakeningComplete ?? this.awakeningComplete,
       createdAt: createdAt ?? this.createdAt,
+      dailyStepGoal: dailyStepGoal ?? this.dailyStepGoal,
+      momentumBuffActive: momentumBuffActive ?? this.momentumBuffActive,
     );
   }
 
@@ -881,6 +986,12 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (dailyStepGoal.present) {
+      map['daily_step_goal'] = Variable<int>(dailyStepGoal.value);
+    }
+    if (momentumBuffActive.present) {
+      map['momentum_buff_active'] = Variable<bool>(momentumBuffActive.value);
+    }
     return map;
   }
 
@@ -902,7 +1013,9 @@ class PlayersCompanion extends UpdateCompanion<Player> {
           ..write('classType: $classType, ')
           ..write('gold: $gold, ')
           ..write('awakeningComplete: $awakeningComplete, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('dailyStepGoal: $dailyStepGoal, ')
+          ..write('momentumBuffActive: $momentumBuffActive')
           ..write(')'))
         .toString();
   }
@@ -5815,6 +5928,2206 @@ class RankTrialsCompanion extends UpdateCompanion<RankTrial> {
   }
 }
 
+class $ExerciseDbTable extends ExerciseDb
+    with TableInfo<$ExerciseDbTable, ExerciseDbData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ExerciseDbTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _externalIdMeta = const VerificationMeta(
+    'externalId',
+  );
+  @override
+  late final GeneratedColumn<String> externalId = GeneratedColumn<String>(
+    'external_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _forceMeta = const VerificationMeta('force');
+  @override
+  late final GeneratedColumn<String> force = GeneratedColumn<String>(
+    'force',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<String> level = GeneratedColumn<String>(
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mechanicMeta = const VerificationMeta(
+    'mechanic',
+  );
+  @override
+  late final GeneratedColumn<String> mechanic = GeneratedColumn<String>(
+    'mechanic',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _equipmentMeta = const VerificationMeta(
+    'equipment',
+  );
+  @override
+  late final GeneratedColumn<String> equipment = GeneratedColumn<String>(
+    'equipment',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _instructionsMeta = const VerificationMeta(
+    'instructions',
+  );
+  @override
+  late final GeneratedColumn<String> instructions = GeneratedColumn<String>(
+    'instructions',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _primaryMusclesMeta = const VerificationMeta(
+    'primaryMuscles',
+  );
+  @override
+  late final GeneratedColumn<String> primaryMuscles = GeneratedColumn<String>(
+    'primary_muscles',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _secondaryMusclesMeta = const VerificationMeta(
+    'secondaryMuscles',
+  );
+  @override
+  late final GeneratedColumn<String> secondaryMuscles = GeneratedColumn<String>(
+    'secondary_muscles',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _imagesMeta = const VerificationMeta('images');
+  @override
+  late final GeneratedColumn<String> images = GeneratedColumn<String>(
+    'images',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    externalId,
+    name,
+    force,
+    level,
+    mechanic,
+    equipment,
+    category,
+    instructions,
+    primaryMuscles,
+    secondaryMuscles,
+    images,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'exercise_db';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ExerciseDbData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('external_id')) {
+      context.handle(
+        _externalIdMeta,
+        externalId.isAcceptableOrUnknown(data['external_id']!, _externalIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_externalIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('force')) {
+      context.handle(
+        _forceMeta,
+        force.isAcceptableOrUnknown(data['force']!, _forceMeta),
+      );
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_levelMeta);
+    }
+    if (data.containsKey('mechanic')) {
+      context.handle(
+        _mechanicMeta,
+        mechanic.isAcceptableOrUnknown(data['mechanic']!, _mechanicMeta),
+      );
+    }
+    if (data.containsKey('equipment')) {
+      context.handle(
+        _equipmentMeta,
+        equipment.isAcceptableOrUnknown(data['equipment']!, _equipmentMeta),
+      );
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('instructions')) {
+      context.handle(
+        _instructionsMeta,
+        instructions.isAcceptableOrUnknown(
+          data['instructions']!,
+          _instructionsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_instructionsMeta);
+    }
+    if (data.containsKey('primary_muscles')) {
+      context.handle(
+        _primaryMusclesMeta,
+        primaryMuscles.isAcceptableOrUnknown(
+          data['primary_muscles']!,
+          _primaryMusclesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_primaryMusclesMeta);
+    }
+    if (data.containsKey('secondary_muscles')) {
+      context.handle(
+        _secondaryMusclesMeta,
+        secondaryMuscles.isAcceptableOrUnknown(
+          data['secondary_muscles']!,
+          _secondaryMusclesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('images')) {
+      context.handle(
+        _imagesMeta,
+        images.isAcceptableOrUnknown(data['images']!, _imagesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ExerciseDbData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ExerciseDbData(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      externalId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}external_id'],
+          )!,
+      name:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}name'],
+          )!,
+      force: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}force'],
+      ),
+      level:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}level'],
+          )!,
+      mechanic: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mechanic'],
+      ),
+      equipment: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}equipment'],
+      ),
+      category:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}category'],
+          )!,
+      instructions:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}instructions'],
+          )!,
+      primaryMuscles:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}primary_muscles'],
+          )!,
+      secondaryMuscles:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}secondary_muscles'],
+          )!,
+      images:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}images'],
+          )!,
+    );
+  }
+
+  @override
+  $ExerciseDbTable createAlias(String alias) {
+    return $ExerciseDbTable(attachedDatabase, alias);
+  }
+}
+
+class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
+  final int id;
+
+  /// Original ID from Free Exercise DB (e.g. 'Barbell_Full_Squat')
+  final String externalId;
+  final String name;
+
+  /// Force type: 'push', 'pull', 'static', or null
+  final String? force;
+
+  /// Difficulty: 'beginner', 'intermediate', 'expert'
+  final String level;
+
+  /// Mechanic: 'compound', 'isolation', or null
+  final String? mechanic;
+
+  /// Equipment: 'barbell', 'dumbbell', 'body only', etc. or null
+  final String? equipment;
+
+  /// Category: 'strength', 'stretching', 'plyometrics', 'cardio', etc.
+  final String category;
+
+  /// Step-by-step instructions stored as JSON array string
+  final String instructions;
+
+  /// Comma-separated primary muscle names
+  final String primaryMuscles;
+
+  /// Comma-separated secondary muscle names (can be empty)
+  final String secondaryMuscles;
+
+  /// Relative image paths stored as JSON array string
+  final String images;
+  const ExerciseDbData({
+    required this.id,
+    required this.externalId,
+    required this.name,
+    this.force,
+    required this.level,
+    this.mechanic,
+    this.equipment,
+    required this.category,
+    required this.instructions,
+    required this.primaryMuscles,
+    required this.secondaryMuscles,
+    required this.images,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['external_id'] = Variable<String>(externalId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || force != null) {
+      map['force'] = Variable<String>(force);
+    }
+    map['level'] = Variable<String>(level);
+    if (!nullToAbsent || mechanic != null) {
+      map['mechanic'] = Variable<String>(mechanic);
+    }
+    if (!nullToAbsent || equipment != null) {
+      map['equipment'] = Variable<String>(equipment);
+    }
+    map['category'] = Variable<String>(category);
+    map['instructions'] = Variable<String>(instructions);
+    map['primary_muscles'] = Variable<String>(primaryMuscles);
+    map['secondary_muscles'] = Variable<String>(secondaryMuscles);
+    map['images'] = Variable<String>(images);
+    return map;
+  }
+
+  ExerciseDbCompanion toCompanion(bool nullToAbsent) {
+    return ExerciseDbCompanion(
+      id: Value(id),
+      externalId: Value(externalId),
+      name: Value(name),
+      force:
+          force == null && nullToAbsent ? const Value.absent() : Value(force),
+      level: Value(level),
+      mechanic:
+          mechanic == null && nullToAbsent
+              ? const Value.absent()
+              : Value(mechanic),
+      equipment:
+          equipment == null && nullToAbsent
+              ? const Value.absent()
+              : Value(equipment),
+      category: Value(category),
+      instructions: Value(instructions),
+      primaryMuscles: Value(primaryMuscles),
+      secondaryMuscles: Value(secondaryMuscles),
+      images: Value(images),
+    );
+  }
+
+  factory ExerciseDbData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ExerciseDbData(
+      id: serializer.fromJson<int>(json['id']),
+      externalId: serializer.fromJson<String>(json['externalId']),
+      name: serializer.fromJson<String>(json['name']),
+      force: serializer.fromJson<String?>(json['force']),
+      level: serializer.fromJson<String>(json['level']),
+      mechanic: serializer.fromJson<String?>(json['mechanic']),
+      equipment: serializer.fromJson<String?>(json['equipment']),
+      category: serializer.fromJson<String>(json['category']),
+      instructions: serializer.fromJson<String>(json['instructions']),
+      primaryMuscles: serializer.fromJson<String>(json['primaryMuscles']),
+      secondaryMuscles: serializer.fromJson<String>(json['secondaryMuscles']),
+      images: serializer.fromJson<String>(json['images']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'externalId': serializer.toJson<String>(externalId),
+      'name': serializer.toJson<String>(name),
+      'force': serializer.toJson<String?>(force),
+      'level': serializer.toJson<String>(level),
+      'mechanic': serializer.toJson<String?>(mechanic),
+      'equipment': serializer.toJson<String?>(equipment),
+      'category': serializer.toJson<String>(category),
+      'instructions': serializer.toJson<String>(instructions),
+      'primaryMuscles': serializer.toJson<String>(primaryMuscles),
+      'secondaryMuscles': serializer.toJson<String>(secondaryMuscles),
+      'images': serializer.toJson<String>(images),
+    };
+  }
+
+  ExerciseDbData copyWith({
+    int? id,
+    String? externalId,
+    String? name,
+    Value<String?> force = const Value.absent(),
+    String? level,
+    Value<String?> mechanic = const Value.absent(),
+    Value<String?> equipment = const Value.absent(),
+    String? category,
+    String? instructions,
+    String? primaryMuscles,
+    String? secondaryMuscles,
+    String? images,
+  }) => ExerciseDbData(
+    id: id ?? this.id,
+    externalId: externalId ?? this.externalId,
+    name: name ?? this.name,
+    force: force.present ? force.value : this.force,
+    level: level ?? this.level,
+    mechanic: mechanic.present ? mechanic.value : this.mechanic,
+    equipment: equipment.present ? equipment.value : this.equipment,
+    category: category ?? this.category,
+    instructions: instructions ?? this.instructions,
+    primaryMuscles: primaryMuscles ?? this.primaryMuscles,
+    secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
+    images: images ?? this.images,
+  );
+  ExerciseDbData copyWithCompanion(ExerciseDbCompanion data) {
+    return ExerciseDbData(
+      id: data.id.present ? data.id.value : this.id,
+      externalId:
+          data.externalId.present ? data.externalId.value : this.externalId,
+      name: data.name.present ? data.name.value : this.name,
+      force: data.force.present ? data.force.value : this.force,
+      level: data.level.present ? data.level.value : this.level,
+      mechanic: data.mechanic.present ? data.mechanic.value : this.mechanic,
+      equipment: data.equipment.present ? data.equipment.value : this.equipment,
+      category: data.category.present ? data.category.value : this.category,
+      instructions:
+          data.instructions.present
+              ? data.instructions.value
+              : this.instructions,
+      primaryMuscles:
+          data.primaryMuscles.present
+              ? data.primaryMuscles.value
+              : this.primaryMuscles,
+      secondaryMuscles:
+          data.secondaryMuscles.present
+              ? data.secondaryMuscles.value
+              : this.secondaryMuscles,
+      images: data.images.present ? data.images.value : this.images,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExerciseDbData(')
+          ..write('id: $id, ')
+          ..write('externalId: $externalId, ')
+          ..write('name: $name, ')
+          ..write('force: $force, ')
+          ..write('level: $level, ')
+          ..write('mechanic: $mechanic, ')
+          ..write('equipment: $equipment, ')
+          ..write('category: $category, ')
+          ..write('instructions: $instructions, ')
+          ..write('primaryMuscles: $primaryMuscles, ')
+          ..write('secondaryMuscles: $secondaryMuscles, ')
+          ..write('images: $images')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    externalId,
+    name,
+    force,
+    level,
+    mechanic,
+    equipment,
+    category,
+    instructions,
+    primaryMuscles,
+    secondaryMuscles,
+    images,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ExerciseDbData &&
+          other.id == this.id &&
+          other.externalId == this.externalId &&
+          other.name == this.name &&
+          other.force == this.force &&
+          other.level == this.level &&
+          other.mechanic == this.mechanic &&
+          other.equipment == this.equipment &&
+          other.category == this.category &&
+          other.instructions == this.instructions &&
+          other.primaryMuscles == this.primaryMuscles &&
+          other.secondaryMuscles == this.secondaryMuscles &&
+          other.images == this.images);
+}
+
+class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
+  final Value<int> id;
+  final Value<String> externalId;
+  final Value<String> name;
+  final Value<String?> force;
+  final Value<String> level;
+  final Value<String?> mechanic;
+  final Value<String?> equipment;
+  final Value<String> category;
+  final Value<String> instructions;
+  final Value<String> primaryMuscles;
+  final Value<String> secondaryMuscles;
+  final Value<String> images;
+  const ExerciseDbCompanion({
+    this.id = const Value.absent(),
+    this.externalId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.force = const Value.absent(),
+    this.level = const Value.absent(),
+    this.mechanic = const Value.absent(),
+    this.equipment = const Value.absent(),
+    this.category = const Value.absent(),
+    this.instructions = const Value.absent(),
+    this.primaryMuscles = const Value.absent(),
+    this.secondaryMuscles = const Value.absent(),
+    this.images = const Value.absent(),
+  });
+  ExerciseDbCompanion.insert({
+    this.id = const Value.absent(),
+    required String externalId,
+    required String name,
+    this.force = const Value.absent(),
+    required String level,
+    this.mechanic = const Value.absent(),
+    this.equipment = const Value.absent(),
+    required String category,
+    required String instructions,
+    required String primaryMuscles,
+    this.secondaryMuscles = const Value.absent(),
+    this.images = const Value.absent(),
+  }) : externalId = Value(externalId),
+       name = Value(name),
+       level = Value(level),
+       category = Value(category),
+       instructions = Value(instructions),
+       primaryMuscles = Value(primaryMuscles);
+  static Insertable<ExerciseDbData> custom({
+    Expression<int>? id,
+    Expression<String>? externalId,
+    Expression<String>? name,
+    Expression<String>? force,
+    Expression<String>? level,
+    Expression<String>? mechanic,
+    Expression<String>? equipment,
+    Expression<String>? category,
+    Expression<String>? instructions,
+    Expression<String>? primaryMuscles,
+    Expression<String>? secondaryMuscles,
+    Expression<String>? images,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (externalId != null) 'external_id': externalId,
+      if (name != null) 'name': name,
+      if (force != null) 'force': force,
+      if (level != null) 'level': level,
+      if (mechanic != null) 'mechanic': mechanic,
+      if (equipment != null) 'equipment': equipment,
+      if (category != null) 'category': category,
+      if (instructions != null) 'instructions': instructions,
+      if (primaryMuscles != null) 'primary_muscles': primaryMuscles,
+      if (secondaryMuscles != null) 'secondary_muscles': secondaryMuscles,
+      if (images != null) 'images': images,
+    });
+  }
+
+  ExerciseDbCompanion copyWith({
+    Value<int>? id,
+    Value<String>? externalId,
+    Value<String>? name,
+    Value<String?>? force,
+    Value<String>? level,
+    Value<String?>? mechanic,
+    Value<String?>? equipment,
+    Value<String>? category,
+    Value<String>? instructions,
+    Value<String>? primaryMuscles,
+    Value<String>? secondaryMuscles,
+    Value<String>? images,
+  }) {
+    return ExerciseDbCompanion(
+      id: id ?? this.id,
+      externalId: externalId ?? this.externalId,
+      name: name ?? this.name,
+      force: force ?? this.force,
+      level: level ?? this.level,
+      mechanic: mechanic ?? this.mechanic,
+      equipment: equipment ?? this.equipment,
+      category: category ?? this.category,
+      instructions: instructions ?? this.instructions,
+      primaryMuscles: primaryMuscles ?? this.primaryMuscles,
+      secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
+      images: images ?? this.images,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (externalId.present) {
+      map['external_id'] = Variable<String>(externalId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (force.present) {
+      map['force'] = Variable<String>(force.value);
+    }
+    if (level.present) {
+      map['level'] = Variable<String>(level.value);
+    }
+    if (mechanic.present) {
+      map['mechanic'] = Variable<String>(mechanic.value);
+    }
+    if (equipment.present) {
+      map['equipment'] = Variable<String>(equipment.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (instructions.present) {
+      map['instructions'] = Variable<String>(instructions.value);
+    }
+    if (primaryMuscles.present) {
+      map['primary_muscles'] = Variable<String>(primaryMuscles.value);
+    }
+    if (secondaryMuscles.present) {
+      map['secondary_muscles'] = Variable<String>(secondaryMuscles.value);
+    }
+    if (images.present) {
+      map['images'] = Variable<String>(images.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExerciseDbCompanion(')
+          ..write('id: $id, ')
+          ..write('externalId: $externalId, ')
+          ..write('name: $name, ')
+          ..write('force: $force, ')
+          ..write('level: $level, ')
+          ..write('mechanic: $mechanic, ')
+          ..write('equipment: $equipment, ')
+          ..write('category: $category, ')
+          ..write('instructions: $instructions, ')
+          ..write('primaryMuscles: $primaryMuscles, ')
+          ..write('secondaryMuscles: $secondaryMuscles, ')
+          ..write('images: $images')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StepMilestonesTable extends StepMilestones
+    with TableInfo<$StepMilestonesTable, StepMilestone> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StepMilestonesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (id)',
+    ),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _milestonesClaimedMeta = const VerificationMeta(
+    'milestonesClaimed',
+  );
+  @override
+  late final GeneratedColumn<int> milestonesClaimed = GeneratedColumn<int>(
+    'milestones_claimed',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _stepsAtLastClaimMeta = const VerificationMeta(
+    'stepsAtLastClaim',
+  );
+  @override
+  late final GeneratedColumn<int> stepsAtLastClaim = GeneratedColumn<int>(
+    'steps_at_last_claim',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    playerId,
+    date,
+    milestonesClaimed,
+    stepsAtLastClaim,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'step_milestones';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StepMilestone> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('milestones_claimed')) {
+      context.handle(
+        _milestonesClaimedMeta,
+        milestonesClaimed.isAcceptableOrUnknown(
+          data['milestones_claimed']!,
+          _milestonesClaimedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('steps_at_last_claim')) {
+      context.handle(
+        _stepsAtLastClaimMeta,
+        stepsAtLastClaim.isAcceptableOrUnknown(
+          data['steps_at_last_claim']!,
+          _stepsAtLastClaimMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StepMilestone map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StepMilestone(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      playerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}player_id'],
+          )!,
+      date:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}date'],
+          )!,
+      milestonesClaimed:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}milestones_claimed'],
+          )!,
+      stepsAtLastClaim:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}steps_at_last_claim'],
+          )!,
+    );
+  }
+
+  @override
+  $StepMilestonesTable createAlias(String alias) {
+    return $StepMilestonesTable(attachedDatabase, alias);
+  }
+}
+
+class StepMilestone extends DataClass implements Insertable<StepMilestone> {
+  final int id;
+  final int playerId;
+
+  /// Date string 'YYYY-MM-DD' for daily tracking
+  final String date;
+
+  /// Number of milestones claimed today
+  final int milestonesClaimed;
+
+  /// Steps at last milestone claim
+  final int stepsAtLastClaim;
+  const StepMilestone({
+    required this.id,
+    required this.playerId,
+    required this.date,
+    required this.milestonesClaimed,
+    required this.stepsAtLastClaim,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['date'] = Variable<String>(date);
+    map['milestones_claimed'] = Variable<int>(milestonesClaimed);
+    map['steps_at_last_claim'] = Variable<int>(stepsAtLastClaim);
+    return map;
+  }
+
+  StepMilestonesCompanion toCompanion(bool nullToAbsent) {
+    return StepMilestonesCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      date: Value(date),
+      milestonesClaimed: Value(milestonesClaimed),
+      stepsAtLastClaim: Value(stepsAtLastClaim),
+    );
+  }
+
+  factory StepMilestone.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StepMilestone(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      date: serializer.fromJson<String>(json['date']),
+      milestonesClaimed: serializer.fromJson<int>(json['milestonesClaimed']),
+      stepsAtLastClaim: serializer.fromJson<int>(json['stepsAtLastClaim']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'date': serializer.toJson<String>(date),
+      'milestonesClaimed': serializer.toJson<int>(milestonesClaimed),
+      'stepsAtLastClaim': serializer.toJson<int>(stepsAtLastClaim),
+    };
+  }
+
+  StepMilestone copyWith({
+    int? id,
+    int? playerId,
+    String? date,
+    int? milestonesClaimed,
+    int? stepsAtLastClaim,
+  }) => StepMilestone(
+    id: id ?? this.id,
+    playerId: playerId ?? this.playerId,
+    date: date ?? this.date,
+    milestonesClaimed: milestonesClaimed ?? this.milestonesClaimed,
+    stepsAtLastClaim: stepsAtLastClaim ?? this.stepsAtLastClaim,
+  );
+  StepMilestone copyWithCompanion(StepMilestonesCompanion data) {
+    return StepMilestone(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      date: data.date.present ? data.date.value : this.date,
+      milestonesClaimed:
+          data.milestonesClaimed.present
+              ? data.milestonesClaimed.value
+              : this.milestonesClaimed,
+      stepsAtLastClaim:
+          data.stepsAtLastClaim.present
+              ? data.stepsAtLastClaim.value
+              : this.stepsAtLastClaim,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StepMilestone(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('date: $date, ')
+          ..write('milestonesClaimed: $milestonesClaimed, ')
+          ..write('stepsAtLastClaim: $stepsAtLastClaim')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, playerId, date, milestonesClaimed, stepsAtLastClaim);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StepMilestone &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.date == this.date &&
+          other.milestonesClaimed == this.milestonesClaimed &&
+          other.stepsAtLastClaim == this.stepsAtLastClaim);
+}
+
+class StepMilestonesCompanion extends UpdateCompanion<StepMilestone> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> date;
+  final Value<int> milestonesClaimed;
+  final Value<int> stepsAtLastClaim;
+  const StepMilestonesCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.milestonesClaimed = const Value.absent(),
+    this.stepsAtLastClaim = const Value.absent(),
+  });
+  StepMilestonesCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String date,
+    this.milestonesClaimed = const Value.absent(),
+    this.stepsAtLastClaim = const Value.absent(),
+  }) : playerId = Value(playerId),
+       date = Value(date);
+  static Insertable<StepMilestone> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? date,
+    Expression<int>? milestonesClaimed,
+    Expression<int>? stepsAtLastClaim,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (date != null) 'date': date,
+      if (milestonesClaimed != null) 'milestones_claimed': milestonesClaimed,
+      if (stepsAtLastClaim != null) 'steps_at_last_claim': stepsAtLastClaim,
+    });
+  }
+
+  StepMilestonesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playerId,
+    Value<String>? date,
+    Value<int>? milestonesClaimed,
+    Value<int>? stepsAtLastClaim,
+  }) {
+    return StepMilestonesCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      date: date ?? this.date,
+      milestonesClaimed: milestonesClaimed ?? this.milestonesClaimed,
+      stepsAtLastClaim: stepsAtLastClaim ?? this.stepsAtLastClaim,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (milestonesClaimed.present) {
+      map['milestones_claimed'] = Variable<int>(milestonesClaimed.value);
+    }
+    if (stepsAtLastClaim.present) {
+      map['steps_at_last_claim'] = Variable<int>(stepsAtLastClaim.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StepMilestonesCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('date: $date, ')
+          ..write('milestonesClaimed: $milestonesClaimed, ')
+          ..write('stepsAtLastClaim: $stepsAtLastClaim')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $EggsTable extends Eggs with TableInfo<$EggsTable, Egg> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EggsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (id)',
+    ),
+  );
+  static const VerificationMeta _companionTypeMeta = const VerificationMeta(
+    'companionType',
+  );
+  @override
+  late final GeneratedColumn<String> companionType = GeneratedColumn<String>(
+    'companion_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rarityMeta = const VerificationMeta('rarity');
+  @override
+  late final GeneratedColumn<String> rarity = GeneratedColumn<String>(
+    'rarity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stepsRequiredMeta = const VerificationMeta(
+    'stepsRequired',
+  );
+  @override
+  late final GeneratedColumn<int> stepsRequired = GeneratedColumn<int>(
+    'steps_required',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stepsAccumulatedMeta = const VerificationMeta(
+    'stepsAccumulated',
+  );
+  @override
+  late final GeneratedColumn<int> stepsAccumulated = GeneratedColumn<int>(
+    'steps_accumulated',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _foundAtMeta = const VerificationMeta(
+    'foundAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> foundAt = GeneratedColumn<DateTime>(
+    'found_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _hatchedAtMeta = const VerificationMeta(
+    'hatchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> hatchedAt = GeneratedColumn<DateTime>(
+    'hatched_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    playerId,
+    companionType,
+    rarity,
+    stepsRequired,
+    stepsAccumulated,
+    foundAt,
+    hatchedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'eggs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Egg> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('companion_type')) {
+      context.handle(
+        _companionTypeMeta,
+        companionType.isAcceptableOrUnknown(
+          data['companion_type']!,
+          _companionTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_companionTypeMeta);
+    }
+    if (data.containsKey('rarity')) {
+      context.handle(
+        _rarityMeta,
+        rarity.isAcceptableOrUnknown(data['rarity']!, _rarityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rarityMeta);
+    }
+    if (data.containsKey('steps_required')) {
+      context.handle(
+        _stepsRequiredMeta,
+        stepsRequired.isAcceptableOrUnknown(
+          data['steps_required']!,
+          _stepsRequiredMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_stepsRequiredMeta);
+    }
+    if (data.containsKey('steps_accumulated')) {
+      context.handle(
+        _stepsAccumulatedMeta,
+        stepsAccumulated.isAcceptableOrUnknown(
+          data['steps_accumulated']!,
+          _stepsAccumulatedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('found_at')) {
+      context.handle(
+        _foundAtMeta,
+        foundAt.isAcceptableOrUnknown(data['found_at']!, _foundAtMeta),
+      );
+    }
+    if (data.containsKey('hatched_at')) {
+      context.handle(
+        _hatchedAtMeta,
+        hatchedAt.isAcceptableOrUnknown(data['hatched_at']!, _hatchedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Egg map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Egg(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      playerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}player_id'],
+          )!,
+      companionType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}companion_type'],
+          )!,
+      rarity:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}rarity'],
+          )!,
+      stepsRequired:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}steps_required'],
+          )!,
+      stepsAccumulated:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}steps_accumulated'],
+          )!,
+      foundAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}found_at'],
+          )!,
+      hatchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}hatched_at'],
+      ),
+    );
+  }
+
+  @override
+  $EggsTable createAlias(String alias) {
+    return $EggsTable(attachedDatabase, alias);
+  }
+}
+
+class Egg extends DataClass implements Insertable<Egg> {
+  final int id;
+  final int playerId;
+
+  /// Companion type that will hatch (matches CompanionDef.type)
+  final String companionType;
+
+  /// Rarity: common, rare, epic, legendary
+  final String rarity;
+
+  /// Total steps required to hatch
+  final int stepsRequired;
+
+  /// Steps accumulated so far
+  final int stepsAccumulated;
+  final DateTime foundAt;
+  final DateTime? hatchedAt;
+  const Egg({
+    required this.id,
+    required this.playerId,
+    required this.companionType,
+    required this.rarity,
+    required this.stepsRequired,
+    required this.stepsAccumulated,
+    required this.foundAt,
+    this.hatchedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['companion_type'] = Variable<String>(companionType);
+    map['rarity'] = Variable<String>(rarity);
+    map['steps_required'] = Variable<int>(stepsRequired);
+    map['steps_accumulated'] = Variable<int>(stepsAccumulated);
+    map['found_at'] = Variable<DateTime>(foundAt);
+    if (!nullToAbsent || hatchedAt != null) {
+      map['hatched_at'] = Variable<DateTime>(hatchedAt);
+    }
+    return map;
+  }
+
+  EggsCompanion toCompanion(bool nullToAbsent) {
+    return EggsCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      companionType: Value(companionType),
+      rarity: Value(rarity),
+      stepsRequired: Value(stepsRequired),
+      stepsAccumulated: Value(stepsAccumulated),
+      foundAt: Value(foundAt),
+      hatchedAt:
+          hatchedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(hatchedAt),
+    );
+  }
+
+  factory Egg.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Egg(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      companionType: serializer.fromJson<String>(json['companionType']),
+      rarity: serializer.fromJson<String>(json['rarity']),
+      stepsRequired: serializer.fromJson<int>(json['stepsRequired']),
+      stepsAccumulated: serializer.fromJson<int>(json['stepsAccumulated']),
+      foundAt: serializer.fromJson<DateTime>(json['foundAt']),
+      hatchedAt: serializer.fromJson<DateTime?>(json['hatchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'companionType': serializer.toJson<String>(companionType),
+      'rarity': serializer.toJson<String>(rarity),
+      'stepsRequired': serializer.toJson<int>(stepsRequired),
+      'stepsAccumulated': serializer.toJson<int>(stepsAccumulated),
+      'foundAt': serializer.toJson<DateTime>(foundAt),
+      'hatchedAt': serializer.toJson<DateTime?>(hatchedAt),
+    };
+  }
+
+  Egg copyWith({
+    int? id,
+    int? playerId,
+    String? companionType,
+    String? rarity,
+    int? stepsRequired,
+    int? stepsAccumulated,
+    DateTime? foundAt,
+    Value<DateTime?> hatchedAt = const Value.absent(),
+  }) => Egg(
+    id: id ?? this.id,
+    playerId: playerId ?? this.playerId,
+    companionType: companionType ?? this.companionType,
+    rarity: rarity ?? this.rarity,
+    stepsRequired: stepsRequired ?? this.stepsRequired,
+    stepsAccumulated: stepsAccumulated ?? this.stepsAccumulated,
+    foundAt: foundAt ?? this.foundAt,
+    hatchedAt: hatchedAt.present ? hatchedAt.value : this.hatchedAt,
+  );
+  Egg copyWithCompanion(EggsCompanion data) {
+    return Egg(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      companionType:
+          data.companionType.present
+              ? data.companionType.value
+              : this.companionType,
+      rarity: data.rarity.present ? data.rarity.value : this.rarity,
+      stepsRequired:
+          data.stepsRequired.present
+              ? data.stepsRequired.value
+              : this.stepsRequired,
+      stepsAccumulated:
+          data.stepsAccumulated.present
+              ? data.stepsAccumulated.value
+              : this.stepsAccumulated,
+      foundAt: data.foundAt.present ? data.foundAt.value : this.foundAt,
+      hatchedAt: data.hatchedAt.present ? data.hatchedAt.value : this.hatchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Egg(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('companionType: $companionType, ')
+          ..write('rarity: $rarity, ')
+          ..write('stepsRequired: $stepsRequired, ')
+          ..write('stepsAccumulated: $stepsAccumulated, ')
+          ..write('foundAt: $foundAt, ')
+          ..write('hatchedAt: $hatchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    playerId,
+    companionType,
+    rarity,
+    stepsRequired,
+    stepsAccumulated,
+    foundAt,
+    hatchedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Egg &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.companionType == this.companionType &&
+          other.rarity == this.rarity &&
+          other.stepsRequired == this.stepsRequired &&
+          other.stepsAccumulated == this.stepsAccumulated &&
+          other.foundAt == this.foundAt &&
+          other.hatchedAt == this.hatchedAt);
+}
+
+class EggsCompanion extends UpdateCompanion<Egg> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> companionType;
+  final Value<String> rarity;
+  final Value<int> stepsRequired;
+  final Value<int> stepsAccumulated;
+  final Value<DateTime> foundAt;
+  final Value<DateTime?> hatchedAt;
+  const EggsCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.companionType = const Value.absent(),
+    this.rarity = const Value.absent(),
+    this.stepsRequired = const Value.absent(),
+    this.stepsAccumulated = const Value.absent(),
+    this.foundAt = const Value.absent(),
+    this.hatchedAt = const Value.absent(),
+  });
+  EggsCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String companionType,
+    required String rarity,
+    required int stepsRequired,
+    this.stepsAccumulated = const Value.absent(),
+    this.foundAt = const Value.absent(),
+    this.hatchedAt = const Value.absent(),
+  }) : playerId = Value(playerId),
+       companionType = Value(companionType),
+       rarity = Value(rarity),
+       stepsRequired = Value(stepsRequired);
+  static Insertable<Egg> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? companionType,
+    Expression<String>? rarity,
+    Expression<int>? stepsRequired,
+    Expression<int>? stepsAccumulated,
+    Expression<DateTime>? foundAt,
+    Expression<DateTime>? hatchedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (companionType != null) 'companion_type': companionType,
+      if (rarity != null) 'rarity': rarity,
+      if (stepsRequired != null) 'steps_required': stepsRequired,
+      if (stepsAccumulated != null) 'steps_accumulated': stepsAccumulated,
+      if (foundAt != null) 'found_at': foundAt,
+      if (hatchedAt != null) 'hatched_at': hatchedAt,
+    });
+  }
+
+  EggsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playerId,
+    Value<String>? companionType,
+    Value<String>? rarity,
+    Value<int>? stepsRequired,
+    Value<int>? stepsAccumulated,
+    Value<DateTime>? foundAt,
+    Value<DateTime?>? hatchedAt,
+  }) {
+    return EggsCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      companionType: companionType ?? this.companionType,
+      rarity: rarity ?? this.rarity,
+      stepsRequired: stepsRequired ?? this.stepsRequired,
+      stepsAccumulated: stepsAccumulated ?? this.stepsAccumulated,
+      foundAt: foundAt ?? this.foundAt,
+      hatchedAt: hatchedAt ?? this.hatchedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (companionType.present) {
+      map['companion_type'] = Variable<String>(companionType.value);
+    }
+    if (rarity.present) {
+      map['rarity'] = Variable<String>(rarity.value);
+    }
+    if (stepsRequired.present) {
+      map['steps_required'] = Variable<int>(stepsRequired.value);
+    }
+    if (stepsAccumulated.present) {
+      map['steps_accumulated'] = Variable<int>(stepsAccumulated.value);
+    }
+    if (foundAt.present) {
+      map['found_at'] = Variable<DateTime>(foundAt.value);
+    }
+    if (hatchedAt.present) {
+      map['hatched_at'] = Variable<DateTime>(hatchedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EggsCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('companionType: $companionType, ')
+          ..write('rarity: $rarity, ')
+          ..write('stepsRequired: $stepsRequired, ')
+          ..write('stepsAccumulated: $stepsAccumulated, ')
+          ..write('foundAt: $foundAt, ')
+          ..write('hatchedAt: $hatchedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CompanionsTable extends Companions
+    with TableInfo<$CompanionsTable, Companion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CompanionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (id)',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rarityMeta = const VerificationMeta('rarity');
+  @override
+  late final GeneratedColumn<String> rarity = GeneratedColumn<String>(
+    'rarity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _buffTypeMeta = const VerificationMeta(
+    'buffType',
+  );
+  @override
+  late final GeneratedColumn<String> buffType = GeneratedColumn<String>(
+    'buff_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _buffValueMeta = const VerificationMeta(
+    'buffValue',
+  );
+  @override
+  late final GeneratedColumn<int> buffValue = GeneratedColumn<int>(
+    'buff_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _hatchedAtMeta = const VerificationMeta(
+    'hatchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> hatchedAt = GeneratedColumn<DateTime>(
+    'hatched_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    playerId,
+    name,
+    type,
+    rarity,
+    buffType,
+    buffValue,
+    isActive,
+    hatchedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'companions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Companion> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('rarity')) {
+      context.handle(
+        _rarityMeta,
+        rarity.isAcceptableOrUnknown(data['rarity']!, _rarityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rarityMeta);
+    }
+    if (data.containsKey('buff_type')) {
+      context.handle(
+        _buffTypeMeta,
+        buffType.isAcceptableOrUnknown(data['buff_type']!, _buffTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_buffTypeMeta);
+    }
+    if (data.containsKey('buff_value')) {
+      context.handle(
+        _buffValueMeta,
+        buffValue.isAcceptableOrUnknown(data['buff_value']!, _buffValueMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('hatched_at')) {
+      context.handle(
+        _hatchedAtMeta,
+        hatchedAt.isAcceptableOrUnknown(data['hatched_at']!, _hatchedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Companion map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Companion(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      playerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}player_id'],
+          )!,
+      name:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}name'],
+          )!,
+      type:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}type'],
+          )!,
+      rarity:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}rarity'],
+          )!,
+      buffType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}buff_type'],
+          )!,
+      buffValue:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}buff_value'],
+          )!,
+      isActive:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_active'],
+          )!,
+      hatchedAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}hatched_at'],
+          )!,
+    );
+  }
+
+  @override
+  $CompanionsTable createAlias(String alias) {
+    return $CompanionsTable(attachedDatabase, alias);
+  }
+}
+
+class Companion extends DataClass implements Insertable<Companion> {
+  final int id;
+  final int playerId;
+  final String name;
+  final String type;
+  final String rarity;
+
+  /// Passive buff type (e.g. 'gold_bonus', 'lp_bonus')
+  final String buffType;
+
+  /// Buff value (e.g. 5 for +5%)
+  final int buffValue;
+
+  /// Whether this companion is active (only 1 active at a time)
+  final bool isActive;
+  final DateTime hatchedAt;
+  const Companion({
+    required this.id,
+    required this.playerId,
+    required this.name,
+    required this.type,
+    required this.rarity,
+    required this.buffType,
+    required this.buffValue,
+    required this.isActive,
+    required this.hatchedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['name'] = Variable<String>(name);
+    map['type'] = Variable<String>(type);
+    map['rarity'] = Variable<String>(rarity);
+    map['buff_type'] = Variable<String>(buffType);
+    map['buff_value'] = Variable<int>(buffValue);
+    map['is_active'] = Variable<bool>(isActive);
+    map['hatched_at'] = Variable<DateTime>(hatchedAt);
+    return map;
+  }
+
+  CompanionsCompanion toCompanion(bool nullToAbsent) {
+    return CompanionsCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      name: Value(name),
+      type: Value(type),
+      rarity: Value(rarity),
+      buffType: Value(buffType),
+      buffValue: Value(buffValue),
+      isActive: Value(isActive),
+      hatchedAt: Value(hatchedAt),
+    );
+  }
+
+  factory Companion.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Companion(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      name: serializer.fromJson<String>(json['name']),
+      type: serializer.fromJson<String>(json['type']),
+      rarity: serializer.fromJson<String>(json['rarity']),
+      buffType: serializer.fromJson<String>(json['buffType']),
+      buffValue: serializer.fromJson<int>(json['buffValue']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      hatchedAt: serializer.fromJson<DateTime>(json['hatchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'name': serializer.toJson<String>(name),
+      'type': serializer.toJson<String>(type),
+      'rarity': serializer.toJson<String>(rarity),
+      'buffType': serializer.toJson<String>(buffType),
+      'buffValue': serializer.toJson<int>(buffValue),
+      'isActive': serializer.toJson<bool>(isActive),
+      'hatchedAt': serializer.toJson<DateTime>(hatchedAt),
+    };
+  }
+
+  Companion copyWith({
+    int? id,
+    int? playerId,
+    String? name,
+    String? type,
+    String? rarity,
+    String? buffType,
+    int? buffValue,
+    bool? isActive,
+    DateTime? hatchedAt,
+  }) => Companion(
+    id: id ?? this.id,
+    playerId: playerId ?? this.playerId,
+    name: name ?? this.name,
+    type: type ?? this.type,
+    rarity: rarity ?? this.rarity,
+    buffType: buffType ?? this.buffType,
+    buffValue: buffValue ?? this.buffValue,
+    isActive: isActive ?? this.isActive,
+    hatchedAt: hatchedAt ?? this.hatchedAt,
+  );
+  Companion copyWithCompanion(CompanionsCompanion data) {
+    return Companion(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      name: data.name.present ? data.name.value : this.name,
+      type: data.type.present ? data.type.value : this.type,
+      rarity: data.rarity.present ? data.rarity.value : this.rarity,
+      buffType: data.buffType.present ? data.buffType.value : this.buffType,
+      buffValue: data.buffValue.present ? data.buffValue.value : this.buffValue,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      hatchedAt: data.hatchedAt.present ? data.hatchedAt.value : this.hatchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Companion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('rarity: $rarity, ')
+          ..write('buffType: $buffType, ')
+          ..write('buffValue: $buffValue, ')
+          ..write('isActive: $isActive, ')
+          ..write('hatchedAt: $hatchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    playerId,
+    name,
+    type,
+    rarity,
+    buffType,
+    buffValue,
+    isActive,
+    hatchedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Companion &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.name == this.name &&
+          other.type == this.type &&
+          other.rarity == this.rarity &&
+          other.buffType == this.buffType &&
+          other.buffValue == this.buffValue &&
+          other.isActive == this.isActive &&
+          other.hatchedAt == this.hatchedAt);
+}
+
+class CompanionsCompanion extends UpdateCompanion<Companion> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> name;
+  final Value<String> type;
+  final Value<String> rarity;
+  final Value<String> buffType;
+  final Value<int> buffValue;
+  final Value<bool> isActive;
+  final Value<DateTime> hatchedAt;
+  const CompanionsCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.type = const Value.absent(),
+    this.rarity = const Value.absent(),
+    this.buffType = const Value.absent(),
+    this.buffValue = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.hatchedAt = const Value.absent(),
+  });
+  CompanionsCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String name,
+    required String type,
+    required String rarity,
+    required String buffType,
+    this.buffValue = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.hatchedAt = const Value.absent(),
+  }) : playerId = Value(playerId),
+       name = Value(name),
+       type = Value(type),
+       rarity = Value(rarity),
+       buffType = Value(buffType);
+  static Insertable<Companion> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? name,
+    Expression<String>? type,
+    Expression<String>? rarity,
+    Expression<String>? buffType,
+    Expression<int>? buffValue,
+    Expression<bool>? isActive,
+    Expression<DateTime>? hatchedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (name != null) 'name': name,
+      if (type != null) 'type': type,
+      if (rarity != null) 'rarity': rarity,
+      if (buffType != null) 'buff_type': buffType,
+      if (buffValue != null) 'buff_value': buffValue,
+      if (isActive != null) 'is_active': isActive,
+      if (hatchedAt != null) 'hatched_at': hatchedAt,
+    });
+  }
+
+  CompanionsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playerId,
+    Value<String>? name,
+    Value<String>? type,
+    Value<String>? rarity,
+    Value<String>? buffType,
+    Value<int>? buffValue,
+    Value<bool>? isActive,
+    Value<DateTime>? hatchedAt,
+  }) {
+    return CompanionsCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      rarity: rarity ?? this.rarity,
+      buffType: buffType ?? this.buffType,
+      buffValue: buffValue ?? this.buffValue,
+      isActive: isActive ?? this.isActive,
+      hatchedAt: hatchedAt ?? this.hatchedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (rarity.present) {
+      map['rarity'] = Variable<String>(rarity.value);
+    }
+    if (buffType.present) {
+      map['buff_type'] = Variable<String>(buffType.value);
+    }
+    if (buffValue.present) {
+      map['buff_value'] = Variable<int>(buffValue.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (hatchedAt.present) {
+      map['hatched_at'] = Variable<DateTime>(hatchedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionsCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('rarity: $rarity, ')
+          ..write('buffType: $buffType, ')
+          ..write('buffValue: $buffValue, ')
+          ..write('isActive: $isActive, ')
+          ..write('hatchedAt: $hatchedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$QuestFitDatabase extends GeneratedDatabase {
   _$QuestFitDatabase(QueryExecutor e) : super(e);
   $QuestFitDatabaseManager get managers => $QuestFitDatabaseManager(this);
@@ -5830,6 +8143,10 @@ abstract class _$QuestFitDatabase extends GeneratedDatabase {
   late final $EquippedSlotsTable equippedSlots = $EquippedSlotsTable(this);
   late final $InventoryTable inventory = $InventoryTable(this);
   late final $RankTrialsTable rankTrials = $RankTrialsTable(this);
+  late final $ExerciseDbTable exerciseDb = $ExerciseDbTable(this);
+  late final $StepMilestonesTable stepMilestones = $StepMilestonesTable(this);
+  late final $EggsTable eggs = $EggsTable(this);
+  late final $CompanionsTable companions = $CompanionsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5846,6 +8163,10 @@ abstract class _$QuestFitDatabase extends GeneratedDatabase {
     equippedSlots,
     inventory,
     rankTrials,
+    exerciseDb,
+    stepMilestones,
+    eggs,
+    companions,
   ];
 }
 
@@ -5867,6 +8188,8 @@ typedef $$PlayersTableCreateCompanionBuilder =
       Value<int> gold,
       Value<bool> awakeningComplete,
       Value<DateTime> createdAt,
+      Value<int> dailyStepGoal,
+      Value<bool> momentumBuffActive,
     });
 typedef $$PlayersTableUpdateCompanionBuilder =
     PlayersCompanion Function({
@@ -5886,6 +8209,8 @@ typedef $$PlayersTableUpdateCompanionBuilder =
       Value<int> gold,
       Value<bool> awakeningComplete,
       Value<DateTime> createdAt,
+      Value<int> dailyStepGoal,
+      Value<bool> momentumBuffActive,
     });
 
 final class $$PlayersTableReferences
@@ -6023,6 +8348,65 @@ final class $$PlayersTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$StepMilestonesTable, List<StepMilestone>>
+  _stepMilestonesRefsTable(_$QuestFitDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.stepMilestones,
+        aliasName: $_aliasNameGenerator(
+          db.players.id,
+          db.stepMilestones.playerId,
+        ),
+      );
+
+  $$StepMilestonesTableProcessedTableManager get stepMilestonesRefs {
+    final manager = $$StepMilestonesTableTableManager(
+      $_db,
+      $_db.stepMilestones,
+    ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_stepMilestonesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$EggsTable, List<Egg>> _eggsRefsTable(
+    _$QuestFitDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.eggs,
+    aliasName: $_aliasNameGenerator(db.players.id, db.eggs.playerId),
+  );
+
+  $$EggsTableProcessedTableManager get eggsRefs {
+    final manager = $$EggsTableTableManager(
+      $_db,
+      $_db.eggs,
+    ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_eggsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$CompanionsTable, List<Companion>>
+  _companionsRefsTable(_$QuestFitDatabase db) => MultiTypedResultKey.fromTable(
+    db.companions,
+    aliasName: $_aliasNameGenerator(db.players.id, db.companions.playerId),
+  );
+
+  $$CompanionsTableProcessedTableManager get companionsRefs {
+    final manager = $$CompanionsTableTableManager(
+      $_db,
+      $_db.companions,
+    ).filter((f) => f.playerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_companionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$PlayersTableFilterComposer
@@ -6111,6 +8495,16 @@ class $$PlayersTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dailyStepGoal => $composableBuilder(
+    column: $table.dailyStepGoal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get momentumBuffActive => $composableBuilder(
+    column: $table.momentumBuffActive,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6288,6 +8682,81 @@ class $$PlayersTableFilterComposer
     );
     return f(composer);
   }
+
+  Expression<bool> stepMilestonesRefs(
+    Expression<bool> Function($$StepMilestonesTableFilterComposer f) f,
+  ) {
+    final $$StepMilestonesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stepMilestones,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StepMilestonesTableFilterComposer(
+            $db: $db,
+            $table: $db.stepMilestones,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> eggsRefs(
+    Expression<bool> Function($$EggsTableFilterComposer f) f,
+  ) {
+    final $$EggsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.eggs,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EggsTableFilterComposer(
+            $db: $db,
+            $table: $db.eggs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> companionsRefs(
+    Expression<bool> Function($$CompanionsTableFilterComposer f) f,
+  ) {
+    final $$CompanionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.companions,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CompanionsTableFilterComposer(
+            $db: $db,
+            $table: $db.companions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PlayersTableOrderingComposer
@@ -6378,6 +8847,16 @@ class $$PlayersTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get dailyStepGoal => $composableBuilder(
+    column: $table.dailyStepGoal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get momentumBuffActive => $composableBuilder(
+    column: $table.momentumBuffActive,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PlayersTableAnnotationComposer
@@ -6444,6 +8923,16 @@ class $$PlayersTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get dailyStepGoal => $composableBuilder(
+    column: $table.dailyStepGoal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get momentumBuffActive => $composableBuilder(
+    column: $table.momentumBuffActive,
+    builder: (column) => column,
+  );
 
   Expression<T> statsRefs<T extends Object>(
     Expression<T> Function($$StatsTableAnnotationComposer a) f,
@@ -6619,6 +9108,81 @@ class $$PlayersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> stepMilestonesRefs<T extends Object>(
+    Expression<T> Function($$StepMilestonesTableAnnotationComposer a) f,
+  ) {
+    final $$StepMilestonesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stepMilestones,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StepMilestonesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.stepMilestones,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> eggsRefs<T extends Object>(
+    Expression<T> Function($$EggsTableAnnotationComposer a) f,
+  ) {
+    final $$EggsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.eggs,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EggsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.eggs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> companionsRefs<T extends Object>(
+    Expression<T> Function($$CompanionsTableAnnotationComposer a) f,
+  ) {
+    final $$CompanionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.companions,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CompanionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.companions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PlayersTableTableManager
@@ -6642,6 +9206,9 @@ class $$PlayersTableTableManager
             bool equippedSlotsRefs,
             bool inventoryRefs,
             bool rankTrialsRefs,
+            bool stepMilestonesRefs,
+            bool eggsRefs,
+            bool companionsRefs,
           })
         > {
   $$PlayersTableTableManager(_$QuestFitDatabase db, $PlayersTable table)
@@ -6673,6 +9240,8 @@ class $$PlayersTableTableManager
                 Value<int> gold = const Value.absent(),
                 Value<bool> awakeningComplete = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<int> dailyStepGoal = const Value.absent(),
+                Value<bool> momentumBuffActive = const Value.absent(),
               }) => PlayersCompanion(
                 id: id,
                 name: name,
@@ -6690,6 +9259,8 @@ class $$PlayersTableTableManager
                 gold: gold,
                 awakeningComplete: awakeningComplete,
                 createdAt: createdAt,
+                dailyStepGoal: dailyStepGoal,
+                momentumBuffActive: momentumBuffActive,
               ),
           createCompanionCallback:
               ({
@@ -6709,6 +9280,8 @@ class $$PlayersTableTableManager
                 Value<int> gold = const Value.absent(),
                 Value<bool> awakeningComplete = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<int> dailyStepGoal = const Value.absent(),
+                Value<bool> momentumBuffActive = const Value.absent(),
               }) => PlayersCompanion.insert(
                 id: id,
                 name: name,
@@ -6726,6 +9299,8 @@ class $$PlayersTableTableManager
                 gold: gold,
                 awakeningComplete: awakeningComplete,
                 createdAt: createdAt,
+                dailyStepGoal: dailyStepGoal,
+                momentumBuffActive: momentumBuffActive,
               ),
           withReferenceMapper:
               (p0) =>
@@ -6745,6 +9320,9 @@ class $$PlayersTableTableManager
             equippedSlotsRefs = false,
             inventoryRefs = false,
             rankTrialsRefs = false,
+            stepMilestonesRefs = false,
+            eggsRefs = false,
+            companionsRefs = false,
           }) {
             return PrefetchHooks(
               db: db,
@@ -6756,6 +9334,9 @@ class $$PlayersTableTableManager
                 if (equippedSlotsRefs) db.equippedSlots,
                 if (inventoryRefs) db.inventory,
                 if (rankTrialsRefs) db.rankTrials,
+                if (stepMilestonesRefs) db.stepMilestones,
+                if (eggsRefs) db.eggs,
+                if (companionsRefs) db.companions,
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -6899,6 +9480,61 @@ class $$PlayersTableTableManager
                           ),
                       typedResults: items,
                     ),
+                  if (stepMilestonesRefs)
+                    await $_getPrefetchedData<
+                      Player,
+                      $PlayersTable,
+                      StepMilestone
+                    >(
+                      currentTable: table,
+                      referencedTable: $$PlayersTableReferences
+                          ._stepMilestonesRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PlayersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).stepMilestonesRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.playerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                  if (eggsRefs)
+                    await $_getPrefetchedData<Player, $PlayersTable, Egg>(
+                      currentTable: table,
+                      referencedTable: $$PlayersTableReferences._eggsRefsTable(
+                        db,
+                      ),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PlayersTableReferences(db, table, p0).eggsRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.playerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                  if (companionsRefs)
+                    await $_getPrefetchedData<Player, $PlayersTable, Companion>(
+                      currentTable: table,
+                      referencedTable: $$PlayersTableReferences
+                          ._companionsRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PlayersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).companionsRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.playerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
                 ];
               },
             );
@@ -6927,6 +9563,9 @@ typedef $$PlayersTableProcessedTableManager =
         bool equippedSlotsRefs,
         bool inventoryRefs,
         bool rankTrialsRefs,
+        bool stepMilestonesRefs,
+        bool eggsRefs,
+        bool companionsRefs,
       })
     >;
 typedef $$StatsTableCreateCompanionBuilder =
@@ -10874,6 +13513,1449 @@ typedef $$RankTrialsTableProcessedTableManager =
       RankTrial,
       PrefetchHooks Function({bool playerId})
     >;
+typedef $$ExerciseDbTableCreateCompanionBuilder =
+    ExerciseDbCompanion Function({
+      Value<int> id,
+      required String externalId,
+      required String name,
+      Value<String?> force,
+      required String level,
+      Value<String?> mechanic,
+      Value<String?> equipment,
+      required String category,
+      required String instructions,
+      required String primaryMuscles,
+      Value<String> secondaryMuscles,
+      Value<String> images,
+    });
+typedef $$ExerciseDbTableUpdateCompanionBuilder =
+    ExerciseDbCompanion Function({
+      Value<int> id,
+      Value<String> externalId,
+      Value<String> name,
+      Value<String?> force,
+      Value<String> level,
+      Value<String?> mechanic,
+      Value<String?> equipment,
+      Value<String> category,
+      Value<String> instructions,
+      Value<String> primaryMuscles,
+      Value<String> secondaryMuscles,
+      Value<String> images,
+    });
+
+class $$ExerciseDbTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $ExerciseDbTable> {
+  $$ExerciseDbTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get force => $composableBuilder(
+    column: $table.force,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mechanic => $composableBuilder(
+    column: $table.mechanic,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get equipment => $composableBuilder(
+    column: $table.equipment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get instructions => $composableBuilder(
+    column: $table.instructions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get primaryMuscles => $composableBuilder(
+    column: $table.primaryMuscles,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondaryMuscles => $composableBuilder(
+    column: $table.secondaryMuscles,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get images => $composableBuilder(
+    column: $table.images,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ExerciseDbTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $ExerciseDbTable> {
+  $$ExerciseDbTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get force => $composableBuilder(
+    column: $table.force,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mechanic => $composableBuilder(
+    column: $table.mechanic,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get equipment => $composableBuilder(
+    column: $table.equipment,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get instructions => $composableBuilder(
+    column: $table.instructions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get primaryMuscles => $composableBuilder(
+    column: $table.primaryMuscles,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondaryMuscles => $composableBuilder(
+    column: $table.secondaryMuscles,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get images => $composableBuilder(
+    column: $table.images,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ExerciseDbTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $ExerciseDbTable> {
+  $$ExerciseDbTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get force =>
+      $composableBuilder(column: $table.force, builder: (column) => column);
+
+  GeneratedColumn<String> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<String> get mechanic =>
+      $composableBuilder(column: $table.mechanic, builder: (column) => column);
+
+  GeneratedColumn<String> get equipment =>
+      $composableBuilder(column: $table.equipment, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get instructions => $composableBuilder(
+    column: $table.instructions,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get primaryMuscles => $composableBuilder(
+    column: $table.primaryMuscles,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get secondaryMuscles => $composableBuilder(
+    column: $table.secondaryMuscles,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get images =>
+      $composableBuilder(column: $table.images, builder: (column) => column);
+}
+
+class $$ExerciseDbTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $ExerciseDbTable,
+          ExerciseDbData,
+          $$ExerciseDbTableFilterComposer,
+          $$ExerciseDbTableOrderingComposer,
+          $$ExerciseDbTableAnnotationComposer,
+          $$ExerciseDbTableCreateCompanionBuilder,
+          $$ExerciseDbTableUpdateCompanionBuilder,
+          (
+            ExerciseDbData,
+            BaseReferences<
+              _$QuestFitDatabase,
+              $ExerciseDbTable,
+              ExerciseDbData
+            >,
+          ),
+          ExerciseDbData,
+          PrefetchHooks Function()
+        > {
+  $$ExerciseDbTableTableManager(_$QuestFitDatabase db, $ExerciseDbTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$ExerciseDbTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$ExerciseDbTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$ExerciseDbTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> externalId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> force = const Value.absent(),
+                Value<String> level = const Value.absent(),
+                Value<String?> mechanic = const Value.absent(),
+                Value<String?> equipment = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<String> instructions = const Value.absent(),
+                Value<String> primaryMuscles = const Value.absent(),
+                Value<String> secondaryMuscles = const Value.absent(),
+                Value<String> images = const Value.absent(),
+              }) => ExerciseDbCompanion(
+                id: id,
+                externalId: externalId,
+                name: name,
+                force: force,
+                level: level,
+                mechanic: mechanic,
+                equipment: equipment,
+                category: category,
+                instructions: instructions,
+                primaryMuscles: primaryMuscles,
+                secondaryMuscles: secondaryMuscles,
+                images: images,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String externalId,
+                required String name,
+                Value<String?> force = const Value.absent(),
+                required String level,
+                Value<String?> mechanic = const Value.absent(),
+                Value<String?> equipment = const Value.absent(),
+                required String category,
+                required String instructions,
+                required String primaryMuscles,
+                Value<String> secondaryMuscles = const Value.absent(),
+                Value<String> images = const Value.absent(),
+              }) => ExerciseDbCompanion.insert(
+                id: id,
+                externalId: externalId,
+                name: name,
+                force: force,
+                level: level,
+                mechanic: mechanic,
+                equipment: equipment,
+                category: category,
+                instructions: instructions,
+                primaryMuscles: primaryMuscles,
+                secondaryMuscles: secondaryMuscles,
+                images: images,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ExerciseDbTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $ExerciseDbTable,
+      ExerciseDbData,
+      $$ExerciseDbTableFilterComposer,
+      $$ExerciseDbTableOrderingComposer,
+      $$ExerciseDbTableAnnotationComposer,
+      $$ExerciseDbTableCreateCompanionBuilder,
+      $$ExerciseDbTableUpdateCompanionBuilder,
+      (
+        ExerciseDbData,
+        BaseReferences<_$QuestFitDatabase, $ExerciseDbTable, ExerciseDbData>,
+      ),
+      ExerciseDbData,
+      PrefetchHooks Function()
+    >;
+typedef $$StepMilestonesTableCreateCompanionBuilder =
+    StepMilestonesCompanion Function({
+      Value<int> id,
+      required int playerId,
+      required String date,
+      Value<int> milestonesClaimed,
+      Value<int> stepsAtLastClaim,
+    });
+typedef $$StepMilestonesTableUpdateCompanionBuilder =
+    StepMilestonesCompanion Function({
+      Value<int> id,
+      Value<int> playerId,
+      Value<String> date,
+      Value<int> milestonesClaimed,
+      Value<int> stepsAtLastClaim,
+    });
+
+final class $$StepMilestonesTableReferences
+    extends
+        BaseReferences<
+          _$QuestFitDatabase,
+          $StepMilestonesTable,
+          StepMilestone
+        > {
+  $$StepMilestonesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $PlayersTable _playerIdTable(_$QuestFitDatabase db) =>
+      db.players.createAlias(
+        $_aliasNameGenerator(db.stepMilestones.playerId, db.players.id),
+      );
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<int>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$StepMilestonesTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $StepMilestonesTable> {
+  $$StepMilestonesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get milestonesClaimed => $composableBuilder(
+    column: $table.milestonesClaimed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepsAtLastClaim => $composableBuilder(
+    column: $table.stepsAtLastClaim,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StepMilestonesTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $StepMilestonesTable> {
+  $$StepMilestonesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get milestonesClaimed => $composableBuilder(
+    column: $table.milestonesClaimed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepsAtLastClaim => $composableBuilder(
+    column: $table.stepsAtLastClaim,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StepMilestonesTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $StepMilestonesTable> {
+  $$StepMilestonesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get milestonesClaimed => $composableBuilder(
+    column: $table.milestonesClaimed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get stepsAtLastClaim => $composableBuilder(
+    column: $table.stepsAtLastClaim,
+    builder: (column) => column,
+  );
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StepMilestonesTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $StepMilestonesTable,
+          StepMilestone,
+          $$StepMilestonesTableFilterComposer,
+          $$StepMilestonesTableOrderingComposer,
+          $$StepMilestonesTableAnnotationComposer,
+          $$StepMilestonesTableCreateCompanionBuilder,
+          $$StepMilestonesTableUpdateCompanionBuilder,
+          (StepMilestone, $$StepMilestonesTableReferences),
+          StepMilestone,
+          PrefetchHooks Function({bool playerId})
+        > {
+  $$StepMilestonesTableTableManager(
+    _$QuestFitDatabase db,
+    $StepMilestonesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$StepMilestonesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () =>
+                  $$StepMilestonesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$StepMilestonesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playerId = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<int> milestonesClaimed = const Value.absent(),
+                Value<int> stepsAtLastClaim = const Value.absent(),
+              }) => StepMilestonesCompanion(
+                id: id,
+                playerId: playerId,
+                date: date,
+                milestonesClaimed: milestonesClaimed,
+                stepsAtLastClaim: stepsAtLastClaim,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playerId,
+                required String date,
+                Value<int> milestonesClaimed = const Value.absent(),
+                Value<int> stepsAtLastClaim = const Value.absent(),
+              }) => StepMilestonesCompanion.insert(
+                id: id,
+                playerId: playerId,
+                date: date,
+                milestonesClaimed: milestonesClaimed,
+                stepsAtLastClaim: stepsAtLastClaim,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$StepMilestonesTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({playerId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (playerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$StepMilestonesTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn:
+                                $$StepMilestonesTableReferences
+                                    ._playerIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$StepMilestonesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $StepMilestonesTable,
+      StepMilestone,
+      $$StepMilestonesTableFilterComposer,
+      $$StepMilestonesTableOrderingComposer,
+      $$StepMilestonesTableAnnotationComposer,
+      $$StepMilestonesTableCreateCompanionBuilder,
+      $$StepMilestonesTableUpdateCompanionBuilder,
+      (StepMilestone, $$StepMilestonesTableReferences),
+      StepMilestone,
+      PrefetchHooks Function({bool playerId})
+    >;
+typedef $$EggsTableCreateCompanionBuilder =
+    EggsCompanion Function({
+      Value<int> id,
+      required int playerId,
+      required String companionType,
+      required String rarity,
+      required int stepsRequired,
+      Value<int> stepsAccumulated,
+      Value<DateTime> foundAt,
+      Value<DateTime?> hatchedAt,
+    });
+typedef $$EggsTableUpdateCompanionBuilder =
+    EggsCompanion Function({
+      Value<int> id,
+      Value<int> playerId,
+      Value<String> companionType,
+      Value<String> rarity,
+      Value<int> stepsRequired,
+      Value<int> stepsAccumulated,
+      Value<DateTime> foundAt,
+      Value<DateTime?> hatchedAt,
+    });
+
+final class $$EggsTableReferences
+    extends BaseReferences<_$QuestFitDatabase, $EggsTable, Egg> {
+  $$EggsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $PlayersTable _playerIdTable(_$QuestFitDatabase db) => db.players
+      .createAlias($_aliasNameGenerator(db.eggs.playerId, db.players.id));
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<int>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$EggsTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $EggsTable> {
+  $$EggsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companionType => $composableBuilder(
+    column: $table.companionType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepsRequired => $composableBuilder(
+    column: $table.stepsRequired,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepsAccumulated => $composableBuilder(
+    column: $table.stepsAccumulated,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get foundAt => $composableBuilder(
+    column: $table.foundAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get hatchedAt => $composableBuilder(
+    column: $table.hatchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EggsTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $EggsTable> {
+  $$EggsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companionType => $composableBuilder(
+    column: $table.companionType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepsRequired => $composableBuilder(
+    column: $table.stepsRequired,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepsAccumulated => $composableBuilder(
+    column: $table.stepsAccumulated,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get foundAt => $composableBuilder(
+    column: $table.foundAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get hatchedAt => $composableBuilder(
+    column: $table.hatchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EggsTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $EggsTable> {
+  $$EggsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companionType => $composableBuilder(
+    column: $table.companionType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get rarity =>
+      $composableBuilder(column: $table.rarity, builder: (column) => column);
+
+  GeneratedColumn<int> get stepsRequired => $composableBuilder(
+    column: $table.stepsRequired,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get stepsAccumulated => $composableBuilder(
+    column: $table.stepsAccumulated,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get foundAt =>
+      $composableBuilder(column: $table.foundAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get hatchedAt =>
+      $composableBuilder(column: $table.hatchedAt, builder: (column) => column);
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EggsTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $EggsTable,
+          Egg,
+          $$EggsTableFilterComposer,
+          $$EggsTableOrderingComposer,
+          $$EggsTableAnnotationComposer,
+          $$EggsTableCreateCompanionBuilder,
+          $$EggsTableUpdateCompanionBuilder,
+          (Egg, $$EggsTableReferences),
+          Egg,
+          PrefetchHooks Function({bool playerId})
+        > {
+  $$EggsTableTableManager(_$QuestFitDatabase db, $EggsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$EggsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$EggsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$EggsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playerId = const Value.absent(),
+                Value<String> companionType = const Value.absent(),
+                Value<String> rarity = const Value.absent(),
+                Value<int> stepsRequired = const Value.absent(),
+                Value<int> stepsAccumulated = const Value.absent(),
+                Value<DateTime> foundAt = const Value.absent(),
+                Value<DateTime?> hatchedAt = const Value.absent(),
+              }) => EggsCompanion(
+                id: id,
+                playerId: playerId,
+                companionType: companionType,
+                rarity: rarity,
+                stepsRequired: stepsRequired,
+                stepsAccumulated: stepsAccumulated,
+                foundAt: foundAt,
+                hatchedAt: hatchedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playerId,
+                required String companionType,
+                required String rarity,
+                required int stepsRequired,
+                Value<int> stepsAccumulated = const Value.absent(),
+                Value<DateTime> foundAt = const Value.absent(),
+                Value<DateTime?> hatchedAt = const Value.absent(),
+              }) => EggsCompanion.insert(
+                id: id,
+                playerId: playerId,
+                companionType: companionType,
+                rarity: rarity,
+                stepsRequired: stepsRequired,
+                stepsAccumulated: stepsAccumulated,
+                foundAt: foundAt,
+                hatchedAt: hatchedAt,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$EggsTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({playerId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (playerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$EggsTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn:
+                                $$EggsTableReferences._playerIdTable(db).id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EggsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $EggsTable,
+      Egg,
+      $$EggsTableFilterComposer,
+      $$EggsTableOrderingComposer,
+      $$EggsTableAnnotationComposer,
+      $$EggsTableCreateCompanionBuilder,
+      $$EggsTableUpdateCompanionBuilder,
+      (Egg, $$EggsTableReferences),
+      Egg,
+      PrefetchHooks Function({bool playerId})
+    >;
+typedef $$CompanionsTableCreateCompanionBuilder =
+    CompanionsCompanion Function({
+      Value<int> id,
+      required int playerId,
+      required String name,
+      required String type,
+      required String rarity,
+      required String buffType,
+      Value<int> buffValue,
+      Value<bool> isActive,
+      Value<DateTime> hatchedAt,
+    });
+typedef $$CompanionsTableUpdateCompanionBuilder =
+    CompanionsCompanion Function({
+      Value<int> id,
+      Value<int> playerId,
+      Value<String> name,
+      Value<String> type,
+      Value<String> rarity,
+      Value<String> buffType,
+      Value<int> buffValue,
+      Value<bool> isActive,
+      Value<DateTime> hatchedAt,
+    });
+
+final class $$CompanionsTableReferences
+    extends BaseReferences<_$QuestFitDatabase, $CompanionsTable, Companion> {
+  $$CompanionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $PlayersTable _playerIdTable(_$QuestFitDatabase db) => db.players
+      .createAlias($_aliasNameGenerator(db.companions.playerId, db.players.id));
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<int>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CompanionsTableFilterComposer
+    extends Composer<_$QuestFitDatabase, $CompanionsTable> {
+  $$CompanionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get buffType => $composableBuilder(
+    column: $table.buffType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get buffValue => $composableBuilder(
+    column: $table.buffValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get hatchedAt => $composableBuilder(
+    column: $table.hatchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CompanionsTableOrderingComposer
+    extends Composer<_$QuestFitDatabase, $CompanionsTable> {
+  $$CompanionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get buffType => $composableBuilder(
+    column: $table.buffType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get buffValue => $composableBuilder(
+    column: $table.buffValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get hatchedAt => $composableBuilder(
+    column: $table.hatchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CompanionsTableAnnotationComposer
+    extends Composer<_$QuestFitDatabase, $CompanionsTable> {
+  $$CompanionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get rarity =>
+      $composableBuilder(column: $table.rarity, builder: (column) => column);
+
+  GeneratedColumn<String> get buffType =>
+      $composableBuilder(column: $table.buffType, builder: (column) => column);
+
+  GeneratedColumn<int> get buffValue =>
+      $composableBuilder(column: $table.buffValue, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get hatchedAt =>
+      $composableBuilder(column: $table.hatchedAt, builder: (column) => column);
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CompanionsTableTableManager
+    extends
+        RootTableManager<
+          _$QuestFitDatabase,
+          $CompanionsTable,
+          Companion,
+          $$CompanionsTableFilterComposer,
+          $$CompanionsTableOrderingComposer,
+          $$CompanionsTableAnnotationComposer,
+          $$CompanionsTableCreateCompanionBuilder,
+          $$CompanionsTableUpdateCompanionBuilder,
+          (Companion, $$CompanionsTableReferences),
+          Companion,
+          PrefetchHooks Function({bool playerId})
+        > {
+  $$CompanionsTableTableManager(_$QuestFitDatabase db, $CompanionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$CompanionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$CompanionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$CompanionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playerId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> rarity = const Value.absent(),
+                Value<String> buffType = const Value.absent(),
+                Value<int> buffValue = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> hatchedAt = const Value.absent(),
+              }) => CompanionsCompanion(
+                id: id,
+                playerId: playerId,
+                name: name,
+                type: type,
+                rarity: rarity,
+                buffType: buffType,
+                buffValue: buffValue,
+                isActive: isActive,
+                hatchedAt: hatchedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playerId,
+                required String name,
+                required String type,
+                required String rarity,
+                required String buffType,
+                Value<int> buffValue = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> hatchedAt = const Value.absent(),
+              }) => CompanionsCompanion.insert(
+                id: id,
+                playerId: playerId,
+                name: name,
+                type: type,
+                rarity: rarity,
+                buffType: buffType,
+                buffValue: buffValue,
+                isActive: isActive,
+                hatchedAt: hatchedAt,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$CompanionsTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({playerId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (playerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$CompanionsTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn:
+                                $$CompanionsTableReferences
+                                    ._playerIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CompanionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$QuestFitDatabase,
+      $CompanionsTable,
+      Companion,
+      $$CompanionsTableFilterComposer,
+      $$CompanionsTableOrderingComposer,
+      $$CompanionsTableAnnotationComposer,
+      $$CompanionsTableCreateCompanionBuilder,
+      $$CompanionsTableUpdateCompanionBuilder,
+      (Companion, $$CompanionsTableReferences),
+      Companion,
+      PrefetchHooks Function({bool playerId})
+    >;
 
 class $QuestFitDatabaseManager {
   final _$QuestFitDatabase _db;
@@ -10900,4 +14982,11 @@ class $QuestFitDatabaseManager {
       $$InventoryTableTableManager(_db, _db.inventory);
   $$RankTrialsTableTableManager get rankTrials =>
       $$RankTrialsTableTableManager(_db, _db.rankTrials);
+  $$ExerciseDbTableTableManager get exerciseDb =>
+      $$ExerciseDbTableTableManager(_db, _db.exerciseDb);
+  $$StepMilestonesTableTableManager get stepMilestones =>
+      $$StepMilestonesTableTableManager(_db, _db.stepMilestones);
+  $$EggsTableTableManager get eggs => $$EggsTableTableManager(_db, _db.eggs);
+  $$CompanionsTableTableManager get companions =>
+      $$CompanionsTableTableManager(_db, _db.companions);
 }

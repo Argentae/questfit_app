@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../app/theme.dart';
 import '../db/database.dart';
 import '../providers/quest_provider.dart';
+import '../providers/step_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/rank_trial_provider.dart';
 import '../engine/rank_engine.dart';
@@ -30,7 +31,11 @@ class HomeScreen extends ConsumerWidget {
           _buildTopBar(context, ref),
           const SizedBox(height: 20),
           const CharacterCard(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          // v2.2: Momentum Buff banner + Step progress
+          _buildMomentumBanner(ref),
+          _buildStepProgress(context, ref),
+          const SizedBox(height: 12),
           // v2.0: Promotion Series banner
           _buildPromotionBanner(context, ref),
           const SizedBox(height: 16),
@@ -118,9 +123,112 @@ class HomeScreen extends ConsumerWidget {
                 context.go('/settings');
               },
             ),
+            const SizedBox(width: 8),
+            // v2.2: Grimoire button
+            _IconButton(
+              icon: Icons.auto_stories_outlined,
+              onTap: () => context.go('/grimoire'),
+            ),
           ],
         ),
       ],
+    );
+  }
+
+  /// v2.2: Momentum Buff banner (shown when active).
+  Widget _buildMomentumBanner(WidgetRef ref) {
+    final hasMomentum = ref.watch(momentumBuffProvider);
+    if (!hasMomentum) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [
+            QuestFitColors.emerald.withOpacity(0.15),
+            QuestFitColors.emerald.withOpacity(0.05),
+          ]),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: QuestFitColors.emerald.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            const Text('🔥', style: TextStyle(fontSize: 18)),
+            const SizedBox(width: 10),
+            Text(
+              'MOMENTUM BUFF — +10% LP & Gold today!',
+              style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: QuestFitColors.emerald),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// v2.2: Compact step progress bar with expedition link.
+  Widget _buildStepProgress(BuildContext context, WidgetRef ref) {
+    final steps = ref.watch(todayStepsProvider);
+    final goal = ref.watch(dailyStepGoalProvider);
+    final progress = goal > 0 ? (steps / goal).clamp(0.0, 1.0) : 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: GestureDetector(
+        onTap: () => context.go('/expedition'),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: glassCard(borderRadius: 12),
+          child: Row(
+            children: [
+              const Text('👟', style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '$steps / $goal steps',
+                          style: const TextStyle(
+                              color: QuestFitColors.textSecondary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          '${(progress * 100).toInt()}%',
+                          style: const TextStyle(
+                              color: QuestFitColors.emerald,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 4,
+                        backgroundColor: QuestFitColors.glassBorder,
+                        color: QuestFitColors.emerald,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right_rounded,
+                  color: QuestFitColors.textMuted, size: 18),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

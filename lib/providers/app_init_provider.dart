@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../db/database.dart';
 import 'database_provider.dart';
 import 'shop_provider.dart';
+import 'step_provider.dart';
 import 'user_provider.dart';
 
 /// App initialization state.
@@ -62,10 +63,16 @@ class AppInitNotifier extends AsyncNotifier<AppInitState> {
             '${decayResult.shouldDemote ? " (DEMOTED!)" : ""}');
       }
 
+      // v2.2: Check and apply Momentum Buff from yesterday's steps
+      await ref
+          .read(stepNotifierProvider.notifier)
+          .checkMomentumBuff();
+
       // v2.0: Check if Awakening is complete
-      if (!player.awakeningComplete) {
-        return AppInitState.awakening;
-      }
+      // [Bypassed for beta testing]
+      // if (!player.awakeningComplete) {
+      //   return AppInitState.awakening;
+      // }
 
       return AppInitState.ready;
     } catch (e) {

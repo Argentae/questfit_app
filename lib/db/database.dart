@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'tables.dart';
@@ -12,6 +14,8 @@ part 'database.g.dart';
   Players, Stats, Quests, WorkoutLogs, Streaks, RankHistory,
   // v2.0 tables
   Equipment, EquipmentExercises, EquippedSlots, Inventory, RankTrials,
+  // v2.2 tables
+  ExerciseDb, StepMilestones, Eggs, Companions,
 ])
 class QuestFitDatabase extends _$QuestFitDatabase {
   QuestFitDatabase._() : super(_openConnection());
@@ -25,7 +29,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
   }
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -35,6 +39,8 @@ class QuestFitDatabase extends _$QuestFitDatabase {
           await _seedInitialData();
           // Seed weapon catalog
           await _seedWeaponCatalog();
+          // v2.2: Seed exercise database
+          await _seedExerciseDatabase();
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) {
@@ -62,6 +68,17 @@ class QuestFitDatabase extends _$QuestFitDatabase {
 
             // Migrate existing player rank data to new tier/division columns
             await _migrateRankToTier();
+          }
+          if (from < 4) {
+            // v3 → v4 migration: Exercise DB, Step mechanics, Companions
+            await m.createTable(exerciseDb);
+            await m.createTable(stepMilestones);
+            await m.createTable(eggs);
+            await m.createTable(companions);
+            await m.addColumn(players, players.dailyStepGoal);
+            await m.addColumn(players, players.momentumBuffActive);
+            // Seed the exercise database for existing users
+            await _seedExerciseDatabase();
           }
         },
       );
@@ -180,8 +197,39 @@ class QuestFitDatabase extends _$QuestFitDatabase {
     }
   }
 
+  /// Seeds the expanded exercise library from the bundled JSON asset.
+  Future<void> _seedExerciseDatabase() async {
+    // Check if already seeded
+    final count = await (selectOnly(exerciseDb)..addColumns([exerciseDb.id.count()])).map((r) => r.read(exerciseDb.id.count()) ?? 0).getSingle();
+    if (count > 0) return;
+
+    final jsonStr = await rootBundle.loadString('assets/data/exercises.json');
+    final List<dynamic> exercises = jsonDecode(jsonStr);
+
+    await batch((b) {
+      for (final ex in exercises) {
+        b.insert(exerciseDb, ExerciseDbCompanion(
+          externalId: Value(ex['id'] as String? ?? ex['name'] as String),
+          name: Value(ex['name'] as String),
+          force: Value(ex['force'] as String?),
+          level: Value(ex['level'] as String? ?? 'beginner'),
+          mechanic: Value(ex['mechanic'] as String?),
+          equipment: Value(ex['equipment'] as String?),
+          category: Value(ex['category'] as String? ?? 'strength'),
+          instructions: Value(jsonEncode(ex['instructions'] ?? [])),
+          primaryMuscles: Value((ex['primaryMuscles'] as List?)?.join(',') ?? ''),
+          secondaryMuscles: Value((ex['secondaryMuscles'] as List?)?.join(',') ?? ''),
+          images: Value(jsonEncode(ex['images'] ?? [])),
+        ));
+      }
+    });
+  }
+
   /// Resets the database to its initial state.
   Future<void> resetAllProgress() async {
+    await delete(companions).go();
+    await delete(eggs).go();
+    await delete(stepMilestones).go();
     await delete(equippedSlots).go();
     await delete(equipmentExercises).go();
     await delete(equipment).go();
@@ -195,6 +243,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
     await delete(players).go();
     await _seedInitialData();
     await _seedWeaponCatalog();
+    // Exercise DB is not reset — it's reference data
   }
 }
 

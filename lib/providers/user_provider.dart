@@ -330,4 +330,13 @@ class UserNotifier extends AsyncNotifier<void> {
     final rows = await _db.select(_db.players).get();
     return rows.isNotEmpty;
   }
+
+  /// v2.2: Update the player's daily step goal.
+  Future<void> updateStepGoal(int goal) async {
+    final player =
+        await ((_db.select(_db.players))..limit(1)).getSingle();
+    await (_db.update(_db.players)
+          ..where((t) => t.id.equals(player.id)))
+        .write(PlayersCompanion(dailyStepGoal: Value(goal)));
+  }
 }
