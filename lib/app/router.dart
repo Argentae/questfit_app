@@ -17,9 +17,6 @@ import '../screens/shop_screen.dart';
 import '../screens/rank_trial_screen.dart';
 import '../screens/routines_screen.dart';
 import '../screens/bestiary_screen.dart';
-import '../screens/rank_trial_screen.dart';
-import '../screens/routines_screen.dart';
-import '../screens/rank_trial_screen.dart';
 import '../widgets/bottom_nav.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();

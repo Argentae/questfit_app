@@ -168,6 +168,7 @@ class CombatEngine {
         streakBroken: false,
         message: _victoryMessage(difficulty),
         bonusGold: bonusGold,
+        totalDamageDealt: enemyMaxHp + overkillPercent.round(), // Approximate for now or pass actual
       );
     } else {
       // Defeat: LP penalty scales with how much HP remained
@@ -184,6 +185,7 @@ class CombatEngine {
         streakBroken: true,
         message: _defeatMessage(difficulty),
         bonusGold: 0,
+        totalDamageDealt: enemyMaxHp - enemyCurrentHp,
       );
     }
   }
@@ -271,6 +273,7 @@ class BountyResolution {
   final bool streakBroken;
   final String message;
   final int bonusGold;
+  final int totalDamageDealt;
 
   const BountyResolution({
     required this.isVictory,
@@ -279,5 +282,6 @@ class BountyResolution {
     required this.streakBroken,
     required this.message,
     required this.bonusGold,
+    required this.totalDamageDealt,
   });
 }

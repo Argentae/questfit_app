@@ -265,9 +265,8 @@ class BountyNotifier extends AsyncNotifier<void> {
       resistances: resistances,
       immunities: immunities,
     );
-    
     // v2.5: Apply Sleep Buff Multiplier
-    final dmg = (baseDmg * player.restBuffMultiplier).round();
+    final totalDmg = (baseDmg.totalDamage * player.restBuffMultiplier).round();
 
     // Update routine exercise as completed
     await (_db.update(_db.routineExercises)
@@ -275,18 +274,18 @@ class BountyNotifier extends AsyncNotifier<void> {
         .write(RoutineExercisesCompanion(
       isCompleted: const Value(true),
       completedAt: Value(DateTime.now()),
-      damageDealt: Value(dmg.totalDamage),
+      damageDealt: Value(totalDmg),
     ));
 
     // Deduct damage from enemy HP
-    final newHp = (bounty.currentHp - dmg.totalDamage).clamp(0, enemy.hp);
+    final newHp = (bounty.currentHp - totalDmg).clamp(0, enemy.hp).toInt();
     await (_db.update(_db.bounties)
           ..where((t) => t.id.equals(bounty.id)))
         .write(BountiesCompanion(
       currentHp: Value(newHp),
     ));
 
-    debugPrint('Combat: Dealt ${dmg.totalDamage} dmg (${dmg.effectiveness}). '
+    debugPrint('Combat: Dealt $totalDmg dmg (${baseDmg.effectiveness}). '
         'Enemy HP: $newHp/${enemy.hp}');
 
     // Check for victory
@@ -294,7 +293,7 @@ class BountyNotifier extends AsyncNotifier<void> {
       await _resolveVictory(bounty.id);
     }
 
-    return dmg.totalDamage;
+    return totalDmg;
   }
 
   /// Uncomplete an exercise — reverses the damage.

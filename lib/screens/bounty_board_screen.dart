@@ -77,6 +77,42 @@ class _BountyBoardScreenState extends ConsumerState<BountyBoardScreen>
 
   // ─── NO BOUNTY ─────────────────────────────────────────────────────
 
+  void _importRoutine(int bountyId) async {
+    final routines = await ref.read(routinesProvider.future);
+    if (!mounted) return;
+
+    if (routines.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You have no saved decks! Create one in the Battle Decks screen.')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: QuestFitColors.bgCard,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: routines.length,
+          itemBuilder: (context, index) {
+            final r = routines[index];
+            return ListTile(
+              title: Text(r.routine.name, style: const TextStyle(color: QuestFitColors.gold, fontWeight: FontWeight.bold)),
+              subtitle: Text('${r.exercises.length} exercises', style: const TextStyle(color: QuestFitColors.textMuted)),
+              trailing: const Icon(Icons.chevron_right, color: QuestFitColors.textMuted),
+              onTap: () {
+                Navigator.pop(context);
+                ref.read(bountyNotifierProvider.notifier).importRoutine(bountyId, r.routine.id);
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildNoBounty() {
     return Center(
       child: Column(
@@ -256,10 +292,12 @@ class _BountyBoardScreenState extends ConsumerState<BountyBoardScreen>
                     const SizedBox(height: 20),
 
                     // Routine header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               'YOUR ROUTINE',

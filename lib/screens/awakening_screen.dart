@@ -38,7 +38,6 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   int _currentCalories = 0;
   DateTime? _lastSyncTime;
   bool _isSyncing = false;
-  List<String> _debugLines = [];
 
   @override
   void initState() {
@@ -469,7 +468,6 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
           _currentSteps = summary.steps;
           _currentCalories = summary.calories;
           _lastSyncTime = summary.syncedAt;
-          _debugLines = summary.debugInfo;
           _isSyncing = false;
         });
 
