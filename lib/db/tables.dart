@@ -211,6 +211,8 @@ class ExerciseDb extends Table {
   TextColumn get secondaryMuscles => text().withDefault(const Constant(''))();
   /// Relative image paths stored as JSON array string
   TextColumn get images => text().withDefault(const Constant('[]'))();
+  /// v2.5: Whether the user has favorited this exercise
+  BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
 }
 
 /// Step milestone tracking for expedition rewards.

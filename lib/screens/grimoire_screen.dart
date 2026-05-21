@@ -94,6 +94,22 @@ class _GrimoireScreenState extends ConsumerState<GrimoireScreen> {
             ),
           ),
 
+          // Favorites toggle
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                _FilterChip(
+                  label: '❤️ Favorites Only',
+                  isSelected: filter.favoritesOnly,
+                  color: QuestFitColors.redAccent,
+                  onTap: () => ref.read(exerciseFilterProvider.notifier).toggleFavoritesOnly(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+
           // Filter chips
           _buildFilterRow('Category', filter.category,
               ['strength', 'cardio', 'stretching', 'plyometrics', 'powerlifting', 'olympic weightlifting', 'strongman'],

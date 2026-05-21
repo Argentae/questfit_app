@@ -32,7 +32,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
   }
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -111,6 +111,10 @@ class QuestFitDatabase extends _$QuestFitDatabase {
             await safeAddCol(players, players.restBuffMultiplier);
             await safeAddCol(players, players.lastHealthSync);
           }
+          if (from < 7) {
+            // v6 → v7 migration: Grimoire favorites
+            await safeAddCol(exerciseDb, exerciseDb.isFavorite);
+          }
         },
         beforeOpen: (details) async {
           // Fix potentially null columns from legacy migrations.
@@ -129,6 +133,9 @@ class QuestFitDatabase extends _$QuestFitDatabase {
             await customStatement("UPDATE players SET aether = 0 WHERE aether IS NULL");
             await customStatement("UPDATE players SET last_sleep_minutes = 0 WHERE last_sleep_minutes IS NULL");
             await customStatement("UPDATE players SET rest_buff_multiplier = 1.0 WHERE rest_buff_multiplier IS NULL");
+          } catch (_) {}
+          try {
+            await customStatement("UPDATE exercise_db SET is_favorite = 0 WHERE is_favorite IS NULL");
           } catch (_) {}
           try {
             await customStatement("UPDATE quests SET gold_reward = 0 WHERE gold_reward IS NULL");

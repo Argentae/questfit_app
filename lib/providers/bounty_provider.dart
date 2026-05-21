@@ -231,8 +231,11 @@ class BountyNotifier extends AsyncNotifier<void> {
     final resistances = (jsonDecode(enemy.resistances) as List).cast<String>();
     final immunities = (jsonDecode(enemy.immunities) as List).cast<String>();
 
+    // Get player to apply rhythm buffs
+    final player = await (_db.select(_db.players)..limit(1)).getSingle();
+
     // Calculate damage
-    final dmg = CombatEngine.calculateExerciseDamage(
+    final baseDmg = CombatEngine.calculateExerciseDamage(
       sets: routineEx.sets,
       reps: routineEx.reps,
       duration: routineEx.duration,
@@ -242,6 +245,9 @@ class BountyNotifier extends AsyncNotifier<void> {
       resistances: resistances,
       immunities: immunities,
     );
+    
+    // v2.5: Apply Sleep Buff Multiplier
+    final dmg = (baseDmg * player.restBuffMultiplier).round();
 
     // Update routine exercise as completed
     await (_db.update(_db.routineExercises)

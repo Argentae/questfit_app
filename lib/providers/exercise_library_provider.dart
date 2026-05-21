@@ -9,9 +9,28 @@ import 'database_provider.dart';
 final allExercisesProvider = StreamProvider<List<ExerciseDbData>>((ref) {
   final db = ref.watch(databaseProvider);
   return (db.select(db.exerciseDb)
-        ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+        ..orderBy([
+          (t) => OrderingTerm.desc(t.isFavorite),
+          (t) => OrderingTerm.asc(t.name)
+        ]))
       .watch();
 });
+
+/// Toggles the favorite status of an exercise
+final exerciseLibraryActionsProvider = Provider((ref) {
+  final db = ref.watch(databaseProvider);
+  return ExerciseLibraryActions(db);
+});
+
+class ExerciseLibraryActions {
+  final QuestFitDatabase _db;
+  ExerciseLibraryActions(this._db);
+
+  Future<void> toggleFavorite(int exerciseId, bool currentStatus) async {
+    await (_db.update(_db.exerciseDb)..where((t) => t.id.equals(exerciseId)))
+        .write(ExerciseDbCompanion(isFavorite: Value(!currentStatus)));
+  }
+}
 
 /// Total exercise count.
 final exerciseCountProvider = Provider<int>((ref) {
@@ -26,14 +45,22 @@ class ExerciseFilter {
   final String? equipment;
   final String? level;
   final String? muscle;
+  final bool favoritesOnly;
 
-  const ExerciseFilter({this.category, this.equipment, this.level, this.muscle});
+  const ExerciseFilter({
+    this.category,
+    this.equipment,
+    this.level,
+    this.muscle,
+    this.favoritesOnly = false,
+  });
 
   ExerciseFilter copyWith({
     String? category,
     String? equipment,
     String? level,
     String? muscle,
+    bool? favoritesOnly,
     bool clearCategory = false,
     bool clearEquipment = false,
     bool clearLevel = false,
@@ -44,6 +71,7 @@ class ExerciseFilter {
       equipment: clearEquipment ? null : (equipment ?? this.equipment),
       level: clearLevel ? null : (level ?? this.level),
       muscle: clearMuscle ? null : (muscle ?? this.muscle),
+      favoritesOnly: favoritesOnly ?? this.favoritesOnly,
     );
   }
 }
@@ -81,6 +109,10 @@ class ExerciseFilterNotifier extends Notifier<ExerciseFilter> {
     );
   }
 
+  void toggleFavoritesOnly() {
+    state = state.copyWith(favoritesOnly: !state.favoritesOnly);
+  }
+
   void clearAll() {
     state = const ExerciseFilter();
   }
@@ -104,6 +136,11 @@ final filteredExercisesProvider =
 
   return allExercises.whenData((exercises) {
     var filtered = exercises;
+
+    // Favorites filter
+    if (filter.favoritesOnly) {
+      filtered = filtered.where((e) => e.isFavorite).toList();
+    }
 
     // Category filter
     if (filter.category != null) {

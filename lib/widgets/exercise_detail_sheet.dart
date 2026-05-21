@@ -1,17 +1,19 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app/theme.dart';
 import '../db/database.dart';
 import '../data/exercise_catalog.dart';
+import '../providers/exercise_library_provider.dart';
 
 /// Modal bottom sheet showing full exercise details from the Grimoire.
-class ExerciseDetailSheet extends StatelessWidget {
+class ExerciseDetailSheet extends ConsumerWidget {
   final ExerciseDbData exercise;
 
   const ExerciseDetailSheet({super.key, required this.exercise});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final questCat = categoryMapping[exercise.category] ?? exercise.category;
     final catColor = _catColor(questCat);
     final instructions = _parseInstructions(exercise.instructions);
@@ -48,14 +50,33 @@ class ExerciseDetailSheet extends StatelessWidget {
               ),
             ),
 
-            // Exercise name
-            Text(
-              exercise.name,
-              style: TextStyle(
-                color: catColor,
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-              ),
+            // Exercise name and favorite button
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    exercise.name,
+                    style: TextStyle(
+                      color: catColor,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    exercise.isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: exercise.isFavorite ? QuestFitColors.redAccent : QuestFitColors.textMuted,
+                  ),
+                  onPressed: () {
+                    ref
+                        .read(exerciseLibraryActionsProvider)
+                        .toggleFavorite(exercise.id, exercise.isFavorite);
+                    // Dismiss the sheet so it can visually refresh when re-opened, or wait for stream update
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 12),
 
