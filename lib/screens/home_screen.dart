@@ -170,6 +170,12 @@ class HomeScreen extends ConsumerWidget {
               icon: Icons.view_carousel_outlined,
               onTap: () => context.push('/routines'),
             ),
+            const SizedBox(width: 8),
+            // v2.5: Bestiary button
+            _IconButton(
+              icon: Icons.menu_book_outlined,
+              onTap: () => context.push('/bestiary'),
+            ),
           ],
         ),
       ),

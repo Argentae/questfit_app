@@ -170,6 +170,38 @@ class CompanionNotifier extends Notifier<void> {
         .write(const CompanionsCompanion(isActive: Value(false)));
   }
 
+  /// Feed a companion to reduce hunger, increase bond, and potentially level up.
+  Future<bool> feedCompanion(int companionId) async {
+    final companion = await (_db.select(_db.companions)
+          ..where((t) => t.id.equals(companionId)))
+        .getSingleOrNull();
+    if (companion == null) return false;
+
+    // In a real app we'd subtract a Consumable here.
+    // For now we just increase Bond and XP.
+    int newXp = companion.xp + 25;
+    int newLevel = companion.level;
+    int newBond = (companion.bond + 10).clamp(0, 100);
+    int newHunger = (companion.hunger - 20).clamp(0, 100);
+
+    // Simple level up curve
+    final xpNeeded = newLevel * 100;
+    if (newXp >= xpNeeded) {
+      newLevel++;
+      newXp -= xpNeeded;
+    }
+
+    await (_db.update(_db.companions)..where((t) => t.id.equals(companionId)))
+        .write(CompanionsCompanion(
+      xp: Value(newXp),
+      level: Value(newLevel),
+      bond: Value(newBond),
+      hunger: Value(newHunger),
+    ));
+
+    return true;
+  }
+
   Future<int> _getPlayerId() async {
     final player =
         await ((_db.select(_db.players))..limit(1)).getSingle();

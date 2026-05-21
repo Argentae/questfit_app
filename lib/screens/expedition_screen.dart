@@ -352,7 +352,7 @@ class _ExpeditionScreenState extends ConsumerState<ExpeditionScreen>
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 1.3,
+                    childAspectRatio: 0.85,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
@@ -406,12 +406,40 @@ class _ExpeditionScreenState extends ConsumerState<ExpeditionScreen>
                                 style: TextStyle(
                                     color: rarityColor, fontSize: 10),
                                 maxLines: 1, overflow: TextOverflow.ellipsis),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Lv.${c.level}', style: const TextStyle(color: QuestFitColors.textSecondary, fontSize: 10)),
+                                Text('Bond: ${c.bond}%', style: const TextStyle(color: QuestFitColors.textSecondary, fontSize: 10)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 24,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: QuestFitColors.emerald.withValues(alpha: 0.2),
+                                  foregroundColor: QuestFitColors.emerald,
+                                  padding: EdgeInsets.zero,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                ),
+                                onPressed: () {
+                                  ref.read(companionNotifierProvider.notifier).feedCompanion(c.id);
+                                },
+                                child: const Text('FEED 🍖', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
                             if (c.isActive)
-                              const Text('⭐ ACTIVE',
-                                  style: TextStyle(
-                                      color: QuestFitColors.gold,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w700)),
+                              const Padding(
+                                padding: EdgeInsets.only(top: 4.0),
+                                child: Text('⭐ ACTIVE',
+                                    style: TextStyle(
+                                        color: QuestFitColors.gold,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700)),
+                              ),
                           ],
                         ),
                       ),

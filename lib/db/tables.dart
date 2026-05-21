@@ -260,6 +260,11 @@ class Companions extends Table {
   /// Whether this companion is active (only 1 active at a time)
   BoolColumn get isActive => boolean().withDefault(const Constant(false))();
   DateTimeColumn get hatchedAt => dateTime().withDefault(currentDateAndTime)();
+  // v2.5: Pet System
+  IntColumn get level => integer().withDefault(const Constant(1))();
+  IntColumn get xp => integer().withDefault(const Constant(0))();
+  IntColumn get hunger => integer().withDefault(const Constant(100))();
+  IntColumn get bond => integer().withDefault(const Constant(0))();
 }
 
 // ─── v2.3 NEW TABLES ─────────────────────────────────────────────────
@@ -354,4 +359,27 @@ class RoutineBuilderExercises extends Table {
   IntColumn get reps => integer().nullable()();
   IntColumn get duration => integer().nullable()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+}
+
+// ─── v2.5 Phase 3 NEW TABLES ──────────────────────────────────────────
+
+/// The Bestiary tracks encountered and defeated enemies.
+class Bestiary extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get playerId => integer().references(Players, #id)();
+  IntColumn get enemyId => integer().references(Enemies, #id)();
+  IntColumn get timesDefeated => integer().withDefault(const Constant(0))();
+  IntColumn get fastestKillSeconds => integer().nullable()();
+  IntColumn get maxDamageDealt => integer().withDefault(const Constant(0))();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [{playerId, enemyId}];
+}
+
+/// Consumable items (e.g. companion food, reroll tokens).
+class Consumables extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get playerId => integer().references(Players, #id)();
+  TextColumn get itemType => text()(); // 'food_basic', 'food_premium', 'reroll_token'
+  IntColumn get quantity => integer().withDefault(const Constant(0))();
 }

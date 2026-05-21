@@ -365,6 +365,24 @@ class BountyNotifier extends AsyncNotifier<void> {
       resolvedAt: Value(DateTime.now()),
     ));
 
+    // Update Bestiary
+    await _db.into(_db.bestiary).insert(
+          BestiaryCompanion.insert(
+            playerId: bounty.playerId,
+            enemyId: bounty.enemyId!,
+            timesDefeated: const Value(1),
+            maxDamageDealt: Value(resolution.totalDamageDealt),
+          ),
+          onConflict: DoUpdate(
+            (old) => BestiaryCompanion.custom(
+              timesDefeated: old.timesDefeated + const Constant(1),
+              maxDamageDealt: CustomExpression<int>(
+                'MAX(${old.maxDamageDealt.name}, ${resolution.totalDamageDealt})'
+              ),
+            ),
+          ),
+        );
+
     debugPrint('Bounty: VICTORY! +${resolution.lpChange} LP, +${resolution.goldChange} Gold');
 
     return resolution;

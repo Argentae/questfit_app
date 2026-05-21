@@ -21,6 +21,7 @@ part 'database.g.dart';
   Enemies, Bounties, RoutineExercises,
   // v2.5 tables
   Routines, RoutineBuilderExercises,
+  Bestiary, Consumables,
 ])
 class QuestFitDatabase extends _$QuestFitDatabase {
   QuestFitDatabase._() : super(_openConnection());
@@ -34,7 +35,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
   }
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -123,6 +124,15 @@ class QuestFitDatabase extends _$QuestFitDatabase {
             await safeCreateTab(routineBuilderExercises);
             await safeAddCol(workoutLogs, workoutLogs.weight);
             await safeAddCol(workoutLogs, workoutLogs.reps);
+          }
+          if (from < 9) {
+            // v8 → v9 migration: Bestiary and Companions Expansion
+            await safeCreateTab(bestiary);
+            await safeCreateTab(consumables);
+            await safeAddCol(companions, companions.level);
+            await safeAddCol(companions, companions.xp);
+            await safeAddCol(companions, companions.hunger);
+            await safeAddCol(companions, companions.bond);
           }
         },
         beforeOpen: (details) async {

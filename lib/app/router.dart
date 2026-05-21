@@ -16,6 +16,9 @@ import '../screens/loadout_screen.dart';
 import '../screens/shop_screen.dart';
 import '../screens/rank_trial_screen.dart';
 import '../screens/routines_screen.dart';
+import '../screens/bestiary_screen.dart';
+import '../screens/rank_trial_screen.dart';
+import '../screens/routines_screen.dart';
 import '../screens/rank_trial_screen.dart';
 import '../widgets/bottom_nav.dart';
 
@@ -133,6 +136,13 @@ GoRouter createAppRouter(WidgetRef ref) {
             path: '/routines',
             pageBuilder: (context, state) => CustomTransitionPage(
               child: const RoutinesScreen(),
+              transitionsBuilder: _fadeTransition,
+            ),
+          ),
+          GoRoute(
+            path: '/bestiary',
+            pageBuilder: (context, state) => CustomTransitionPage(
+              child: const BestiaryScreen(),
               transitionsBuilder: _fadeTransition,
             ),
           ),
