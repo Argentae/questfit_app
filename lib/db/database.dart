@@ -19,6 +19,8 @@ part 'database.g.dart';
   ExerciseDb, StepMilestones, Eggs, Companions,
   // v2.3 tables
   Enemies, Bounties, RoutineExercises,
+  // v2.5 tables
+  Routines, RoutineBuilderExercises,
 ])
 class QuestFitDatabase extends _$QuestFitDatabase {
   QuestFitDatabase._() : super(_openConnection());
@@ -32,7 +34,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
   }
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -114,6 +116,13 @@ class QuestFitDatabase extends _$QuestFitDatabase {
           if (from < 7) {
             // v6 → v7 migration: Grimoire favorites
             await safeAddCol(exerciseDb, exerciseDb.isFavorite);
+          }
+          if (from < 8) {
+            // v7 → v8 migration: Routines and PR Tracking
+            await safeCreateTab(routines);
+            await safeCreateTab(routineBuilderExercises);
+            await safeAddCol(workoutLogs, workoutLogs.weight);
+            await safeAddCol(workoutLogs, workoutLogs.reps);
           }
         },
         beforeOpen: (details) async {

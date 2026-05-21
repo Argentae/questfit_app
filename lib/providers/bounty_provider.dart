@@ -195,6 +195,26 @@ class BountyNotifier extends AsyncNotifier<void> {
     ));
   }
 
+  /// Import all exercises from a Deck (Routine) into the current bounty.
+  Future<void> importRoutine(int bountyId, int routineId) async {
+    await _db.transaction(() async {
+      final exercises = await (_db.select(_db.routineBuilderExercises)
+            ..where((t) => t.routineId.equals(routineId))
+            ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
+          .get();
+
+      for (final ex in exercises) {
+        await _db.into(_db.routineExercises).insert(RoutineExercisesCompanion.insert(
+          bountyId: bountyId,
+          exerciseDbId: ex.exerciseDbId,
+          sets: Value(ex.sets),
+          reps: Value(ex.reps),
+          duration: Value(ex.duration),
+        ));
+      }
+    });
+  }
+
   /// Remove an exercise from the routine.
   Future<void> removeExerciseFromRoutine(int routineExerciseId) async {
     await (_db.delete(_db.routineExercises)

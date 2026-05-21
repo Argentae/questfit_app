@@ -6283,6 +6283,21 @@ class $ExerciseDbTable extends ExerciseDb
     requiredDuringInsert: false,
     defaultValue: const Constant('[]'),
   );
+  static const VerificationMeta _isFavoriteMeta = const VerificationMeta(
+    'isFavorite',
+  );
+  @override
+  late final GeneratedColumn<bool> isFavorite = GeneratedColumn<bool>(
+    'is_favorite',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_favorite" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6297,6 +6312,7 @@ class $ExerciseDbTable extends ExerciseDb
     primaryMuscles,
     secondaryMuscles,
     images,
+    isFavorite,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6400,6 +6416,12 @@ class $ExerciseDbTable extends ExerciseDb
         images.isAcceptableOrUnknown(data['images']!, _imagesMeta),
       );
     }
+    if (data.containsKey('is_favorite')) {
+      context.handle(
+        _isFavoriteMeta,
+        isFavorite.isAcceptableOrUnknown(data['is_favorite']!, _isFavoriteMeta),
+      );
+    }
     return context;
   }
 
@@ -6466,6 +6488,11 @@ class $ExerciseDbTable extends ExerciseDb
             DriftSqlType.string,
             data['${effectivePrefix}images'],
           )!,
+      isFavorite:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_favorite'],
+          )!,
     );
   }
 
@@ -6508,6 +6535,9 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
 
   /// Relative image paths stored as JSON array string
   final String images;
+
+  /// v2.5: Whether the user has favorited this exercise
+  final bool isFavorite;
   const ExerciseDbData({
     required this.id,
     required this.externalId,
@@ -6521,6 +6551,7 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
     required this.primaryMuscles,
     required this.secondaryMuscles,
     required this.images,
+    required this.isFavorite,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6543,6 +6574,7 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
     map['primary_muscles'] = Variable<String>(primaryMuscles);
     map['secondary_muscles'] = Variable<String>(secondaryMuscles);
     map['images'] = Variable<String>(images);
+    map['is_favorite'] = Variable<bool>(isFavorite);
     return map;
   }
 
@@ -6567,6 +6599,7 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
       primaryMuscles: Value(primaryMuscles),
       secondaryMuscles: Value(secondaryMuscles),
       images: Value(images),
+      isFavorite: Value(isFavorite),
     );
   }
 
@@ -6588,6 +6621,7 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
       primaryMuscles: serializer.fromJson<String>(json['primaryMuscles']),
       secondaryMuscles: serializer.fromJson<String>(json['secondaryMuscles']),
       images: serializer.fromJson<String>(json['images']),
+      isFavorite: serializer.fromJson<bool>(json['isFavorite']),
     );
   }
   @override
@@ -6606,6 +6640,7 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
       'primaryMuscles': serializer.toJson<String>(primaryMuscles),
       'secondaryMuscles': serializer.toJson<String>(secondaryMuscles),
       'images': serializer.toJson<String>(images),
+      'isFavorite': serializer.toJson<bool>(isFavorite),
     };
   }
 
@@ -6622,6 +6657,7 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
     String? primaryMuscles,
     String? secondaryMuscles,
     String? images,
+    bool? isFavorite,
   }) => ExerciseDbData(
     id: id ?? this.id,
     externalId: externalId ?? this.externalId,
@@ -6635,6 +6671,7 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
     primaryMuscles: primaryMuscles ?? this.primaryMuscles,
     secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
     images: images ?? this.images,
+    isFavorite: isFavorite ?? this.isFavorite,
   );
   ExerciseDbData copyWithCompanion(ExerciseDbCompanion data) {
     return ExerciseDbData(
@@ -6660,6 +6697,8 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
               ? data.secondaryMuscles.value
               : this.secondaryMuscles,
       images: data.images.present ? data.images.value : this.images,
+      isFavorite:
+          data.isFavorite.present ? data.isFavorite.value : this.isFavorite,
     );
   }
 
@@ -6677,7 +6716,8 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
           ..write('instructions: $instructions, ')
           ..write('primaryMuscles: $primaryMuscles, ')
           ..write('secondaryMuscles: $secondaryMuscles, ')
-          ..write('images: $images')
+          ..write('images: $images, ')
+          ..write('isFavorite: $isFavorite')
           ..write(')'))
         .toString();
   }
@@ -6696,6 +6736,7 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
     primaryMuscles,
     secondaryMuscles,
     images,
+    isFavorite,
   );
   @override
   bool operator ==(Object other) =>
@@ -6712,7 +6753,8 @@ class ExerciseDbData extends DataClass implements Insertable<ExerciseDbData> {
           other.instructions == this.instructions &&
           other.primaryMuscles == this.primaryMuscles &&
           other.secondaryMuscles == this.secondaryMuscles &&
-          other.images == this.images);
+          other.images == this.images &&
+          other.isFavorite == this.isFavorite);
 }
 
 class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
@@ -6728,6 +6770,7 @@ class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
   final Value<String> primaryMuscles;
   final Value<String> secondaryMuscles;
   final Value<String> images;
+  final Value<bool> isFavorite;
   const ExerciseDbCompanion({
     this.id = const Value.absent(),
     this.externalId = const Value.absent(),
@@ -6741,6 +6784,7 @@ class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
     this.primaryMuscles = const Value.absent(),
     this.secondaryMuscles = const Value.absent(),
     this.images = const Value.absent(),
+    this.isFavorite = const Value.absent(),
   });
   ExerciseDbCompanion.insert({
     this.id = const Value.absent(),
@@ -6755,6 +6799,7 @@ class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
     required String primaryMuscles,
     this.secondaryMuscles = const Value.absent(),
     this.images = const Value.absent(),
+    this.isFavorite = const Value.absent(),
   }) : externalId = Value(externalId),
        name = Value(name),
        level = Value(level),
@@ -6774,6 +6819,7 @@ class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
     Expression<String>? primaryMuscles,
     Expression<String>? secondaryMuscles,
     Expression<String>? images,
+    Expression<bool>? isFavorite,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -6788,6 +6834,7 @@ class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
       if (primaryMuscles != null) 'primary_muscles': primaryMuscles,
       if (secondaryMuscles != null) 'secondary_muscles': secondaryMuscles,
       if (images != null) 'images': images,
+      if (isFavorite != null) 'is_favorite': isFavorite,
     });
   }
 
@@ -6804,6 +6851,7 @@ class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
     Value<String>? primaryMuscles,
     Value<String>? secondaryMuscles,
     Value<String>? images,
+    Value<bool>? isFavorite,
   }) {
     return ExerciseDbCompanion(
       id: id ?? this.id,
@@ -6818,6 +6866,7 @@ class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
       primaryMuscles: primaryMuscles ?? this.primaryMuscles,
       secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
       images: images ?? this.images,
+      isFavorite: isFavorite ?? this.isFavorite,
     );
   }
 
@@ -6860,6 +6909,9 @@ class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
     if (images.present) {
       map['images'] = Variable<String>(images.value);
     }
+    if (isFavorite.present) {
+      map['is_favorite'] = Variable<bool>(isFavorite.value);
+    }
     return map;
   }
 
@@ -6877,7 +6929,8 @@ class ExerciseDbCompanion extends UpdateCompanion<ExerciseDbData> {
           ..write('instructions: $instructions, ')
           ..write('primaryMuscles: $primaryMuscles, ')
           ..write('secondaryMuscles: $secondaryMuscles, ')
-          ..write('images: $images')
+          ..write('images: $images, ')
+          ..write('isFavorite: $isFavorite')
           ..write(')'))
         .toString();
   }
@@ -16130,6 +16183,7 @@ typedef $$ExerciseDbTableCreateCompanionBuilder =
       required String primaryMuscles,
       Value<String> secondaryMuscles,
       Value<String> images,
+      Value<bool> isFavorite,
     });
 typedef $$ExerciseDbTableUpdateCompanionBuilder =
     ExerciseDbCompanion Function({
@@ -16145,6 +16199,7 @@ typedef $$ExerciseDbTableUpdateCompanionBuilder =
       Value<String> primaryMuscles,
       Value<String> secondaryMuscles,
       Value<String> images,
+      Value<bool> isFavorite,
     });
 
 final class $$ExerciseDbTableReferences
@@ -16246,6 +16301,11 @@ class $$ExerciseDbTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> routineExercisesRefs(
     Expression<bool> Function($$RoutineExercisesTableFilterComposer f) f,
   ) {
@@ -16340,6 +16400,11 @@ class $$ExerciseDbTableOrderingComposer
     column: $table.images,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ExerciseDbTableAnnotationComposer
@@ -16394,6 +16459,11 @@ class $$ExerciseDbTableAnnotationComposer
 
   GeneratedColumn<String> get images =>
       $composableBuilder(column: $table.images, builder: (column) => column);
+
+  GeneratedColumn<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => column,
+  );
 
   Expression<T> routineExercisesRefs<T extends Object>(
     Expression<T> Function($$RoutineExercisesTableAnnotationComposer a) f,
@@ -16461,6 +16531,7 @@ class $$ExerciseDbTableTableManager
                 Value<String> primaryMuscles = const Value.absent(),
                 Value<String> secondaryMuscles = const Value.absent(),
                 Value<String> images = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
               }) => ExerciseDbCompanion(
                 id: id,
                 externalId: externalId,
@@ -16474,6 +16545,7 @@ class $$ExerciseDbTableTableManager
                 primaryMuscles: primaryMuscles,
                 secondaryMuscles: secondaryMuscles,
                 images: images,
+                isFavorite: isFavorite,
               ),
           createCompanionCallback:
               ({
@@ -16489,6 +16561,7 @@ class $$ExerciseDbTableTableManager
                 required String primaryMuscles,
                 Value<String> secondaryMuscles = const Value.absent(),
                 Value<String> images = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
               }) => ExerciseDbCompanion.insert(
                 id: id,
                 externalId: externalId,
@@ -16502,6 +16575,7 @@ class $$ExerciseDbTableTableManager
                 primaryMuscles: primaryMuscles,
                 secondaryMuscles: secondaryMuscles,
                 images: images,
+                isFavorite: isFavorite,
               ),
           withReferenceMapper:
               (p0) =>

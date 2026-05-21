@@ -164,6 +164,12 @@ class HomeScreen extends ConsumerWidget {
               icon: Icons.auto_stories_outlined,
               onTap: () => context.go('/grimoire'),
             ),
+            const SizedBox(width: 8),
+            // v2.5: Battle Decks button
+            _IconButton(
+              icon: Icons.view_carousel_outlined,
+              onTap: () => context.push('/routines'),
+            ),
           ],
         ),
       ),

@@ -91,6 +91,9 @@ class WorkoutLogs extends Table {
   IntColumn get xpEarned => integer()();
   TextColumn get source => text().withDefault(const Constant('manual'))();
   TextColumn get healthConnectId => text().nullable()();
+  // v2.5: PR Tracking
+  RealColumn get weight => real().nullable()();
+  IntColumn get reps => integer().nullable()();
 }
 
 /// Streak tracking.
@@ -322,7 +325,7 @@ class RoutineExercises extends Table {
   IntColumn get bountyId => integer().references(Bounties, #id)();
   /// Reference to the Grimoire exercise
   IntColumn get exerciseDbId => integer().references(ExerciseDb, #id)();
-  IntColumn get sets => integer()();
+  IntColumn get sets => integer().withDefault(const Constant(1))();
   IntColumn get reps => integer().nullable()();
   IntColumn get duration => integer().nullable()();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
@@ -331,3 +334,24 @@ class RoutineExercises extends Table {
   IntColumn get damageDealt => integer().withDefault(const Constant(0))();
 }
 
+// ─── v2.5 NEW TABLES ─────────────────────────────────────────────────
+
+/// User-created workout routines (Decks).
+class Routines extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get playerId => integer().references(Players, #id)();
+  TextColumn get name => text()();
+  TextColumn get description => text().withDefault(const Constant(''))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+/// The exercises saved inside a Routine.
+class RoutineBuilderExercises extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get routineId => integer().references(Routines, #id)();
+  IntColumn get exerciseDbId => integer().references(ExerciseDb, #id)();
+  IntColumn get sets => integer().withDefault(const Constant(1))();
+  IntColumn get reps => integer().nullable()();
+  IntColumn get duration => integer().nullable()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+}

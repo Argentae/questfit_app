@@ -11,6 +11,7 @@ import '../data/enemy_catalog.dart';
 import '../engine/combat_engine.dart';
 import '../providers/bounty_provider.dart';
 import '../providers/database_provider.dart';
+import '../providers/routine_provider.dart';
 import '../services/haptic_service.dart';
 
 class BountyBoardScreen extends ConsumerStatefulWidget {
@@ -256,34 +257,44 @@ class _BountyBoardScreenState extends ConsumerState<BountyBoardScreen>
 
                     // Routine header
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'YOUR ROUTINE',
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 11,
-                            color: QuestFitColors.textMuted,
-                            letterSpacing: 3,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        routineAsync.when(
-                          data: (exercises) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: QuestFitColors.emerald.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '${exercises.where((e) => e.isCompleted).length}/${exercises.length}',
-                              style: const TextStyle(
-                                fontSize: 10, fontWeight: FontWeight.w700,
-                                color: QuestFitColors.emerald,
+                        Row(
+                          children: [
+                            Text(
+                              'YOUR ROUTINE',
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 11,
+                                color: QuestFitColors.textMuted,
+                                letterSpacing: 3,
                               ),
                             ),
-                          ),
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
+                            const SizedBox(width: 8),
+                            routineAsync.when(
+                              data: (exercises) => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: QuestFitColors.emerald.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${exercises.where((e) => e.isCompleted).length}/${exercises.length}',
+                                  style: const TextStyle(
+                                    fontSize: 10, fontWeight: FontWeight.w700,
+                                    color: QuestFitColors.emerald,
+                                  ),
+                                ),
+                              ),
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, __) => const SizedBox.shrink(),
+                            ),
+                          ],
+                        ),
+                        TextButton.icon(
+                          onPressed: () => _importRoutine(bounty.id),
+                          icon: const Icon(Icons.download_rounded, color: QuestFitColors.emerald, size: 16),
+                          label: const Text('IMPORT DECK', style: TextStyle(color: QuestFitColors.emerald, fontSize: 12, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
