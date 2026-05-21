@@ -1,5 +1,5 @@
-import '../lib/engine/rank_engine.dart';
-import '../lib/engine/lp_engine.dart';
+import 'package:questfit_app/engine/rank_engine.dart';
+import 'package:questfit_app/engine/lp_engine.dart';
 
 void main() {
   // ── v3.0 Tier System Tests ──────────────────────────────────────────
@@ -55,5 +55,4 @@ void main() {
   assert(info.fullName == 'Silver III');
   assert(info.tierIndex == 2);
 
-  print('✅ All v3.0 LP/Tier system tests passed!');
 }

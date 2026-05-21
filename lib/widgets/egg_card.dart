@@ -81,10 +81,10 @@ class _EggCardState extends State<EggCard> with SingleTickerProviderStateMixin {
         decoration: BoxDecoration(
           color: QuestFitColors.bgCard,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: rarityColor.withOpacity(0.5), width: 1.5),
+          border: Border.all(color: rarityColor.withValues(alpha: 0.5), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: rarityColor.withOpacity(0.15),
+              color: rarityColor.withValues(alpha: 0.15),
               blurRadius: 10,
             ),
           ],

@@ -346,7 +346,7 @@ class SettingsScreen extends ConsumerWidget {
               activeTrackColor: QuestFitColors.emerald,
               inactiveTrackColor: QuestFitColors.glassBorder,
               thumbColor: QuestFitColors.emerald,
-              overlayColor: QuestFitColors.emerald.withOpacity(0.1),
+              overlayColor: QuestFitColors.emerald.withValues(alpha: 0.1),
               trackHeight: 4,
             ),
             child: Slider(

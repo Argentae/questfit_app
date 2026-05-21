@@ -107,7 +107,7 @@ class ExerciseDetailSheet extends StatelessWidget {
                         Container(
                           width: 24, height: 24,
                           decoration: BoxDecoration(
-                            color: catColor.withOpacity(0.15),
+                            color: catColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Center(
@@ -153,9 +153,9 @@ class ExerciseDetailSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3), width: 0.5),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5),
       ),
       child: Text(text,
           style: TextStyle(
@@ -167,7 +167,7 @@ class ExerciseDetailSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(muscle,

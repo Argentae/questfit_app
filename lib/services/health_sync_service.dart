@@ -176,6 +176,7 @@ class HealthSyncService {
       await _setLastSyncTimestamp(now);
     } catch (e) {
       debugPrint('HealthConnect sync error: $e');
+      throw Exception('Failed to sync workouts from Health Connect: $e');
     }
 
     final totalXp = results.fold<int>(0, (sum, r) => sum + r.lpAwarded);

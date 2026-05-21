@@ -104,7 +104,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (err, _) => const Icon(Icons.error_outline, size: 16, color: Colors.redAccent),
             ),
             const SizedBox(width: 6),
             // v2.4: Aether display
@@ -139,7 +139,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (err, _) => const Icon(Icons.error_outline, size: 16, color: Colors.redAccent),
             ),
             const SizedBox(width: 8),
             _IconButton(
@@ -183,11 +183,11 @@ class HomeScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           gradient: LinearGradient(colors: [
-            QuestFitColors.emerald.withOpacity(0.15),
-            QuestFitColors.emerald.withOpacity(0.05),
+            QuestFitColors.emerald.withValues(alpha: 0.15),
+            QuestFitColors.emerald.withValues(alpha: 0.05),
           ]),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: QuestFitColors.emerald.withOpacity(0.3)),
+          border: Border.all(color: QuestFitColors.emerald.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -229,11 +229,11 @@ class HomeScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           gradient: LinearGradient(colors: [
-            accentColor.withOpacity(0.15),
-            accentColor.withOpacity(0.05),
+            accentColor.withValues(alpha: 0.15),
+            accentColor.withValues(alpha: 0.05),
           ]),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: accentColor.withOpacity(0.3)),
+          border: Border.all(color: accentColor.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -404,7 +404,7 @@ class HomeScreen extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (err, _) => const Center(child: Icon(Icons.error_outline, color: Colors.redAccent)),
     );
   }
 
@@ -414,7 +414,7 @@ class HomeScreen extends ConsumerWidget {
 
     return bountyAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (err, _) => const Center(child: Icon(Icons.error_outline, color: Colors.redAccent)),
       data: (bounty) {
         if (bounty == null) {
           return _buildNoBountyCard(context);
@@ -558,7 +558,7 @@ class HomeScreen extends ConsumerWidget {
                               fontSize: 12, color: QuestFitColors.textSecondary),
                         ),
                         loading: () => const SizedBox.shrink(),
-                        error: (_, __) => const SizedBox.shrink(),
+                        error: (err, _) => const Center(child: Icon(Icons.error_outline, color: Colors.redAccent)),
                       ),
                     ],
                   ),

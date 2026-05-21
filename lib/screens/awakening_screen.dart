@@ -6,7 +6,7 @@ import '../app/theme.dart';
 import '../providers/app_init_provider.dart';
 import '../providers/health_provider.dart';
 import '../providers/user_provider.dart';
-import '../services/health_sync_service.dart';
+
 
 /// v2.0: The Awakening — Proving Grounds (Levels 1-5).
 /// A dark, minimalist screen that locks the player out of the main UI
@@ -293,41 +293,6 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
           color: QuestFitColors.orangeAccent,
         ),
       ],
-    );
-  }
-
-  Widget _buildDebugPanel() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '⚙️ HEALTH CONNECT DEBUG',
-            style: GoogleFonts.inter(
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
-              color: Colors.amber,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          ..._debugLines.map((line) => Text(
-                line,
-                style: GoogleFonts.inter(
-                  fontSize: 9,
-                  color: Colors.white70,
-                  height: 1.4,
-                ),
-              )),
-        ],
-      ),
     );
   }
 

@@ -136,12 +136,12 @@ class _ExpeditionScreenState extends ConsumerState<ExpeditionScreen>
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: hasMomentum
-                    ? QuestFitColors.emerald.withOpacity(0.1)
+                    ? QuestFitColors.emerald.withValues(alpha: 0.1)
                     : QuestFitColors.bgCard,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: hasMomentum
-                      ? QuestFitColors.emerald.withOpacity(0.4)
+                      ? QuestFitColors.emerald.withValues(alpha: 0.4)
                       : QuestFitColors.glassBorder,
                 ),
               ),
@@ -222,9 +222,9 @@ class _ExpeditionScreenState extends ConsumerState<ExpeditionScreen>
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: isClaimed
-                                      ? QuestFitColors.gold.withOpacity(0.2)
+                                      ? QuestFitColors.gold.withValues(alpha: 0.2)
                                       : isCurrent
-                                          ? QuestFitColors.emerald.withOpacity(0.2)
+                                          ? QuestFitColors.emerald.withValues(alpha: 0.2)
                                           : Colors.transparent,
                                   border: Border.all(
                                     color: isClaimed
@@ -236,7 +236,7 @@ class _ExpeditionScreenState extends ConsumerState<ExpeditionScreen>
                                   ),
                                   boxShadow: isCurrent
                                       ? [BoxShadow(
-                                          color: QuestFitColors.emerald.withOpacity(0.4),
+                                          color: QuestFitColors.emerald.withValues(alpha: 0.4),
                                           blurRadius: 8)]
                                       : null,
                                 ),
@@ -379,7 +379,7 @@ class _ExpeditionScreenState extends ConsumerState<ExpeditionScreen>
                           ),
                           boxShadow: c.isActive
                               ? [BoxShadow(
-                                  color: rarityColor.withOpacity(0.3),
+                                  color: rarityColor.withValues(alpha: 0.3),
                                   blurRadius: 12)]
                               : null,
                         ),

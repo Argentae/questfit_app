@@ -88,7 +88,7 @@ class _RewardToastWidgetState extends State<_RewardToastWidget>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: colors.first.withOpacity(0.4),
+                  color: colors.first.withValues(alpha: 0.4),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -115,7 +115,7 @@ class _RewardToastWidgetState extends State<_RewardToastWidget>
                       Text(
                         widget.reward.description,
                         style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                             fontSize: 12),
                       ),
                     ],

@@ -587,10 +587,7 @@ class _BountyBoardScreenState extends ConsumerState<BountyBoardScreen>
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => ProviderScope(
-          parent: ProviderScope.containerOf(context),
-          child: _ExercisePickerPage(bountyId: bounty.id),
-        ),
+        builder: (_) => _ExercisePickerPage(bountyId: bounty.id),
       ),
     );
   }

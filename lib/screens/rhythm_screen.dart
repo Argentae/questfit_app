@@ -126,8 +126,8 @@ class _RhythmScreenState extends ConsumerState<RhythmScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    QuestFitColors.purple.withOpacity(0.3),
-                    QuestFitColors.purple.withOpacity(0.05),
+                    QuestFitColors.purple.withValues(alpha: 0.3),
+                    QuestFitColors.purple.withValues(alpha: 0.05),
                   ],
                 ),
               ),
@@ -297,15 +297,15 @@ class _RhythmScreenState extends ConsumerState<RhythmScreen>
     switch (buff.tier) {
       case 'well_rested':
         accentColor = QuestFitColors.emerald;
-        bgColor = QuestFitColors.emerald.withOpacity(0.08);
+        bgColor = QuestFitColors.emerald.withValues(alpha: 0.08);
         break;
       case 'rested':
         accentColor = QuestFitColors.blueAccent;
-        bgColor = QuestFitColors.blueAccent.withOpacity(0.08);
+        bgColor = QuestFitColors.blueAccent.withValues(alpha: 0.08);
         break;
       case 'light':
         accentColor = QuestFitColors.gold;
-        bgColor = QuestFitColors.gold.withOpacity(0.08);
+        bgColor = QuestFitColors.gold.withValues(alpha: 0.08);
         break;
       default:
         accentColor = QuestFitColors.textMuted;
@@ -317,7 +317,7 @@ class _RhythmScreenState extends ConsumerState<RhythmScreen>
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accentColor.withOpacity(0.3)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -329,8 +329,8 @@ class _RhythmScreenState extends ConsumerState<RhythmScreen>
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  accentColor.withOpacity(0.25),
-                  accentColor.withOpacity(0.05),
+                  accentColor.withValues(alpha: 0.25),
+                  accentColor.withValues(alpha: 0.05),
                 ],
               ),
             ),
@@ -359,7 +359,7 @@ class _RhythmScreenState extends ConsumerState<RhythmScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: accentColor.withOpacity(0.15),
+                          color: accentColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -389,7 +389,7 @@ class _RhythmScreenState extends ConsumerState<RhythmScreen>
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: accentColor.withOpacity(0.7),
+                      color: accentColor.withValues(alpha: 0.7),
                     ),
                   ),
               ],
@@ -527,15 +527,15 @@ class _RhythmScreenState extends ConsumerState<RhythmScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF1A0A2E).withOpacity(0.8),
-            const Color(0xFF0D1B2A).withOpacity(0.8),
+            const Color(0xFF1A0A2E).withValues(alpha: 0.8),
+            const Color(0xFF0D1B2A).withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: QuestFitColors.purple.withOpacity(0.3),
+          color: QuestFitColors.purple.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -565,7 +565,7 @@ class _RhythmScreenState extends ConsumerState<RhythmScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: QuestFitColors.purple.withOpacity(0.15),
+                    color: QuestFitColors.purple.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -620,7 +620,7 @@ class _RhythmScreenState extends ConsumerState<RhythmScreen>
               value: (aether.earned / RhythmEngine.maxDailyAether)
                   .clamp(0.0, 1.0),
               minHeight: 4,
-              backgroundColor: QuestFitColors.purple.withOpacity(0.1),
+              backgroundColor: QuestFitColors.purple.withValues(alpha: 0.1),
               valueColor: const AlwaysStoppedAnimation(QuestFitColors.purple),
             ),
           ),
@@ -673,12 +673,12 @@ class _RhythmScreenState extends ConsumerState<RhythmScreen>
           ),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: QuestFitColors.purple.withOpacity(0.2),
+          backgroundColor: QuestFitColors.purple.withValues(alpha: 0.2),
           foregroundColor: QuestFitColors.purple,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
-              color: QuestFitColors.purple.withOpacity(0.3),
+              color: QuestFitColors.purple.withValues(alpha: 0.3),
             ),
           ),
           elevation: 0,
