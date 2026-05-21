@@ -2,6 +2,7 @@ import 'package:health/health.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../engine/health_xp_converter.dart';
+import '../engine/rhythm_engine.dart';
 
 /// QuestFit Health Connect sync service.
 /// READ-ONLY access to Samsung Watch workout data via Health Connect.
@@ -23,9 +24,23 @@ class HealthSyncService {
     HealthDataType.STEPS,
     HealthDataType.TOTAL_CALORIES_BURNED,
     HealthDataType.ACTIVE_ENERGY_BURNED,
+    // v2.4: Sleep & Heart Rate
+    HealthDataType.SLEEP_SESSION,
+    HealthDataType.SLEEP_ASLEEP,
+    HealthDataType.SLEEP_DEEP,
+    HealthDataType.SLEEP_LIGHT,
+    HealthDataType.SLEEP_REM,
+    HealthDataType.HEART_RATE,
   ];
 
   static final _permissions = [
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
+    // v2.4: Sleep & Heart Rate
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
     HealthDataAccess.READ,
     HealthDataAccess.READ,
     HealthDataAccess.READ,
@@ -294,6 +309,129 @@ class HealthSyncService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_lastSyncKey, dt.millisecondsSinceEpoch);
   }
+
+  // ─── v2.4: Sleep Data ────────────────────────────────────────────────
+
+  /// Fetch last night's sleep data from Health Connect.
+  ///
+  /// Looks at sleep sessions from 6 PM yesterday to noon today
+  /// to capture typical overnight sleep windows.
+  Future<SleepSummary> getLastNightSleep() async {
+    final now = DateTime.now();
+    // Sleep window: 6 PM yesterday to noon today
+    final sleepWindowStart = DateTime(now.year, now.month, now.day - 1, 18);
+    final sleepWindowEnd = DateTime(now.year, now.month, now.day, 12);
+
+    var totalMinutes = 0;
+    var deepMinutes = 0;
+    var remMinutes = 0;
+    var lightMinutes = 0;
+
+    try {
+      // Fetch sleep session (total duration)
+      final sessions = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.SLEEP_SESSION],
+        startTime: sleepWindowStart,
+        endTime: sleepWindowEnd,
+      );
+
+      // Sum total sleep from sessions
+      for (final s in sessions) {
+        totalMinutes += s.dateTo.difference(s.dateFrom).inMinutes;
+      }
+
+      // Fetch sleep stages for quality analysis
+      final deepData = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.SLEEP_DEEP],
+        startTime: sleepWindowStart,
+        endTime: sleepWindowEnd,
+      );
+      for (final d in deepData) {
+        deepMinutes += d.dateTo.difference(d.dateFrom).inMinutes;
+      }
+
+      final remData = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.SLEEP_REM],
+        startTime: sleepWindowStart,
+        endTime: sleepWindowEnd,
+      );
+      for (final r in remData) {
+        remMinutes += r.dateTo.difference(r.dateFrom).inMinutes;
+      }
+
+      final lightData = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.SLEEP_LIGHT],
+        startTime: sleepWindowStart,
+        endTime: sleepWindowEnd,
+      );
+      for (final l in lightData) {
+        lightMinutes += l.dateTo.difference(l.dateFrom).inMinutes;
+      }
+
+      // If no session data but stages exist, sum stages as total
+      if (totalMinutes == 0 && (deepMinutes + remMinutes + lightMinutes) > 0) {
+        totalMinutes = deepMinutes + remMinutes + lightMinutes;
+      }
+
+      debugPrint('QF_RHYTHM: Sleep — total=${totalMinutes}min, '
+          'deep=${deepMinutes}min, rem=${remMinutes}min, light=${lightMinutes}min');
+    } catch (e) {
+      debugPrint('QF_RHYTHM: Sleep fetch error: $e');
+    }
+
+    return SleepSummary(
+      totalMinutes: totalMinutes,
+      deepMinutes: deepMinutes,
+      remMinutes: remMinutes,
+      lightMinutes: lightMinutes,
+      buff: RhythmEngine.calculateRestBuff(
+        sleepMinutes: totalMinutes,
+        deepSleepMinutes: deepMinutes,
+        remSleepMinutes: remMinutes,
+      ),
+    );
+  }
+
+  // ─── v2.4: Heart Rate Data ──────────────────────────────────────────
+
+  /// Fetch average and peak heart rate from recent workout windows.
+  ///
+  /// [workoutStart] and [workoutEnd] define the workout time range.
+  Future<HeartRateSummary> getWorkoutHeartRate({
+    required DateTime workoutStart,
+    required DateTime workoutEnd,
+  }) async {
+    try {
+      final hrData = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.HEART_RATE],
+        startTime: workoutStart,
+        endTime: workoutEnd,
+      );
+
+      if (hrData.isEmpty) {
+        return const HeartRateSummary(avgBpm: 0, peakBpm: 0, sampleCount: 0);
+      }
+
+      final values = hrData
+          .map((p) => (p.value as NumericHealthValue).numericValue.toDouble())
+          .toList();
+
+      final avg = values.reduce((a, b) => a + b) / values.length;
+      final peak = values.reduce((a, b) => a > b ? a : b);
+
+      debugPrint('QF_RHYTHM: HR — avg=${avg.round()}bpm, '
+          'peak=${peak.round()}bpm, samples=${values.length}');
+
+      return HeartRateSummary(
+        avgBpm: avg,
+        peakBpm: peak,
+        sampleCount: values.length,
+      );
+    } catch (e) {
+      debugPrint('QF_RHYTHM: HR fetch error: $e');
+      return const HeartRateSummary(avgBpm: 0, peakBpm: 0, sampleCount: 0);
+    }
+  }
 }
 
 /// Lightweight health summary for Awakening screen (read-only, no XP).
@@ -325,4 +463,44 @@ class SyncResult {
     this.totalStepsToday = 0,
     this.totalCaloriesToday = 0,
   });
+}
+
+/// v2.4: Sleep data summary from last night.
+class SleepSummary {
+  final int totalMinutes;
+  final int deepMinutes;
+  final int remMinutes;
+  final int lightMinutes;
+  final RestBuff buff;
+
+  const SleepSummary({
+    required this.totalMinutes,
+    required this.deepMinutes,
+    required this.remMinutes,
+    required this.lightMinutes,
+    required this.buff,
+  });
+
+  String get totalFormatted {
+    final hours = totalMinutes ~/ 60;
+    final mins = totalMinutes % 60;
+    return '${hours}h ${mins}m';
+  }
+
+  bool get hasData => totalMinutes > 0;
+}
+
+/// v2.4: Heart rate summary from a workout window.
+class HeartRateSummary {
+  final double avgBpm;
+  final double peakBpm;
+  final int sampleCount;
+
+  const HeartRateSummary({
+    required this.avgBpm,
+    required this.peakBpm,
+    required this.sampleCount,
+  });
+
+  bool get hasData => sampleCount > 0;
 }

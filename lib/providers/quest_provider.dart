@@ -7,6 +7,7 @@ import '../engine/quest_engine.dart';
 import '../engine/rank_engine.dart';
 import '../engine/streak_engine.dart';
 import 'companion_provider.dart';
+import 'health_provider.dart';
 import 'database_provider.dart';
 import 'equipment_provider.dart';
 import 'step_provider.dart';
@@ -94,7 +95,10 @@ class QuestNotifier extends AsyncNotifier<void> {
     final companionLpBonus = ref.read(companionLpBonusProvider);
     final companionGoldBonus = ref.read(companionGoldBonusProvider);
 
-    // Calculate LP reward with mastery, streak, and v2.2 bonuses
+    // v2.4: Check rest buff from sleep quality
+    final restBuff = ref.read(restBuffProvider);
+
+    // Calculate LP reward with mastery, streak, and v2.2/v2.4 bonuses
     final baseLp = quest.lpReward > 0 ? quest.lpReward : LpEngine.baseQuestLp;
     final totalLp = LpEngine.calculateQuestLp(
       baseLp: baseLp,
@@ -102,6 +106,7 @@ class QuestNotifier extends AsyncNotifier<void> {
       currentStreak: streak.currentStreak,
       momentumBuff: hasMomentum,
       companionBonusPct: companionLpBonus,
+      restBuffMultiplier: restBuff.multiplier,
     );
 
     // v2.0: Calculate gold reward with streak multiplier + v2.2 bonuses

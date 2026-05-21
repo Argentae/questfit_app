@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../app/theme.dart';
 import '../db/database.dart';
 import '../providers/bounty_provider.dart';
+import '../providers/health_provider.dart';
 import '../providers/step_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/rank_trial_provider.dart';
@@ -28,6 +29,8 @@ class HomeScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           // v2.2: Momentum Buff banner + Step progress
           _buildMomentumBanner(ref),
+          // v2.4: Rest Buff banner (from sleep quality)
+          _buildRestBuffBanner(ref),
           _buildStepProgress(context, ref),
           const SizedBox(height: 12),
           // v2.0: Promotion Series banner
@@ -62,13 +65,17 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
         ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // v2.0: Gold display
-            goldAsync.when(
-              data: (gold) => GestureDetector(
-                onTap: () => context.go('/shop'),
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            reverse: true,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // v2.0: Gold display
+                goldAsync.when(
+                  data: (gold) => GestureDetector(
+                    onTap: () => context.go('/shop'),
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -90,6 +97,41 @@ class HomeScreen extends ConsumerWidget {
                           fontWeight: FontWeight.w800,
                           fontSize: 12,
                           color: QuestFitColors.gold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+            const SizedBox(width: 6),
+            // v2.4: Aether display
+            ref.watch(aetherProvider).when(
+              data: (aether) => GestureDetector(
+                onTap: () => context.go('/rhythm'),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: QuestFitColors.purple.withValues(alpha: 0.1),
+                    border: Border.all(
+                      color: QuestFitColors.purple.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('🔮', style: TextStyle(fontSize: 12)),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$aether',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                          color: QuestFitColors.purple,
                         ),
                       ),
                     ],
@@ -124,7 +166,9 @@ class HomeScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ],
+      ),
+    ),
+  ],
     );
   }
 
@@ -155,6 +199,52 @@ class HomeScreen extends ConsumerWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: QuestFitColors.emerald),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// v2.4: Rest Buff banner (shown when sleep buff is active).
+  Widget _buildRestBuffBanner(WidgetRef ref) {
+    final restBuff = ref.watch(restBuffProvider);
+    if (!restBuff.isActive) return const SizedBox.shrink();
+
+    final Color accentColor;
+    switch (restBuff.tier) {
+      case 'well_rested':
+        accentColor = QuestFitColors.purple;
+        break;
+      case 'rested':
+        accentColor = QuestFitColors.blueAccent;
+        break;
+      default:
+        accentColor = QuestFitColors.gold;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [
+            accentColor.withOpacity(0.15),
+            accentColor.withOpacity(0.05),
+          ]),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: accentColor.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Text(restBuff.emoji, style: const TextStyle(fontSize: 18)),
+            const SizedBox(width: 10),
+            Text(
+              '${restBuff.label.toUpperCase()} — ${restBuff.description}',
+              style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: accentColor),
             ),
           ],
         ),

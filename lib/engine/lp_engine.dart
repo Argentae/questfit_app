@@ -40,12 +40,14 @@ class LpEngine {
   /// [currentStreak] — Player's current streak length.
   /// [momentumBuff] — v2.2: Whether the Momentum Buff is active (+10%).
   /// [companionBonusPct] — v2.2: Active companion LP bonus percentage.
+  /// [restBuffMultiplier] — v2.4: Rest buff from sleep quality (1.0–1.20).
   static int calculateQuestLp({
     required int baseLp,
     required int masteryPoints,
     required int currentStreak,
     bool momentumBuff = false,
     int companionBonusPct = 0,
+    double restBuffMultiplier = 1.0,
   }) {
     // Mastery bonus: +1 LP per 25 stat points in the relevant category
     final masteryBonus = masteryPoints ~/ 25;
@@ -70,6 +72,11 @@ class LpEngine {
     // v2.2: Companion bonus
     if (companionBonusPct > 0) {
       total = (total * (1 + companionBonusPct / 100.0)).round();
+    }
+
+    // v2.4: Rest buff from sleep quality
+    if (restBuffMultiplier > 1.0) {
+      total = (total * restBuffMultiplier).round();
     }
 
     return total;

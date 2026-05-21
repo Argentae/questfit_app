@@ -7,6 +7,7 @@ import '../screens/bounty_board_screen.dart';
 import '../screens/expedition_screen.dart';
 import '../screens/grimoire_screen.dart';
 import '../screens/home_screen.dart';
+import '../screens/rhythm_screen.dart';
 // quests_screen removed in v2.3 — replaced by bounty_board_screen
 import '../screens/avatar_screen.dart';
 import '../screens/settings_screen.dart';
@@ -153,6 +154,14 @@ GoRouter createAppRouter(WidgetRef ref) {
             path: '/expedition',
             pageBuilder: (context, state) => CustomTransitionPage(
               child: const ExpeditionScreen(),
+              transitionsBuilder: _fadeTransition,
+            ),
+          ),
+          // v2.4: Rhythm (Samsung Health dashboard) screen
+          GoRoute(
+            path: '/rhythm',
+            pageBuilder: (context, state) => CustomTransitionPage(
+              child: const RhythmScreen(),
               transitionsBuilder: _fadeTransition,
             ),
           ),

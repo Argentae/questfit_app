@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../db/database.dart';
 import 'database_provider.dart';
 import 'bounty_provider.dart';
+import 'health_provider.dart';
 import 'shop_provider.dart';
 import 'step_provider.dart';
 import 'user_provider.dart';
@@ -103,6 +104,19 @@ class AppInitNotifier extends AsyncNotifier<AppInitState> {
       debugPrint('QF_INIT: Bounties in DB: ${bountyCount.length}');
       for (final b in bountyCount) {
         debugPrint('QF_INIT: Bounty id=${b.id} date=${b.date} status=${b.status} enemyId=${b.enemyId}');
+      }
+
+      // v2.4: Sync Rhythm data (sleep buff, Aether) if Health Connect is authorized
+      try {
+        final isAuthorized = await ref.read(healthAuthorizedProvider.future);
+        if (isAuthorized) {
+          await ref.read(healthSyncNotifierProvider.notifier).syncRhythm();
+          debugPrint('QF_INIT: Rhythm sync completed');
+        } else {
+          debugPrint('QF_INIT: Health Connect not authorized — skipping rhythm sync');
+        }
+      } catch (e) {
+        debugPrint('QF_INIT: Rhythm sync failed (non-fatal): $e');
       }
 
       // v2.0: Check if Awakening is complete

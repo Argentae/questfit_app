@@ -34,6 +34,15 @@ class Players extends Table {
   IntColumn get dailyStepGoal => integer().withDefault(const Constant(8000))();
   /// v2.2: Whether the Momentum Buff is active today
   BoolColumn get momentumBuffActive => boolean().withDefault(const Constant(false))();
+  // ─── v2.4: Rhythm System (Samsung Health) ─────────────────────────
+  /// Aether currency earned from active calories burned
+  IntColumn get aether => integer().withDefault(const Constant(0))();
+  /// Last night's total sleep duration in minutes (from Health Connect)
+  IntColumn get lastSleepMinutes => integer().withDefault(const Constant(0))();
+  /// Active rest buff multiplier (1.0 = no buff, max 1.20)
+  RealColumn get restBuffMultiplier => real().withDefault(const Constant(1.0))();
+  /// Timestamp of the last Health Connect sync
+  DateTimeColumn get lastHealthSync => dateTime().nullable()();
 }
 
 /// Player stats derived from workout categories.

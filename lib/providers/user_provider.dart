@@ -52,6 +52,12 @@ final goldProvider = Provider<AsyncValue<int>>((ref) {
   return playerAsync.whenData((player) => player.gold);
 });
 
+/// v2.4: Player's current Aether balance.
+final aetherProvider = Provider<AsyncValue<int>>((ref) {
+  final playerAsync = ref.watch(playerStreamProvider);
+  return playerAsync.whenData((player) => player.aether);
+});
+
 /// v2.0: Whether the player has completed the Awakening.
 final awakeningCompleteProvider = Provider<AsyncValue<bool>>((ref) {
   final playerAsync = ref.watch(playerStreamProvider);

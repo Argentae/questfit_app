@@ -32,7 +32,7 @@ class QuestFitDatabase extends _$QuestFitDatabase {
   }
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -104,6 +104,13 @@ class QuestFitDatabase extends _$QuestFitDatabase {
             // Seed enemy catalog for existing users
             await _seedEnemyCatalog();
           }
+          if (from < 6) {
+            // v5 → v6 migration: Rhythm System (Samsung Health)
+            await safeAddCol(players, players.aether);
+            await safeAddCol(players, players.lastSleepMinutes);
+            await safeAddCol(players, players.restBuffMultiplier);
+            await safeAddCol(players, players.lastHealthSync);
+          }
         },
         beforeOpen: (details) async {
           // Fix potentially null columns from legacy migrations.
@@ -119,6 +126,9 @@ class QuestFitDatabase extends _$QuestFitDatabase {
             await customStatement("UPDATE players SET pending_promotion = 0 WHERE pending_promotion IS NULL");
             await customStatement("UPDATE players SET daily_step_goal = 8000 WHERE daily_step_goal IS NULL");
             await customStatement("UPDATE players SET momentum_buff_active = 0 WHERE momentum_buff_active IS NULL");
+            await customStatement("UPDATE players SET aether = 0 WHERE aether IS NULL");
+            await customStatement("UPDATE players SET last_sleep_minutes = 0 WHERE last_sleep_minutes IS NULL");
+            await customStatement("UPDATE players SET rest_buff_multiplier = 1.0 WHERE rest_buff_multiplier IS NULL");
           } catch (_) {}
           try {
             await customStatement("UPDATE quests SET gold_reward = 0 WHERE gold_reward IS NULL");
@@ -144,14 +154,18 @@ class QuestFitDatabase extends _$QuestFitDatabase {
 
   /// Migrates legacy rank string (e.g. 'iron_1') into tier + division columns.
   Future<void> _migrateRankToTier() async {
-    final playerRows = await select(players).get();
-    for (final player in playerRows) {
+    // Use customSelect to avoid mapping to the full Player object,
+    // which expects newer columns to be non-null (they might be null until beforeOpen runs).
+    final playerRows = await customSelect('SELECT id, rank FROM players').get();
+    for (final row in playerRows) {
+      final id = row.read<int>('id');
+      final rank = row.read<String>('rank');
       // Parse legacy rank key like 'iron_1', 'bronze_3'
-      final parts = player.rank.split('_');
+      final parts = rank.split('_');
       final tierName = parts.isNotEmpty ? parts[0] : 'iron';
       final div = parts.length > 1 ? int.tryParse(parts[1]) ?? 4 : 4;
 
-      await (update(players)..where((t) => t.id.equals(player.id))).write(
+      await (update(players)..where((t) => t.id.equals(id))).write(
         PlayersCompanion(
           tier: Value(tierName),
           division: Value(div),

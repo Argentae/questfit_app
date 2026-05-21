@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../db/database.dart';
 import '../engine/quest_engine.dart';
+import '../engine/rhythm_engine.dart';
 import '../services/haptic_service.dart';
 import '../services/health_sync_service.dart';
 import 'companion_provider.dart';
@@ -28,6 +29,31 @@ final healthAvailableProvider = FutureProvider<bool>((ref) async {
 final healthAuthorizedProvider = FutureProvider<bool>((ref) async {
   final service = ref.watch(healthSyncServiceProvider);
   return service.isAuthorized();
+});
+
+// ─── v2.4: Rhythm State Providers ────────────────────────────────────
+
+/// Current rest buff from last night's sleep.
+final restBuffProvider = StateProvider<RestBuff>((ref) {
+  return const RestBuff(
+    multiplier: 1.0,
+    tier: 'none',
+    label: 'No Data',
+    description: 'Sync to check your sleep',
+    emoji: '💤',
+  );
+});
+
+/// Current sleep summary from last night.
+final sleepSummaryProvider = StateProvider<SleepSummary?>((ref) => null);
+
+/// Today's Aether earnings.
+final todayAetherProvider = StateProvider<AetherResult>((ref) {
+  return const AetherResult(
+    earned: 0,
+    totalCalories: 0,
+    description: 'Sync to start earning Aether',
+  );
 });
 
 // ─── Sync Notifier ───────────────────────────────────────────────────
@@ -104,8 +130,7 @@ class HealthSyncNotifier extends Notifier<HealthSyncState> {
           .map((l) => l.healthConnectId!)
           .toSet();
 
-      // Fetch and convert (service still uses playerLevel internally,
-      // but the LP amounts are now scaled in the service)
+      // Fetch and convert
       final result = await _service.syncNewWorkouts(
         playerLevel: player.level,
         existingHealthIds: existingIds,
@@ -167,6 +192,9 @@ class HealthSyncNotifier extends Notifier<HealthSyncState> {
             .updateEggProgress(result.totalStepsToday);
       }
 
+      // v2.4: Run Rhythm sync after workout sync
+      await syncRhythm();
+
       return result;
     } catch (e) {
       debugPrint('Health sync failed: $e');
@@ -175,6 +203,52 @@ class HealthSyncNotifier extends Notifier<HealthSyncState> {
         error: e.toString(),
       );
       return const SyncResult(importedCount: 0, totalXp: 0, results: []);
+    }
+  }
+
+  // ─── v2.4: Rhythm Sync ──────────────────────────────────────────────
+
+  /// Sync sleep data, calculate rest buff, and award Aether.
+  ///
+  /// This is called:
+  /// 1. During app init (if health permissions are granted)
+  /// 2. After a full health sync
+  /// 3. When the user opens the Rhythm screen
+  Future<void> syncRhythm() async {
+    try {
+      debugPrint('QF_RHYTHM: Starting rhythm sync...');
+
+      // 1. Fetch sleep data
+      final sleepData = await _service.getLastNightSleep();
+      ref.read(sleepSummaryProvider.notifier).state = sleepData;
+      ref.read(restBuffProvider.notifier).state = sleepData.buff;
+
+      // 2. Calculate Aether from today's active calories
+      final todaySummary = await _service.getTodayHealthSummary();
+      final aetherResult = RhythmEngine.calculateAether(
+        activeCalories: todaySummary.calories,
+      );
+      ref.read(todayAetherProvider.notifier).state = aetherResult;
+
+      // 3. Persist to database
+      final player =
+          await ((_db.select(_db.players))..limit(1)).getSingle();
+
+      await (_db.update(_db.players)
+            ..where((t) => t.id.equals(player.id)))
+          .write(PlayersCompanion(
+        lastSleepMinutes: Value(sleepData.totalMinutes),
+        restBuffMultiplier: Value(sleepData.buff.multiplier),
+        aether: Value(player.aether + aetherResult.earned),
+        lastHealthSync: Value(DateTime.now()),
+      ));
+
+      debugPrint('QF_RHYTHM: Sync complete — '
+          'sleep=${sleepData.totalMinutes}min, '
+          'buff=${sleepData.buff.label} (x${sleepData.buff.multiplier}), '
+          'aether=${aetherResult.earned}');
+    } catch (e) {
+      debugPrint('QF_RHYTHM: Rhythm sync error: $e');
     }
   }
 }

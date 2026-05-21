@@ -218,6 +218,52 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _aetherMeta = const VerificationMeta('aether');
+  @override
+  late final GeneratedColumn<int> aether = GeneratedColumn<int>(
+    'aether',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastSleepMinutesMeta = const VerificationMeta(
+    'lastSleepMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> lastSleepMinutes = GeneratedColumn<int>(
+    'last_sleep_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _restBuffMultiplierMeta =
+      const VerificationMeta('restBuffMultiplier');
+  @override
+  late final GeneratedColumn<double> restBuffMultiplier =
+      GeneratedColumn<double>(
+        'rest_buff_multiplier',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(1.0),
+      );
+  static const VerificationMeta _lastHealthSyncMeta = const VerificationMeta(
+    'lastHealthSync',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastHealthSync =
+      GeneratedColumn<DateTime>(
+        'last_health_sync',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -238,6 +284,10 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     createdAt,
     dailyStepGoal,
     momentumBuffActive,
+    aether,
+    lastSleepMinutes,
+    restBuffMultiplier,
+    lastHealthSync,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -368,6 +418,39 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
         ),
       );
     }
+    if (data.containsKey('aether')) {
+      context.handle(
+        _aetherMeta,
+        aether.isAcceptableOrUnknown(data['aether']!, _aetherMeta),
+      );
+    }
+    if (data.containsKey('last_sleep_minutes')) {
+      context.handle(
+        _lastSleepMinutesMeta,
+        lastSleepMinutes.isAcceptableOrUnknown(
+          data['last_sleep_minutes']!,
+          _lastSleepMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rest_buff_multiplier')) {
+      context.handle(
+        _restBuffMultiplierMeta,
+        restBuffMultiplier.isAcceptableOrUnknown(
+          data['rest_buff_multiplier']!,
+          _restBuffMultiplierMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_health_sync')) {
+      context.handle(
+        _lastHealthSyncMeta,
+        lastHealthSync.isAcceptableOrUnknown(
+          data['last_health_sync']!,
+          _lastHealthSyncMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -466,6 +549,25 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
             DriftSqlType.bool,
             data['${effectivePrefix}momentum_buff_active'],
           )!,
+      aether:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}aether'],
+          )!,
+      lastSleepMinutes:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}last_sleep_minutes'],
+          )!,
+      restBuffMultiplier:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.double,
+            data['${effectivePrefix}rest_buff_multiplier'],
+          )!,
+      lastHealthSync: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_health_sync'],
+      ),
     );
   }
 
@@ -514,6 +616,18 @@ class Player extends DataClass implements Insertable<Player> {
 
   /// v2.2: Whether the Momentum Buff is active today
   final bool momentumBuffActive;
+
+  /// Aether currency earned from active calories burned
+  final int aether;
+
+  /// Last night's total sleep duration in minutes (from Health Connect)
+  final int lastSleepMinutes;
+
+  /// Active rest buff multiplier (1.0 = no buff, max 1.20)
+  final double restBuffMultiplier;
+
+  /// Timestamp of the last Health Connect sync
+  final DateTime? lastHealthSync;
   const Player({
     required this.id,
     required this.name,
@@ -533,6 +647,10 @@ class Player extends DataClass implements Insertable<Player> {
     required this.createdAt,
     required this.dailyStepGoal,
     required this.momentumBuffActive,
+    required this.aether,
+    required this.lastSleepMinutes,
+    required this.restBuffMultiplier,
+    this.lastHealthSync,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -557,6 +675,12 @@ class Player extends DataClass implements Insertable<Player> {
     map['created_at'] = Variable<DateTime>(createdAt);
     map['daily_step_goal'] = Variable<int>(dailyStepGoal);
     map['momentum_buff_active'] = Variable<bool>(momentumBuffActive);
+    map['aether'] = Variable<int>(aether);
+    map['last_sleep_minutes'] = Variable<int>(lastSleepMinutes);
+    map['rest_buff_multiplier'] = Variable<double>(restBuffMultiplier);
+    if (!nullToAbsent || lastHealthSync != null) {
+      map['last_health_sync'] = Variable<DateTime>(lastHealthSync);
+    }
     return map;
   }
 
@@ -583,6 +707,13 @@ class Player extends DataClass implements Insertable<Player> {
       createdAt: Value(createdAt),
       dailyStepGoal: Value(dailyStepGoal),
       momentumBuffActive: Value(momentumBuffActive),
+      aether: Value(aether),
+      lastSleepMinutes: Value(lastSleepMinutes),
+      restBuffMultiplier: Value(restBuffMultiplier),
+      lastHealthSync:
+          lastHealthSync == null && nullToAbsent
+              ? const Value.absent()
+              : Value(lastHealthSync),
     );
   }
 
@@ -612,6 +743,12 @@ class Player extends DataClass implements Insertable<Player> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       dailyStepGoal: serializer.fromJson<int>(json['dailyStepGoal']),
       momentumBuffActive: serializer.fromJson<bool>(json['momentumBuffActive']),
+      aether: serializer.fromJson<int>(json['aether']),
+      lastSleepMinutes: serializer.fromJson<int>(json['lastSleepMinutes']),
+      restBuffMultiplier: serializer.fromJson<double>(
+        json['restBuffMultiplier'],
+      ),
+      lastHealthSync: serializer.fromJson<DateTime?>(json['lastHealthSync']),
     );
   }
   @override
@@ -636,6 +773,10 @@ class Player extends DataClass implements Insertable<Player> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'dailyStepGoal': serializer.toJson<int>(dailyStepGoal),
       'momentumBuffActive': serializer.toJson<bool>(momentumBuffActive),
+      'aether': serializer.toJson<int>(aether),
+      'lastSleepMinutes': serializer.toJson<int>(lastSleepMinutes),
+      'restBuffMultiplier': serializer.toJson<double>(restBuffMultiplier),
+      'lastHealthSync': serializer.toJson<DateTime?>(lastHealthSync),
     };
   }
 
@@ -658,6 +799,10 @@ class Player extends DataClass implements Insertable<Player> {
     DateTime? createdAt,
     int? dailyStepGoal,
     bool? momentumBuffActive,
+    int? aether,
+    int? lastSleepMinutes,
+    double? restBuffMultiplier,
+    Value<DateTime?> lastHealthSync = const Value.absent(),
   }) => Player(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -678,6 +823,11 @@ class Player extends DataClass implements Insertable<Player> {
     createdAt: createdAt ?? this.createdAt,
     dailyStepGoal: dailyStepGoal ?? this.dailyStepGoal,
     momentumBuffActive: momentumBuffActive ?? this.momentumBuffActive,
+    aether: aether ?? this.aether,
+    lastSleepMinutes: lastSleepMinutes ?? this.lastSleepMinutes,
+    restBuffMultiplier: restBuffMultiplier ?? this.restBuffMultiplier,
+    lastHealthSync:
+        lastHealthSync.present ? lastHealthSync.value : this.lastHealthSync,
   );
   Player copyWithCompanion(PlayersCompanion data) {
     return Player(
@@ -717,6 +867,19 @@ class Player extends DataClass implements Insertable<Player> {
           data.momentumBuffActive.present
               ? data.momentumBuffActive.value
               : this.momentumBuffActive,
+      aether: data.aether.present ? data.aether.value : this.aether,
+      lastSleepMinutes:
+          data.lastSleepMinutes.present
+              ? data.lastSleepMinutes.value
+              : this.lastSleepMinutes,
+      restBuffMultiplier:
+          data.restBuffMultiplier.present
+              ? data.restBuffMultiplier.value
+              : this.restBuffMultiplier,
+      lastHealthSync:
+          data.lastHealthSync.present
+              ? data.lastHealthSync.value
+              : this.lastHealthSync,
     );
   }
 
@@ -740,13 +903,17 @@ class Player extends DataClass implements Insertable<Player> {
           ..write('awakeningComplete: $awakeningComplete, ')
           ..write('createdAt: $createdAt, ')
           ..write('dailyStepGoal: $dailyStepGoal, ')
-          ..write('momentumBuffActive: $momentumBuffActive')
+          ..write('momentumBuffActive: $momentumBuffActive, ')
+          ..write('aether: $aether, ')
+          ..write('lastSleepMinutes: $lastSleepMinutes, ')
+          ..write('restBuffMultiplier: $restBuffMultiplier, ')
+          ..write('lastHealthSync: $lastHealthSync')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     name,
     level,
@@ -765,7 +932,11 @@ class Player extends DataClass implements Insertable<Player> {
     createdAt,
     dailyStepGoal,
     momentumBuffActive,
-  );
+    aether,
+    lastSleepMinutes,
+    restBuffMultiplier,
+    lastHealthSync,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -787,7 +958,11 @@ class Player extends DataClass implements Insertable<Player> {
           other.awakeningComplete == this.awakeningComplete &&
           other.createdAt == this.createdAt &&
           other.dailyStepGoal == this.dailyStepGoal &&
-          other.momentumBuffActive == this.momentumBuffActive);
+          other.momentumBuffActive == this.momentumBuffActive &&
+          other.aether == this.aether &&
+          other.lastSleepMinutes == this.lastSleepMinutes &&
+          other.restBuffMultiplier == this.restBuffMultiplier &&
+          other.lastHealthSync == this.lastHealthSync);
 }
 
 class PlayersCompanion extends UpdateCompanion<Player> {
@@ -809,6 +984,10 @@ class PlayersCompanion extends UpdateCompanion<Player> {
   final Value<DateTime> createdAt;
   final Value<int> dailyStepGoal;
   final Value<bool> momentumBuffActive;
+  final Value<int> aether;
+  final Value<int> lastSleepMinutes;
+  final Value<double> restBuffMultiplier;
+  final Value<DateTime?> lastHealthSync;
   const PlayersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -828,6 +1007,10 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.createdAt = const Value.absent(),
     this.dailyStepGoal = const Value.absent(),
     this.momentumBuffActive = const Value.absent(),
+    this.aether = const Value.absent(),
+    this.lastSleepMinutes = const Value.absent(),
+    this.restBuffMultiplier = const Value.absent(),
+    this.lastHealthSync = const Value.absent(),
   });
   PlayersCompanion.insert({
     this.id = const Value.absent(),
@@ -848,6 +1031,10 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.createdAt = const Value.absent(),
     this.dailyStepGoal = const Value.absent(),
     this.momentumBuffActive = const Value.absent(),
+    this.aether = const Value.absent(),
+    this.lastSleepMinutes = const Value.absent(),
+    this.restBuffMultiplier = const Value.absent(),
+    this.lastHealthSync = const Value.absent(),
   });
   static Insertable<Player> custom({
     Expression<int>? id,
@@ -868,6 +1055,10 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Expression<DateTime>? createdAt,
     Expression<int>? dailyStepGoal,
     Expression<bool>? momentumBuffActive,
+    Expression<int>? aether,
+    Expression<int>? lastSleepMinutes,
+    Expression<double>? restBuffMultiplier,
+    Expression<DateTime>? lastHealthSync,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -890,6 +1081,11 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       if (dailyStepGoal != null) 'daily_step_goal': dailyStepGoal,
       if (momentumBuffActive != null)
         'momentum_buff_active': momentumBuffActive,
+      if (aether != null) 'aether': aether,
+      if (lastSleepMinutes != null) 'last_sleep_minutes': lastSleepMinutes,
+      if (restBuffMultiplier != null)
+        'rest_buff_multiplier': restBuffMultiplier,
+      if (lastHealthSync != null) 'last_health_sync': lastHealthSync,
     });
   }
 
@@ -912,6 +1108,10 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Value<DateTime>? createdAt,
     Value<int>? dailyStepGoal,
     Value<bool>? momentumBuffActive,
+    Value<int>? aether,
+    Value<int>? lastSleepMinutes,
+    Value<double>? restBuffMultiplier,
+    Value<DateTime?>? lastHealthSync,
   }) {
     return PlayersCompanion(
       id: id ?? this.id,
@@ -932,6 +1132,10 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       createdAt: createdAt ?? this.createdAt,
       dailyStepGoal: dailyStepGoal ?? this.dailyStepGoal,
       momentumBuffActive: momentumBuffActive ?? this.momentumBuffActive,
+      aether: aether ?? this.aether,
+      lastSleepMinutes: lastSleepMinutes ?? this.lastSleepMinutes,
+      restBuffMultiplier: restBuffMultiplier ?? this.restBuffMultiplier,
+      lastHealthSync: lastHealthSync ?? this.lastHealthSync,
     );
   }
 
@@ -992,6 +1196,18 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     if (momentumBuffActive.present) {
       map['momentum_buff_active'] = Variable<bool>(momentumBuffActive.value);
     }
+    if (aether.present) {
+      map['aether'] = Variable<int>(aether.value);
+    }
+    if (lastSleepMinutes.present) {
+      map['last_sleep_minutes'] = Variable<int>(lastSleepMinutes.value);
+    }
+    if (restBuffMultiplier.present) {
+      map['rest_buff_multiplier'] = Variable<double>(restBuffMultiplier.value);
+    }
+    if (lastHealthSync.present) {
+      map['last_health_sync'] = Variable<DateTime>(lastHealthSync.value);
+    }
     return map;
   }
 
@@ -1015,7 +1231,11 @@ class PlayersCompanion extends UpdateCompanion<Player> {
           ..write('awakeningComplete: $awakeningComplete, ')
           ..write('createdAt: $createdAt, ')
           ..write('dailyStepGoal: $dailyStepGoal, ')
-          ..write('momentumBuffActive: $momentumBuffActive')
+          ..write('momentumBuffActive: $momentumBuffActive, ')
+          ..write('aether: $aether, ')
+          ..write('lastSleepMinutes: $lastSleepMinutes, ')
+          ..write('restBuffMultiplier: $restBuffMultiplier, ')
+          ..write('lastHealthSync: $lastHealthSync')
           ..write(')'))
         .toString();
   }
@@ -10400,6 +10620,10 @@ typedef $$PlayersTableCreateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<int> dailyStepGoal,
       Value<bool> momentumBuffActive,
+      Value<int> aether,
+      Value<int> lastSleepMinutes,
+      Value<double> restBuffMultiplier,
+      Value<DateTime?> lastHealthSync,
     });
 typedef $$PlayersTableUpdateCompanionBuilder =
     PlayersCompanion Function({
@@ -10421,6 +10645,10 @@ typedef $$PlayersTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<int> dailyStepGoal,
       Value<bool> momentumBuffActive,
+      Value<int> aether,
+      Value<int> lastSleepMinutes,
+      Value<double> restBuffMultiplier,
+      Value<DateTime?> lastHealthSync,
     });
 
 final class $$PlayersTableReferences
@@ -10734,6 +10962,26 @@ class $$PlayersTableFilterComposer
 
   ColumnFilters<bool> get momentumBuffActive => $composableBuilder(
     column: $table.momentumBuffActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get aether => $composableBuilder(
+    column: $table.aether,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSleepMinutes => $composableBuilder(
+    column: $table.lastSleepMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get restBuffMultiplier => $composableBuilder(
+    column: $table.restBuffMultiplier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastHealthSync => $composableBuilder(
+    column: $table.lastHealthSync,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11111,6 +11359,26 @@ class $$PlayersTableOrderingComposer
     column: $table.momentumBuffActive,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get aether => $composableBuilder(
+    column: $table.aether,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSleepMinutes => $composableBuilder(
+    column: $table.lastSleepMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get restBuffMultiplier => $composableBuilder(
+    column: $table.restBuffMultiplier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastHealthSync => $composableBuilder(
+    column: $table.lastHealthSync,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PlayersTableAnnotationComposer
@@ -11185,6 +11453,24 @@ class $$PlayersTableAnnotationComposer
 
   GeneratedColumn<bool> get momentumBuffActive => $composableBuilder(
     column: $table.momentumBuffActive,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get aether =>
+      $composableBuilder(column: $table.aether, builder: (column) => column);
+
+  GeneratedColumn<int> get lastSleepMinutes => $composableBuilder(
+    column: $table.lastSleepMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get restBuffMultiplier => $composableBuilder(
+    column: $table.restBuffMultiplier,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastHealthSync => $composableBuilder(
+    column: $table.lastHealthSync,
     builder: (column) => column,
   );
 
@@ -11522,6 +11808,10 @@ class $$PlayersTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> dailyStepGoal = const Value.absent(),
                 Value<bool> momentumBuffActive = const Value.absent(),
+                Value<int> aether = const Value.absent(),
+                Value<int> lastSleepMinutes = const Value.absent(),
+                Value<double> restBuffMultiplier = const Value.absent(),
+                Value<DateTime?> lastHealthSync = const Value.absent(),
               }) => PlayersCompanion(
                 id: id,
                 name: name,
@@ -11541,6 +11831,10 @@ class $$PlayersTableTableManager
                 createdAt: createdAt,
                 dailyStepGoal: dailyStepGoal,
                 momentumBuffActive: momentumBuffActive,
+                aether: aether,
+                lastSleepMinutes: lastSleepMinutes,
+                restBuffMultiplier: restBuffMultiplier,
+                lastHealthSync: lastHealthSync,
               ),
           createCompanionCallback:
               ({
@@ -11562,6 +11856,10 @@ class $$PlayersTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> dailyStepGoal = const Value.absent(),
                 Value<bool> momentumBuffActive = const Value.absent(),
+                Value<int> aether = const Value.absent(),
+                Value<int> lastSleepMinutes = const Value.absent(),
+                Value<double> restBuffMultiplier = const Value.absent(),
+                Value<DateTime?> lastHealthSync = const Value.absent(),
               }) => PlayersCompanion.insert(
                 id: id,
                 name: name,
@@ -11581,6 +11879,10 @@ class $$PlayersTableTableManager
                 createdAt: createdAt,
                 dailyStepGoal: dailyStepGoal,
                 momentumBuffActive: momentumBuffActive,
+                aether: aether,
+                lastSleepMinutes: lastSleepMinutes,
+                restBuffMultiplier: restBuffMultiplier,
+                lastHealthSync: lastHealthSync,
               ),
           withReferenceMapper:
               (p0) =>
